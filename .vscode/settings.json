@@ -1,0 +1,5 @@
+{
+  "terminal.integrated.env.windows": {
+    "PATH": "${workspaceFolder}\\scripts;${env:APPDATA}\\npm;${env:LOCALAPPDATA}\\pnpm;C:\\Program Files\\nodejs;C:\\Program Files (x86)\\nodejs;${env:PATH}"
+  }
+}
