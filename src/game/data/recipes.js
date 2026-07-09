@@ -1,0 +1,37 @@
+export const recipes = [
+  {
+    id: "plank",
+    nameKey: "recipe.plank",
+    station: "workbench",
+    requiresFacility: "workbench",
+    duration: 3000,
+    costs: { wood: 1 },
+    outputs: { plank: 2 },
+  },
+  {
+    id: "stick",
+    nameKey: "recipe.stick",
+    station: "workbench",
+    requiresFacility: "workbench",
+    duration: 3500,
+    costs: { plank: 2 },
+    outputs: { stick: 4 },
+  },
+  {
+    id: "stoneAxe",
+    nameKey: "recipe.stoneAxe",
+    station: "workbench",
+    requiresFacility: "workbench",
+    duration: 8000,
+    costs: { stone: 3, stick: 2 },
+    outputs: { stoneAxe: 1 },
+  },
+  {
+    id: "hammer",
+    nameKey: "recipe.hammer",
+    station: "hand",
+    duration: 4000,
+    costs: { wood: 2, stone: 1 },
+    outputs: { hammer: 1 },
+  },
+];

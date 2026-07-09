@@ -1,0 +1,382 @@
+import { ref } from "vue";
+import { tutorialMessages } from "./tutorialMessages.js";
+
+const messages = {
+  ja: {
+    ui: {
+      inventory: "インベントリ",
+      menuVillagers: "村人",
+      menuBuild: "建築",
+      clear: "クリア",
+      noLogs: "ログはまだありません。",
+      player: "プレイヤー",
+      villager: "村人",
+      playerInspect: "プレイヤーのインベントリと現在のタスクを確認します。",
+      villagerInspect: "村人のインベントリ、担当設備、現在のタスクを確認します。",
+      storage: "倉庫",
+      groundItems: "地面のアイテム",
+      storageInspect: "倉庫の中身と在庫目標を確認します。",
+      groundItemsInspect: "倉庫が未建築のため、現在見えている地面のアイテムを表示します。",
+      village: "村人管理",
+      villageInspect: "村人を追加し、現在の状態を確認します。",
+      build: "建築",
+      buildInspect: "フィールドに新しい建築予定地を配置します。",
+      facilityInspect: "村人の担当と自動作業の設定を行います。",
+      close: "閉じる",
+      currentTask: "現在のタスク",
+      idle: "待機中",
+      noActiveTask: "現在のタスクはありません。",
+      handCraft: "手作業クラフト",
+      busy: "作業中",
+      ready: "開始可能",
+      construction: "建築",
+      options: "件",
+      assignedStations: "担当設備",
+      noAssignedStations: "担当設備はありません。",
+      stockEnabled: "有効",
+      stockTarget: "在庫目標",
+      stockLine: "在庫 {current} / 見込み {expected} / {status}",
+      addVillager: "村人を追加",
+      noVillagersAvailable: "追加できる村人はいません。",
+      workbench: "作業台",
+      lumberjackHut: "きこり小屋",
+      add: "追加",
+      remove: "外す",
+      craftEntries: "クラフト登録",
+      noCraftEntries: "クラフト登録はありません。",
+      target: "目標数",
+      startCraftEntry: "この登録でクラフトを開始",
+      runningTasks: "進行中の作業",
+      taskCount: "{count}件",
+      noRunningTasks: "この設備で進行中の作業はありません。",
+      remainingSeconds: "残り {seconds}秒",
+      addCraftEntry: "クラフト登録を追加",
+      recipe: "レシピ",
+      selectRecipe: "選択してください",
+      confirm: "決定",
+      assignVillager: "担当村人を追加",
+      available: "使用可能",
+      unavailable: "未開放",
+      stockCurrent: "在庫",
+      stockExpected: "見込み",
+      stockTargetShort: "目標",
+    },
+    taskPhase: {
+      idle: "待機中",
+      movingToTarget: "移動中",
+      working: "作業中",
+      movingToStorage: "搬入中",
+    },
+    status: {
+      disabled: "停止中",
+      actionUnavailable: "開始条件不足",
+      actionPending: "開始できます",
+      actionDone: "目標達成",
+      stationUnavailable: "設備未完成",
+      noWorkers: "担当なし",
+      running: "作業中",
+      insufficientResources: "素材不足",
+      workerBusy: "担当が作業中",
+      invalidRecipe: "レシピ未設定",
+      noTarget: "目標なし",
+    },
+    common: {
+      handCraft: "手作業",
+      facility: "設備",
+      craft: "クラフト",
+      build: "建築",
+      gather: "採集",
+      carryingNone: "何も持っていません",
+      noAssignedStations: "担当設備なし",
+    },
+    item: {
+      wood: "木の枝",
+      stone: "石",
+      log: "丸太",
+      workbench: "作業台",
+      lumberjackHut: "きこり小屋",
+      storage: "倉庫",
+      plank: "板材",
+      stick: "木の棒",
+      stoneAxe: "石斧",
+      hammer: "ハンマー",
+    },
+    recipe: {
+      plank: "板材",
+      stick: "木の棒",
+      stoneAxe: "石斧",
+      hammer: "ハンマー",
+    },
+    station: {
+      workbench: {
+        name: "作業台",
+        description: "村人を配置して、板材や石斧などを自動でクラフトする設備です。",
+      },
+      lumberjackHut: {
+        name: "きこり小屋",
+        description: "村人を配置して、石斧を使った木こり作業を自動で行う設備です。",
+      },
+    },
+    action: {
+      pickupLog: "丸太を拾う",
+      gatherWood: "木の枝を拾う",
+      gatherStone: "石を拾う",
+      gatherLog: "木をこる",
+    },
+    building: {
+      workbench: "作業台",
+      storage: "倉庫",
+      lumberjackHut: "きこり小屋",
+    },
+    field: {
+      tree: "木",
+      branch: "木の枝",
+      stone: "石",
+    },
+    log: {
+      gameStarted: "ゲームを開始しました。村人は近くの対象まで移動してから作業します。",
+      itemMissingAction: "{item}がないため、{action}はできません。{actor}の所持数: {count}",
+      itemMissingActionShort: "{item}がないため、{action}はできません。",
+      moveToPickup: "{actor}が{item}を拾いに向かっています。",
+      takeFromStorage: "{actor}が倉庫から{item}を取り出しました。",
+      moveToAction: "{actor}が{action}に向かっています。",
+      villagerCannotStart: "{actor}は{item}を持てず、{action}を始められません。",
+      gatherStarted: "{actor}が{action}を始めました。{suffix}",
+      autoSuffix: "在庫目標に向けた自動作業です。",
+      playerCraftStarted: "プレイヤーが{recipe}のクラフトを開始しました。",
+      noVillagerForStation: "{station}で作業できる村人がいません。",
+      villagerCraftStarted: "{actor}が{recipe}のクラフトを開始しました。{suffix}",
+      playerBuildStarted: "プレイヤーが{building}の建築を始めました。",
+      villagerBuildStarted: "{actor}が{building}の建築を始めました。",
+      craftCompletePlayer: "{recipe}が完了し、プレイヤーの持ち物に入りました。",
+      craftCompleteStorage: "{recipe}が完了し、倉庫へ搬入されました。",
+      gatherDelivered: "{item}を{amount}個、倉庫へ搬入しました。",
+      buildingComplete: "{building}の建築が完了しました。",
+      choppedTree: "{actor}が木をこり、周囲に丸太が落ちました。",
+      pickedUpItem: "{actor}が{item}を拾いました。",
+      moveToStorage: "{actor}が{item}を持って倉庫へ向かっています。",
+      moveCraftToStorage: "{actor}が{item}を持って倉庫へ向かっています。",
+      placedBuilding: "{building}を配置しました。必要資材を消費して建築待ちです。",
+      assignedStation: "{actor}を{station}の担当にしました。",
+      unassignedStation: "{actor}を{station}の担当から外しました。",
+      villagerJoined: "{actor}が村に加わりました。",
+      craftEntryAdded: "{station}に{recipe}のクラフト登録を追加しました。",
+      craftEntryRemoved: "{station}から{recipe}の登録を外しました。",
+      moveItemToContainer: "{actor}が{item}を{container}へ移しました。",
+      moveItemFromContainer: "{actor}が{container}から{item}を受け取りました。",
+    },
+  },
+  en: {
+    ui: {
+      inventory: "Inventory",
+      menuVillagers: "Villagers",
+      menuBuild: "Build",
+      clear: "Clear",
+      noLogs: "No logs yet.",
+      player: "Player",
+      villager: "Villager",
+      playerInspect: "Inspect the player inventory and current task.",
+      villagerInspect: "Inspect this villager inventory, assignments, and current task.",
+      storage: "Storage",
+      groundItems: "Ground Items",
+      storageInspect: "Review stored items and stock targets.",
+      groundItemsInspect: "Storage is not built yet, so visible field items are shown here.",
+      village: "Villager Management",
+      villageInspect: "Add villagers and inspect their current state.",
+      build: "Construction",
+      buildInspect: "Place a new construction site on the field.",
+      facilityInspect: "Assign villagers and configure automatic production.",
+      close: "Close",
+      currentTask: "Current Task",
+      idle: "Idle",
+      noActiveTask: "No active task.",
+      handCraft: "Hand Craft",
+      busy: "Busy",
+      ready: "Ready",
+      construction: "Construction",
+      options: "options",
+      assignedStations: "Assigned Stations",
+      noAssignedStations: "No assigned stations.",
+      stockEnabled: "Enabled",
+      stockTarget: "Target",
+      stockLine: "Stock {current} / Expected {expected} / {status}",
+      addVillager: "Add Villager",
+      noVillagersAvailable: "No villagers available.",
+      workbench: "Workbench",
+      lumberjackHut: "Lumberjack Hut",
+      add: "Add",
+      remove: "Remove",
+      craftEntries: "Craft Queue",
+      noCraftEntries: "No craft entries.",
+      target: "Target",
+      startCraftEntry: "Start Crafting",
+      runningTasks: "Running Tasks",
+      taskCount: "{count} tasks",
+      noRunningTasks: "No running tasks for this facility.",
+      remainingSeconds: "{seconds}s left",
+      addCraftEntry: "Add Craft Entry",
+      recipe: "Recipe",
+      selectRecipe: "Select a recipe",
+      confirm: "Confirm",
+      assignVillager: "Assign Villager",
+      available: "Available",
+      unavailable: "Locked",
+      stockCurrent: "Stock",
+      stockExpected: "Expected",
+      stockTargetShort: "Target",
+    },
+    taskPhase: {
+      idle: "Idle",
+      movingToTarget: "Moving",
+      working: "Working",
+      movingToStorage: "Delivering",
+    },
+    status: {
+      disabled: "Disabled",
+      actionUnavailable: "Requirements missing",
+      actionPending: "Ready",
+      actionDone: "Target reached",
+      stationUnavailable: "Facility incomplete",
+      noWorkers: "No workers",
+      running: "Working",
+      insufficientResources: "Missing resources",
+      workerBusy: "Workers busy",
+      invalidRecipe: "Invalid recipe",
+      noTarget: "No target",
+    },
+    common: {
+      handCraft: "Hand Craft",
+      facility: "Facility",
+      craft: "Craft",
+      build: "Build",
+      gather: "Gather",
+      carryingNone: "Carrying nothing",
+      noAssignedStations: "No assigned stations",
+    },
+    item: {
+      wood: "Branch",
+      stone: "Stone",
+      log: "Log",
+      workbench: "Workbench",
+      lumberjackHut: "Lumberjack Hut",
+      storage: "Storage",
+      plank: "Plank",
+      stick: "Stick",
+      stoneAxe: "Stone Axe",
+      hammer: "Hammer",
+    },
+    recipe: {
+      plank: "Plank",
+      stick: "Stick",
+      stoneAxe: "Stone Axe",
+      hammer: "Hammer",
+    },
+    station: {
+      workbench: {
+        name: "Workbench",
+        description: "Assign villagers to automatically craft planks, stone axes, and more.",
+      },
+      lumberjackHut: {
+        name: "Lumberjack Hut",
+        description: "Assign villagers to automatically chop trees with stone axes.",
+      },
+    },
+    action: {
+      pickupLog: "Pick up log",
+      gatherWood: "Pick up branch",
+      gatherStone: "Pick up stone",
+      gatherLog: "Chop tree",
+    },
+    building: {
+      workbench: "Workbench",
+      storage: "Storage",
+      lumberjackHut: "Lumberjack Hut",
+    },
+    field: {
+      tree: "Tree",
+      branch: "Branch",
+      stone: "Stone",
+    },
+    log: {
+      gameStarted: "The game has started. Villagers move next to targets before they work.",
+      itemMissingAction: "{item} is required for {action}. {actor} holds: {count}",
+      itemMissingActionShort: "{item} is required for {action}.",
+      moveToPickup: "{actor} is heading to pick up {item}.",
+      takeFromStorage: "{actor} took {item} from storage.",
+      moveToAction: "{actor} is heading to {action}.",
+      villagerCannotStart: "{actor} could not secure {item} and cannot start {action}.",
+      gatherStarted: "{actor} started {action}. {suffix}",
+      autoSuffix: "This is automatic work toward a stock target.",
+      playerCraftStarted: "The player started crafting {recipe}.",
+      noVillagerForStation: "No villager is available to work at {station}.",
+      villagerCraftStarted: "{actor} started crafting {recipe}. {suffix}",
+      playerBuildStarted: "The player started building {building}.",
+      villagerBuildStarted: "{actor} started building {building}.",
+      craftCompletePlayer: "{recipe} is complete and was added to the player inventory.",
+      craftCompleteStorage: "{recipe} is complete and was delivered to storage.",
+      gatherDelivered: "{amount} {item} delivered to storage.",
+      buildingComplete: "{building} construction is complete.",
+      choppedTree: "{actor} chopped a tree and logs dropped nearby.",
+      pickedUpItem: "{actor} picked up {item}.",
+      moveToStorage: "{actor} is carrying {item} to storage.",
+      moveCraftToStorage: "{actor} is carrying {item} to storage.",
+      placedBuilding: "{building} was placed. Resources were consumed and it is waiting for construction.",
+      assignedStation: "{actor} was assigned to {station}.",
+      unassignedStation: "{actor} was removed from {station}.",
+      villagerJoined: "{actor} joined the village.",
+      craftEntryAdded: "{recipe} was added to {station}.",
+      craftEntryRemoved: "{recipe} was removed from {station}.",
+      moveItemToContainer: "{actor} moved {item} to {container}.",
+      moveItemFromContainer: "{actor} took {item} from {container}.",
+    },
+  },
+};
+
+mergeMessages(messages, tutorialMessages);
+
+export const currentLocale = ref("ja");
+
+function lookup(locale, key) {
+  return key.split(".").reduce((value, segment) => value?.[segment], messages[locale]);
+}
+
+export function t(key, params = {}) {
+  const template = lookup(currentLocale.value, key) ?? lookup("ja", key) ?? key;
+  return template.replace(/\{(\w+)\}/g, (_, name) => String(params[name] ?? `{${name}}`));
+}
+
+export function setLocale(locale) {
+  if (messages[locale]) {
+    currentLocale.value = locale;
+  }
+}
+
+export function useI18n() {
+  return {
+    locale: currentLocale,
+    setLocale,
+    t,
+  };
+}
+
+function mergeMessages(target, source) {
+  Object.entries(source).forEach(([locale, values]) => {
+    if (!target[locale]) {
+      target[locale] = {};
+    }
+    mergeRecord(target[locale], values);
+  });
+}
+
+function mergeRecord(target, source) {
+  Object.entries(source).forEach(([key, value]) => {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      if (!target[key] || typeof target[key] !== "object" || Array.isArray(target[key])) {
+        target[key] = {};
+      }
+      mergeRecord(target[key], value);
+      return;
+    }
+    target[key] = value;
+  });
+}
