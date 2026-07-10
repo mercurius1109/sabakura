@@ -579,6 +579,7 @@ const {
   constructionQueue,
   craftQueue,
   gatherQueue,
+  gatherActions,
   playerActor,
   visibleFieldNodes,
   pickupFieldNode,
