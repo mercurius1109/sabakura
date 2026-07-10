@@ -1,4 +1,4 @@
-export const villagerNamePool = ["ハル", "ミナ", "レン", "ユイ", "ソラ", "ナツ", "カイ", "リン", "ヒナ", "リク", "アオ", "イツキ"];
+export const villagerNamePool = ["ハル", "ミナ", "レン", "ユイ", "ソラ", "ナツ", "カイ", "リン", "ヒナ", "リク", "アオ", "イブキ"];
 
 export const storagePoint = { x: 79, y: 51 };
 

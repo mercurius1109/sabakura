@@ -205,7 +205,7 @@ export function useSurvivalCraft() {
   }
 
   const {
-    adjacentPoint,
+    actorWorkPoint,
     buildingWorkPoint,
     distanceBetween,
     fieldNodeById,
@@ -390,7 +390,6 @@ export function useSurvivalCraft() {
     now,
     playerActor,
     placedStructures,
-    storageContainer,
     constructionSites,
     craftQueue,
     gatherQueue,
@@ -419,11 +418,11 @@ export function useSurvivalCraft() {
     actorById,
     findTaskById,
     fieldNodeById,
+    actorWorkPoint,
     gatherActionForNode,
-    isFieldNodeVisible,
     nodeWorkPoint,
     buildingWorkPoint,
-    adjacentPoint,
+    storageWorkPoint,
     distanceBetween,
     t,
   });
@@ -514,6 +513,7 @@ export function useSurvivalCraft() {
     fieldNodeById,
     isFieldNodeVisible,
     fieldNodeIndexById,
+    actorWorkPoint,
     spawnDroppedLogs,
     spawnDroppedItems,
     storageWorkPoint,
@@ -553,11 +553,11 @@ export function useSurvivalCraft() {
 
   function playerTransferTargetPoint(targetKind, actorId = null) {
     if (targetKind === "storage") {
-      return storageWorkPoint();
+      return storageWorkPoint(playerActor);
     }
 
     const actor = actorById(actorId);
-    return actor ? adjacentPoint(actor.x, actor.y, -3, 3) : null;
+    return actor ? actorWorkPoint(actor, playerActor) : null;
   }
 
   function approachTransferTarget(targetKind = "storage", actorId = null) {
@@ -778,17 +778,28 @@ export function useSurvivalCraft() {
     log.splice(0);
   }
 
-  let timerId = null;
   let animationFrameId = null;
-  let lastRenderAt = 0;
+  let lastFrameAt = 0;
+  let accumulatedTickMs = 0;
 
   function renderFrame(timestamp) {
-    if (!lastRenderAt) {
-      lastRenderAt = timestamp;
+    if (!lastFrameAt) {
+      lastFrameAt = timestamp;
     }
 
-    lastRenderAt = timestamp;
-    const alpha = Math.max(0, Math.min(1, (Date.now() - lastTickAt.value) / tickIntervalMs));
+    const frameDeltaMs = Math.min(timestamp - lastFrameAt, tickIntervalMs);
+    lastFrameAt = timestamp;
+    accumulatedTickMs += frameDeltaMs * gameSpeed.value;
+
+    while (accumulatedTickMs >= tickIntervalMs) {
+      snapshotActorPosition(playerActor);
+      villagers.forEach(snapshotActorPosition);
+      tick(tickIntervalMs);
+      accumulatedTickMs -= tickIntervalMs;
+      lastTickAt.value = Date.now();
+    }
+
+    const alpha = Math.max(0, Math.min(1, accumulatedTickMs / tickIntervalMs));
 
     updateActorRenderPosition(playerActor, alpha);
     villagers.forEach((villager) => updateActorRenderPosition(villager, alpha));
@@ -800,19 +811,12 @@ export function useSurvivalCraft() {
     syncActorRenderPosition(playerActor);
     villagers.forEach(syncActorRenderPosition);
     addLog(t("log.gameStarted"));
-    timerId = setInterval(() => {
-      const currentTickAt = Date.now();
-      const realDeltaMs = currentTickAt - lastTickAt.value;
-      lastTickAt.value = currentTickAt;
-      snapshotActorPosition(playerActor);
-      villagers.forEach(snapshotActorPosition);
-      tick(realDeltaMs * gameSpeed.value);
-    }, tickIntervalMs);
+    lastFrameAt = 0;
+    accumulatedTickMs = 0;
     animationFrameId = requestAnimationFrame(renderFrame);
   });
 
   onUnmounted(() => {
-    clearInterval(timerId);
     cancelAnimationFrame(animationFrameId);
   });
 

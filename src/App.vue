@@ -7,7 +7,7 @@
           :player="playerActor"
           :villagers="villagers"
           :construction-sites="constructionSitesForField"
-          :placed-structures="placedStructures"
+          :placed-structure-nodes="placedStructureNodes"
           :item-definitions="itemDefinitions"
           :tutorial-targets="currentTutorialTargets"
           @select-resource="pickupResourceNode"
@@ -789,6 +789,24 @@ const constructionSitesForField = computed(() =>
       progress: task ? taskProgress(task) : 0,
     };
   }),
+);
+
+const placedStructureNodes = computed(() =>
+  Object.entries(placedStructures)
+    .filter(([, isPlaced]) => Boolean(isPlaced))
+    .map(([structureId]) => {
+      const building = buildingById(structureId);
+      return building
+        ? {
+          id: structureId,
+          x: building.x,
+          y: building.y,
+          icon: itemDefinitions[structureId]?.icon || building.icon || "?",
+          name: itemDefinitions[structureId]?.name || building.name,
+        }
+        : null;
+    })
+    .filter(Boolean),
 );
 
 const isCompareWindow = computed(() =>

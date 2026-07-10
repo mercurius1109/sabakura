@@ -19,6 +19,7 @@ export function createSurvivalTaskRuntime({
   fieldNodeById,
   isFieldNodeVisible,
   fieldNodeIndexById,
+  actorWorkPoint,
   spawnDroppedLogs,
   spawnDroppedItems,
   storageWorkPoint,
@@ -202,6 +203,36 @@ export function createSurvivalTaskRuntime({
     if (index >= 0) {
       gatherQueue.splice(index, 1);
     }
+    if (moved) {
+      restartVillagerTask(task);
+    }
+  }
+
+  function isTransferAdjacent(task, actor, targetActor) {
+    if (task.targetKind === "actor") {
+      if (!targetActor) {
+        return false;
+      }
+      return distanceBetween(actor, targetActor) <= 5.5;
+    }
+
+    if (task.targetKind === "storage") {
+      return distanceBetween(actor, storagePoint) <= 6.5;
+    }
+
+    return true;
+  }
+
+  function refreshMovingDestination(task, actor, destination, targetActor) {
+    if (task.targetKind === "actor" && targetActor) {
+      return actorWorkPoint(targetActor, actor);
+    }
+
+    if (task.targetKind === "storage") {
+      return storageWorkPoint(actor);
+    }
+
+    return destination;
   }
 
   function finishTaskWork(task) {
@@ -260,7 +291,7 @@ export function createSurvivalTaskRuntime({
         return true;
       }
       task.phase = "movingToStorage";
-      task.storagePoint = storageWorkPoint();
+      task.storagePoint = storageWorkPoint(villager);
       task.initialStorageDistance = distanceBetween(villager || storagePoint, task.storagePoint);
       addLog(t("log.moveToStorage", { actor: villagerName(task.villagerId), item: itemName(task.itemId) }));
       return true;
@@ -284,7 +315,7 @@ export function createSurvivalTaskRuntime({
         return true;
       }
       task.phase = "movingToStorage";
-      task.storagePoint = storageWorkPoint();
+      task.storagePoint = storageWorkPoint(villager);
       task.initialStorageDistance = distanceBetween(villager || storagePoint, task.storagePoint);
       addLog(t("log.moveCraftToStorage", {
         actor: villagerName(task.villagerId),
@@ -301,10 +332,18 @@ export function createSurvivalTaskRuntime({
     if (!villager) {
       return;
     }
-    const destination = task.phase === "movingToStorage" ? task.storagePoint : task.targetPoint;
+    const targetActor = task.actorId ? actorById(task.actorId) : null;
+    const currentDestination = task.phase === "movingToStorage" ? task.storagePoint : task.targetPoint;
+    const destination = refreshMovingDestination(task, villager, currentDestination, targetActor);
     if (!destination) {
       return;
     }
+    if (task.phase === "movingToStorage") {
+      task.storagePoint = destination;
+    } else {
+      task.targetPoint = destination;
+    }
+
     const arrived = moveVillagerTowards(villager, destination, deltaMs);
     if (!arrived) {
       return;
@@ -312,10 +351,16 @@ export function createSurvivalTaskRuntime({
 
     if (task.phase === "movingToTarget") {
       if (task.kind === "approach") {
+        if (!isTransferAdjacent(task, villager, targetActor)) {
+          return;
+        }
         beginTaskWork(task);
         return;
       }
       if (task.kind === "transfer") {
+        if (!isTransferAdjacent(task, villager, targetActor)) {
+          return;
+        }
         completeTransferTask(task);
         return;
       }

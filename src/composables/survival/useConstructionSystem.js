@@ -126,7 +126,6 @@ export function createConstructionSystem({
       requiresItem: "hammer",
     });
     addLog(t("log.placedBuilding", { building: building.name }));
-    checkConstructionSites();
     return true;
   }
 

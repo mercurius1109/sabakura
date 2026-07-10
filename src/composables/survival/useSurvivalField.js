@@ -47,17 +47,60 @@ export function createSurvivalFieldHelpers({
     };
   }
 
-  function nodeWorkPoint(node) {
-    return adjacentPoint(node.x, node.y, node.type === "tree" ? -4 : -3, 3);
+  function adjacentCandidates(targetX, targetY, offsetX = 3.5, offsetY = 3.5) {
+    return [
+      adjacentPoint(targetX, targetY, -offsetX, offsetY),
+      adjacentPoint(targetX, targetY, 0, offsetY),
+      adjacentPoint(targetX, targetY, offsetX, offsetY),
+      adjacentPoint(targetX, targetY, -offsetX, 0),
+      adjacentPoint(targetX, targetY, offsetX, 0),
+      adjacentPoint(targetX, targetY, -offsetX, -offsetY),
+      adjacentPoint(targetX, targetY, 0, -offsetY),
+      adjacentPoint(targetX, targetY, offsetX, -offsetY),
+    ];
   }
 
-  function buildingWorkPoint(structureId) {
+  function nearestAdjacentPoint(targetX, targetY, actor = null, offsetX = 3.5, offsetY = 3.5) {
+    const candidates = adjacentCandidates(targetX, targetY, offsetX, offsetY);
+    if (!actor) {
+      return candidates[0];
+    }
+
+    return candidates.reduce((best, candidate) => {
+      if (!best) {
+        return candidate;
+      }
+
+      const bestDistance = distanceBetween(actor, best);
+      const candidateDistance = distanceBetween(actor, candidate);
+      return candidateDistance < bestDistance ? candidate : best;
+    }, null);
+  }
+
+  function nodeWorkPoint(node, actor = null) {
+    return nearestAdjacentPoint(node.x, node.y, actor, node.type === "tree" ? 4 : 3, 3);
+  }
+
+  function buildingWorkPoint(structureId, actor = null) {
     const building = buildingById(structureId);
-    return building ? adjacentPoint(building.x, building.y, -4, 4) : adjacentPoint(storagePoint.x, storagePoint.y);
+    return building
+      ? nearestAdjacentPoint(building.x, building.y, actor)
+      : nearestAdjacentPoint(storagePoint.x, storagePoint.y, actor);
   }
 
-  function storageWorkPoint() {
-    return adjacentPoint(storagePoint.x, storagePoint.y, -4, 4);
+  function storageWorkPoint(actor = null) {
+    const storageBuilding = buildingById("storage");
+    return storageBuilding
+      ? nearestAdjacentPoint(storageBuilding.x, storageBuilding.y, actor)
+      : nearestAdjacentPoint(storagePoint.x, storagePoint.y, actor);
+  }
+
+  function actorWorkPoint(targetActor, actor = null) {
+    if (!targetActor) {
+      return null;
+    }
+
+    return nearestAdjacentPoint(targetActor.x, targetActor.y, actor, 3, 3);
   }
 
   function distanceBetween(a, b) {
@@ -125,6 +168,7 @@ export function createSurvivalFieldHelpers({
 
   return {
     adjacentPoint,
+    actorWorkPoint,
     buildingWorkPoint,
     clampFieldPosition,
     distanceBetween,
@@ -134,6 +178,7 @@ export function createSurvivalFieldHelpers({
     gatherActionForNode,
     isFieldNodeVisible,
     moveVillagerTowards,
+    nearestAdjacentPoint,
     nodeWorkPoint,
     spawnDroppedItems,
     spawnDroppedLogs,
