@@ -870,7 +870,7 @@ const playerTransferContext = computed(() => {
     disabledText: "",
   };
 });
-const playerTransferCaption = computed(() => `Player Inventory -> ${playerTransferContext.value.label}`);
+const playerTransferCaption = computed(() => t("ui.transferTo", { target: playerTransferContext.value.label }));
 const playerTransferDisabled = computed(() => playerTransferContext.value.disabled);
 const playerTransferDisabledText = computed(() => playerTransferContext.value.disabledText);
 
