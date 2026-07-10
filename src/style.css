@@ -23,3 +23,46 @@
     font: inherit;
   }
 }
+
+@layer utilities {
+  @keyframes tutorialBeacon {
+    0%,
+    100% {
+      box-shadow:
+        0 0 0 0 rgba(243, 200, 75, 0.00),
+        0 0 18px rgba(243, 200, 75, 0.42);
+      filter: brightness(1);
+      opacity: 0.88;
+    }
+
+    50% {
+      box-shadow:
+        0 0 0 10px rgba(243, 200, 75, 0.18),
+        0 0 30px rgba(243, 200, 75, 0.92);
+      filter: brightness(1.08);
+      opacity: 1;
+    }
+  }
+
+  .tutorial-highlight {
+    position: relative;
+    z-index: 20;
+    animation: tutorialBeacon 1.15s ease-in-out infinite;
+    will-change: transform, box-shadow, filter;
+  }
+
+  .tutorial-highlight-ui {
+    border-color: #f3c84b;
+    box-shadow: 0 0 0 3px rgba(243, 200, 75, 0.9);
+  }
+
+  .tutorial-highlight-round {
+    border-radius: 9999px;
+    box-shadow: 0 0 0 4px rgba(243, 200, 75, 0.9);
+  }
+
+  .tutorial-highlight-card {
+    border-radius: 1.5rem;
+    box-shadow: 0 0 0 4px rgba(243, 200, 75, 0.9);
+  }
+}

@@ -22,6 +22,7 @@ export function createTutorialSteps({
   stationById,
   getPlayerItemCount,
   getVillagerCount,
+  findVisibleNodeIdForItem,
   hasPlacedOrStarted,
   isStructureCompleted,
   getAssignedVillagerCount,
@@ -35,6 +36,7 @@ export function createTutorialSteps({
       stationById,
       getPlayerItemCount,
       getVillagerCount,
+      findVisibleNodeIdForItem,
       hasPlacedOrStarted,
       isStructureCompleted,
       getAssignedVillagerCount,
@@ -45,12 +47,15 @@ export function createTutorialSteps({
 }
 
 function gatherItemStep(itemId, amount) {
-  return ({ getPlayerItemCount }) => ({
+  return ({ getPlayerItemCount, findVisibleNodeIdForItem }) => ({
     id: `gather-${itemId}`,
     titleKey: "tutorial.step.gather.title",
     descriptionKey: "tutorial.step.gather.description",
     textParams: { itemKey: `item.${itemId}` },
-    highlightTargets: [{ kind: "field-resource", id: itemId }],
+    getHighlightTargets: () => {
+      const nodeId = findVisibleNodeIdForItem(itemId);
+      return nodeId ? [{ kind: "field-resource", id: nodeId }] : [];
+    },
     isCompleted: () => getPlayerItemCount(itemId) >= amount,
     getRequirements: () => [
       {

@@ -11,7 +11,7 @@
       :key="node.id"
       type="button"
       class="absolute -translate-x-1/2 -translate-y-1/2 transition hover:scale-105"
-      :class="isTutorialTarget('field-resource', node.itemId) ? resourceHighlightClass : ''"
+      :class="isTutorialTarget('field-resource', node.id) ? resourceHighlightClass : ''"
       :style="{ left: `${node.x}%`, top: `${node.y}%` }"
       @click="$emit('select-resource', node.id)"
     >
@@ -132,8 +132,8 @@ defineEmits([
 const treeIcon = "\uD83C\uDF32";
 const playerIcon = "\uD83D\uDE42";
 const villagerIcon = "\uD83E\uDDD1";
-const resourceHighlightClass = "z-20 scale-110 rounded-full ring-4 ring-[#f3c84b] ring-offset-2 ring-offset-white shadow-[0_0_26px_rgba(243,200,75,0.9)]";
-const cardHighlightClass = "z-20 scale-110 rounded-[1.5rem] ring-4 ring-[#f3c84b] ring-offset-2 ring-offset-white shadow-[0_0_26px_rgba(243,200,75,0.9)]";
+const resourceHighlightClass = "tutorial-highlight tutorial-highlight-round";
+const cardHighlightClass = "tutorial-highlight tutorial-highlight-card";
 
 function nodeIcon(node) {
   if (node.type === "tree") {

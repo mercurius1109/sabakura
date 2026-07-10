@@ -45,6 +45,13 @@
       <p class="mt-2 text-sm leading-6 text-muted">
         {{ t("tutorial.panel.completeDescription") }}
       </p>
+      <button
+        type="button"
+        class="mt-4 rounded-2xl bg-moss px-4 py-2 text-sm font-bold text-white transition hover:bg-leaf"
+        @click="$emit('dismiss')"
+      >
+        {{ t("tutorial.panel.dismiss") }}
+      </button>
     </div>
   </aside>
 </template>
@@ -61,6 +68,8 @@ const props = defineProps({
   totalSteps: { type: Number, required: true },
   isComplete: { type: Boolean, required: true },
 });
+
+defineEmits(["dismiss"]);
 
 const displayStep = computed(() => (
   props.isComplete ? props.totalSteps : Math.min(props.completedCount + 1, props.totalSteps)

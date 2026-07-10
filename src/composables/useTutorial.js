@@ -7,6 +7,7 @@ export function useTutorial({
   villagers,
   placedStructures,
   constructionSites,
+  visibleFieldNodes,
   recipeById,
   buildingById,
   stationById,
@@ -28,6 +29,26 @@ export function useTutorial({
 
   function getVillagerCount() {
     return villagers.length;
+  }
+
+  function findVisibleNodeIdForItem(itemId) {
+    const nodes = visibleFieldNodes()
+      .filter((node) => node.type === "pickup" && node.itemId === itemId);
+    if (nodes.length === 0) {
+      return null;
+    }
+
+    const nearest = nodes.reduce((best, node) => {
+      if (!best) {
+        return node;
+      }
+
+      const bestDistance = distanceBetween(best, playerActor);
+      const nodeDistance = distanceBetween(node, playerActor);
+      return nodeDistance < bestDistance ? node : best;
+    }, null);
+
+    return nearest?.id || null;
   }
 
   function isStructureCompleted(structureId) {
@@ -52,6 +73,7 @@ export function useTutorial({
     stationById,
     getPlayerItemCount,
     getVillagerCount,
+    findVisibleNodeIdForItem,
     hasPlacedOrStarted,
     isStructureCompleted,
     getAssignedVillagerCount,
@@ -74,6 +96,11 @@ export function useTutorial({
           : itemDefinitions[requirement.itemId]?.name || requirement.itemId,
         remaining: Math.max(0, requirement.needed - requirement.current),
       }));
+      const hasRemainingItemRequirements = requirements.some((requirement) => requirement.itemId && requirement.remaining > 0);
+      const requirementHighlightTargets = buildRequirementHighlightTargets(requirements, findVisibleNodeIdForItem);
+      const stepHighlightTargets = hasRemainingItemRequirements
+        ? []
+        : (step.getHighlightTargets?.() || step.highlightTargets || []);
 
       return {
         ...step,
@@ -81,7 +108,7 @@ export function useTutorial({
         description: t(step.descriptionKey, resolveTextParams(step.textParams || {}, itemDefinitions)),
         completed,
         requirements,
-        highlightTargets: step.highlightTargets || [],
+        highlightTargets: mergeHighlightTargets(stepHighlightTargets, requirementHighlightTargets),
       };
     }),
   );
@@ -108,6 +135,37 @@ export function useTutorial({
     isTutorialComplete,
     currentStepIndex,
   };
+}
+
+function distanceBetween(a, b) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return Math.sqrt((dx * dx) + (dy * dy));
+}
+
+function buildRequirementHighlightTargets(requirements, findVisibleNodeIdForItem) {
+  return requirements.flatMap((requirement) => {
+    if (!requirement.itemId || requirement.remaining <= 0) {
+      return [];
+    }
+
+    const nodeId = findVisibleNodeIdForItem(requirement.itemId);
+    return nodeId ? [{ kind: "field-resource", id: nodeId }] : [];
+  });
+}
+
+function mergeHighlightTargets(primaryTargets, secondaryTargets) {
+  const merged = [...primaryTargets, ...secondaryTargets];
+  const seen = new Set();
+
+  return merged.filter((target) => {
+    const key = `${target.kind}:${target.id}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
 }
 
 function resolveTextParams(params, itemDefinitions) {
