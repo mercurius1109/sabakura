@@ -12,6 +12,8 @@ export function createSurvivalTaskStarters({
   actorHasItem,
   isPlayerActor,
   availableItemCount,
+  expectedStock,
+  stockRuleTarget,
   findPickupNodeByItem,
   villagerHasItem,
   availableVillagerForGather,
@@ -36,6 +38,7 @@ export function createSurvivalTaskStarters({
   buildingWorkPoint,
   storageWorkPoint,
   distanceBetween,
+  actorInventoryCount,
   t,
 }) {
   function autoSuffix(source) {
@@ -99,6 +102,39 @@ export function createSurvivalTaskStarters({
       workStartedAt: null,
       duration: 300,
       transferDirection: "fromStorage",
+      actorId: null,
+      targetKind: "storage",
+      nextTask,
+    };
+
+    actor.taskId = task.id;
+    gatherQueue.push(task);
+    addLog(t("log.moveToStorage", { actor: actor.name, item: itemName(itemId) }));
+    return true;
+  }
+
+  function startActorStorageDeliveryTask(actor, itemId, amount = 1, nextTask = null) {
+    if (!actor || actor.taskId !== null || amount <= 0 || !placedStructures.storage) {
+      return false;
+    }
+
+    const targetPoint = storageWorkPoint(actor);
+    const task = {
+      id: makeId("transfer"),
+      kind: "transfer",
+      label: t("log.moveToStorage", { actor: actor.name, item: itemName(itemId) }),
+      itemId,
+      amount,
+      workerType: isPlayerActor(actor) ? "player" : "villager",
+      villagerId: actor.id,
+      station: "storage",
+      source: "deliver",
+      phase: "movingToTarget",
+      targetPoint,
+      initialTargetDistance: distanceBetween(actor, targetPoint),
+      workStartedAt: null,
+      duration: 300,
+      transferDirection: "toStorage",
       actorId: null,
       targetKind: "storage",
       nextTask,
@@ -222,7 +258,7 @@ export function createSurvivalTaskStarters({
       amount: action.amount,
       workerType: isPlayerActor(actor) ? "player" : "villager",
       villagerId: actor.id,
-      station: action.requiresStation || "field",
+      station: options.preferredStationId || action.requiresStation || "field",
       source: options.source || "manual",
       ruleId: options.ruleId || null,
       targetNodeId: targetNode.id,
@@ -234,6 +270,9 @@ export function createSurvivalTaskStarters({
       dropToStorage: options.dropToStorage ?? !isPlayerActor(actor),
       carriedOutputs: null,
       keepOutputs: options.keepOutputs ?? isPlayerActor(actor),
+      carryLimit: actor.inventoryCapacity ?? Number.POSITIVE_INFINITY,
+      deliveryTarget: options.deliveryTarget ?? action.amount,
+      carriedAmount: 0,
       nextTask: options.nextTask || null,
     };
 
@@ -305,9 +344,10 @@ export function createSurvivalTaskStarters({
       return false;
     }
 
-    const villager = availableVillagerForGather(action);
+    const preferredStationId = options.preferredStationId || action.requiresStation || null;
+    const villager = availableVillagerForGather(action, preferredStationId);
     if (!villager) {
-      addLog(t("log.noVillagerForStation", { station: stationName(action.requiresStation || "hand") }));
+      addLog(t("log.noVillagerForStation", { station: stationName(preferredStationId || "hand") }));
       return false;
     }
     if (action.requiresItem) {
@@ -319,6 +359,7 @@ export function createSurvivalTaskStarters({
           source: options.source || "manual",
           ruleId: options.ruleId || null,
           dropToStorage: true,
+          preferredStationId,
         },
       });
       if (!prepared) {
@@ -335,10 +376,22 @@ export function createSurvivalTaskStarters({
     }
 
     const source = options.source || "manual";
+    const shortageAmount = options.ruleId
+      ? Math.max(0, stockRuleTarget(options.ruleId) - expectedStock(action.itemId))
+      : action.amount;
+    const villagerHeldAmount = villager.inventory[action.itemId] || 0;
+    if (shortageAmount > 0 && villagerHeldAmount >= shortageAmount) {
+      return startActorStorageDeliveryTask(villager, action.itemId, shortageAmount);
+    }
+    const villagerCapacity = villager.inventoryCapacity ?? Number.POSITIVE_INFINITY;
+    const capacityRemaining = Math.max(0, villagerCapacity - actorInventoryCount(villager));
+    const deliveryTarget = villagerHeldAmount + Math.min(shortageAmount, capacityRemaining);
     const started = startActorGatherTask(villager, action, targetNode, {
       source,
       ruleId: options.ruleId || null,
       dropToStorage: true,
+      preferredStationId,
+      deliveryTarget: Math.max(1, deliveryTarget),
     });
     if (started) {
       addLog(t("log.gatherStarted", {

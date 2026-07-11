@@ -24,6 +24,7 @@ import {
 import {
   actorCanTakeRequiredItem as canActorTakeRequiredItem,
   actorHasItem,
+  actorInventoryCount,
   assignedStationsSummary,
   inventorySummary,
   isPlayerActor as isPlayerActorCore,
@@ -114,7 +115,7 @@ export function useSurvivalCraft() {
   const log = reactive([]);
   const stockRules = reactive(
     gatherActions.map((action) => ({
-      id: `stock-${action.itemId}`,
+      id: `stock-${action.id}`,
       kind: "gather",
       actionId: action.id,
       itemId: action.itemId,
@@ -124,7 +125,7 @@ export function useSurvivalCraft() {
   );
   const stationAssignments = reactive(
     Object.fromEntries(
-      stations.map((station) => [
+      [...stations, { id: "storage" }].map((station) => [
         station.id,
         {
           villagerIds: [],
@@ -404,6 +405,7 @@ export function useSurvivalCraft() {
     expectedStock,
     buildTaskLabel,
     taskPhaseLabel,
+    actorInventoryCount,
     inventorySummary,
     assignedStationsSummary,
     checkStockRules: requestCheckStockRules,
@@ -439,6 +441,8 @@ export function useSurvivalCraft() {
     actorHasItem,
     isPlayerActor,
     availableItemCount,
+    expectedStock,
+    stockRuleTarget: (ruleId) => stockRules.find((rule) => rule.id === ruleId)?.target || 0,
     findPickupNodeByItem,
     villagerHasItem,
     availableVillagerForGather,
@@ -463,6 +467,7 @@ export function useSurvivalCraft() {
     buildingWorkPoint,
     storageWorkPoint,
     distanceBetween,
+    actorInventoryCount,
     t,
   });
 
@@ -497,6 +502,7 @@ export function useSurvivalCraft() {
     stationCraftEntries,
     isRecipeUnlocked,
     hasActorResources,
+    actorInventoryCount,
   });
 
   const {
@@ -555,8 +561,13 @@ export function useSurvivalCraft() {
     actorWorkPoint,
     spawnDroppedLogs,
     spawnDroppedItems,
+    nodeWorkPoint,
     storageWorkPoint,
     distanceBetween,
+    actorInventoryCount,
+    shouldVillagerContinue,
+    gatherActionById,
+    findGatherTargetNode,
     addItemToStore: addItem,
     removeItemFromStore: removeItem,
     restartVillagerTask,

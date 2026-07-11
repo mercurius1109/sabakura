@@ -64,6 +64,8 @@ export function useGameWindowsState(options) {
   const playerOwnedKinds = computed(() => ownedKindsFromStore(playerActor.inventory));
   const storageTransferEntries = computed(() => actionableEntries(storage, itemDefinitions));
   const selectedVillagerTransferOutEntries = computed(() => actionableEntries(selectedVillager.value?.inventory || null, itemDefinitions));
+  const storageAssignedVillagers = computed(() => assignedVillagerList("storage"));
+  const storageAvailableVillagers = computed(() => unassignedVillagersForStation("storage"));
   const isPlayerAdjacentToSelectedVillager = computed(() => (
     selectedVillager.value ? isPlayerAdjacentToActor(selectedVillager.value) : false
   ));
@@ -270,6 +272,8 @@ export function useGameWindowsState(options) {
     playerOwnedKinds,
     storageTransferEntries,
     selectedVillagerTransferOutEntries,
+    storageAssignedVillagers,
+    storageAvailableVillagers,
     isPlayerAdjacentToSelectedVillager,
     selectedVillagerStations,
     editingStockRule,
@@ -287,6 +291,7 @@ export function useGameWindowsState(options) {
     playerBuildCards,
     pendingBuildingPlacement,
     storageTitle,
+    resolvedInventory,
     selectedVillagerStationsLabel,
     playerCraftIcon,
     playerCraftTooltip,

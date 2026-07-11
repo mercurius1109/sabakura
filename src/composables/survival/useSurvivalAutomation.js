@@ -70,10 +70,11 @@ export function createSurvivalAutomation({
       }
 
       const action = gatherActionById(rule.actionId);
-      if (!action || !isGatherUnlocked(action) || !availableVillagerForGather(action) || !findGatherTargetNode(action)) {
+      const preferredStationId = action?.requiresStation || "storage";
+      if (!action || !isGatherUnlocked(action) || !availableVillagerForGather(action, preferredStationId) || !findGatherTargetNode(action)) {
         return;
       }
-      startGather(action.id, { source: "auto", ruleId: rule.id });
+      startGather(action.id, { source: "auto", ruleId: rule.id, preferredStationId });
     });
 
     autoCraftAssignedStations();

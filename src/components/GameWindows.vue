@@ -151,6 +151,8 @@
           </div>
           <StorageWindow
             :storage-transfer-entries="storageTransferEntries"
+            :assigned-villagers="storageAssignedVillagers"
+            :available-villagers="storageAvailableVillagers"
             :is-player-adjacent-to-storage="isPlayerAdjacentToStorage"
             :registered-stock-rules="registeredStockRules"
             :stock-rule-tooltip="stockRuleTooltip"
@@ -179,6 +181,8 @@
             @close-edit-rule="$emit('close-stock-rule-modal')"
             @update-edit-target="$emit('set-editing-stock-rule-target', $event)"
             @submit-edit-rule="$emit('submit-stock-rule-edit')"
+            @add-villager="forwardAddStorageVillager"
+            @remove-villager="forwardRemoveStorageVillager"
           />
         </div>
       </template>
@@ -260,6 +264,8 @@ const props = defineProps({
   canStartPlayerRecipe: { type: Function, required: true },
   storageTitle: { type: String, required: true },
   storageTransferEntries: { type: Array, required: true },
+  storageAssignedVillagers: { type: Array, required: true },
+  storageAvailableVillagers: { type: Array, required: true },
   isPlayerAdjacentToStorage: { type: Boolean, required: true },
   registeredStockRules: { type: Array, required: true },
   stockRuleTooltip: { type: Function, required: true },
@@ -313,6 +319,8 @@ const emit = defineEmits([
   "close-stock-rule-modal",
   "set-editing-stock-rule-target",
   "submit-stock-rule-edit",
+  "add-storage-villager",
+  "remove-storage-villager",
   "transfer-villager-item-to-player",
   "begin-building-placement",
   "add-villager",
@@ -355,5 +363,13 @@ function forwardUpdateStationCraftEntryTarget(stationId, craftEntryId, target) {
 
 function forwardStartStationCraftEntry(stationId, craftEntryId) {
   emit("start-station-craft-entry", stationId, craftEntryId);
+}
+
+function forwardAddStorageVillager(villagerId) {
+  emit("add-storage-villager", villagerId);
+}
+
+function forwardRemoveStorageVillager(villagerId) {
+  emit("remove-storage-villager", villagerId);
 }
 </script>

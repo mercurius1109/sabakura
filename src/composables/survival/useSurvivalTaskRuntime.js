@@ -22,8 +22,13 @@ export function createSurvivalTaskRuntime({
   actorWorkPoint,
   spawnDroppedLogs,
   spawnDroppedItems,
+  nodeWorkPoint,
   storageWorkPoint,
   distanceBetween,
+  actorInventoryCount,
+  shouldVillagerContinue,
+  gatherActionById,
+  findGatherTargetNode,
   addItemToStore,
   removeItemFromStore,
   restartVillagerTask,
@@ -109,7 +114,8 @@ export function createSurvivalTaskRuntime({
   function completeGatherTask(task, options = {}) {
     if (!options.skipDeposit) {
       depositVillagerOutputs(task);
-      addLog(t("log.gatherDelivered", { item: itemName(task.itemId), amount: task.amount }));
+      const deliveredAmount = Object.values(task.carriedOutputs || {}).reduce((total, amount) => total + amount, 0);
+      addLog(t("log.gatherDelivered", { item: itemName(task.itemId), amount: deliveredAmount }));
     }
 
     if (task.villagerId) {
@@ -286,17 +292,38 @@ export function createSurvivalTaskRuntime({
         villager.inventory[task.itemId] += task.amount;
       }
 
-      task.carriedOutputs = { [task.itemId]: task.amount };
+      task.carriedAmount = (task.carriedAmount || 0) + task.amount;
       if (task.keepOutputs) {
+        task.carriedOutputs = { [task.itemId]: task.amount };
         addLog(t("log.pickedUpItem", { actor: villagerName(task.villagerId), item: itemName(task.itemId) }));
         completeGatherTask(task, { skipDeposit: true });
         return true;
       }
       if (!placedStructures.storage) {
+        task.carriedOutputs = { [task.itemId]: villager?.inventory[task.itemId] || task.amount };
         dropVillagerOutputsToField(task);
         completeGatherTask(task, { skipDeposit: true });
         return true;
       }
+      const villagerCarryLimit = villager?.inventoryCapacity ?? task.carryLimit ?? Number.POSITIVE_INFINITY;
+      const nextAction = gatherActionById(task.actionId);
+      const nextNode = nextAction ? findGatherTargetNode(nextAction) : null;
+      const canContinueSameHaul = Boolean(
+        nextNode
+        && actorInventoryCount(villager) < villagerCarryLimit
+        && task.deliveryTarget
+        && task.carriedAmount < task.deliveryTarget,
+      );
+      if (canContinueSameHaul) {
+        task.phase = "movingToTarget";
+        task.targetNodeId = nextNode.id;
+        task.targetPoint = nodeWorkPoint(nextNode, villager);
+        task.initialTargetDistance = distanceBetween(villager, task.targetPoint);
+        task.workStartedAt = null;
+        return true;
+      }
+      const deliveryAmount = Math.min(task.deliveryTarget || task.carriedAmount || task.amount, villager?.inventory[task.itemId] || 0);
+      task.carriedOutputs = { [task.itemId]: deliveryAmount };
       task.phase = "movingToStorage";
       task.storagePoint = storageWorkPoint(villager);
       task.initialStorageDistance = distanceBetween(villager || currentStorageAnchor(), task.storagePoint);

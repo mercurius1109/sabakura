@@ -16,6 +16,7 @@ export function createActor({
   taskId = null,
   assignedStations = [],
   inventory = null,
+  inventoryCapacity = kind === "player" ? Number.POSITIVE_INFINITY : 10,
 }) {
   return {
     id,
@@ -29,6 +30,7 @@ export function createActor({
     prevY,
     renderX,
     renderY,
+    inventoryCapacity,
     inventory: inventory || reactive(createItemStore()),
   };
 }

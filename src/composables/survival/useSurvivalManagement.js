@@ -27,6 +27,7 @@ export function createSurvivalManagementHelpers({
   expectedStock,
   buildTaskLabel,
   taskPhaseLabel,
+  actorInventoryCount,
   inventorySummary,
   assignedStationsSummary,
   checkStockRules,
@@ -36,6 +37,9 @@ export function createSurvivalManagementHelpers({
   function stationName(stationId) {
     if (stationId === "hand") {
       return t("common.handCraft");
+    }
+    if (stationId === "storage") {
+      return t("ui.storage");
     }
     return stationById(stationId)?.name || t("common.facility");
   }
@@ -128,7 +132,13 @@ export function createSurvivalManagementHelpers({
       }
 
       const action = gatherActionById(rule.actionId);
-      return Boolean(action) && action.requiresStation === stationId;
+      if (!action) {
+        return false;
+      }
+      if (stationId === "storage") {
+        return !action.requiresStation;
+      }
+      return action.requiresStation === stationId;
     });
   }
 
@@ -150,12 +160,13 @@ export function createSurvivalManagementHelpers({
     }) || null;
   }
 
-  function availableVillagerForGather(action = null) {
-    const candidates = action?.requiresStation
-      ? villagers.filter((villager) => assignedVillagerIds(action.requiresStation).includes(villager.id))
+  function availableVillagerForGather(action = null, preferredStationId = null) {
+    const stationId = preferredStationId || action?.requiresStation || null;
+    const candidates = stationId
+      ? villagers.filter((villager) => assignedVillagerIds(stationId).includes(villager.id))
       : villagers;
 
-    if (action?.requiresStation) {
+    if (stationId) {
       return firstAvailableVillager(candidates, action);
     }
 
@@ -211,6 +222,10 @@ export function createSurvivalManagementHelpers({
     return inventorySummary(villager, itemName);
   }
 
+  function villagerInventoryCount(villager) {
+    return actorInventoryCount(villager);
+  }
+
   function villagerAssignedStationsSummary(villager) {
     return assignedStationsSummary(villager, stationName);
   }
@@ -225,18 +240,50 @@ export function createSurvivalManagementHelpers({
     return `${taskLabel(task)} / ${taskPhaseLabel(task)} / ${stationText} / ${inventoryText}`;
   }
 
+  function detachVillagerFromAssignedStations(villager) {
+    if (!villager) {
+      return [];
+    }
+
+    const detachedStationIds = [...villager.assignedStations];
+    detachedStationIds.forEach((assignedStationId) => {
+      const assignedStation = stationAssignment(assignedStationId);
+      if (!assignedStation) {
+        return;
+      }
+
+      const stationIndex = assignedStation.villagerIds.indexOf(villager.id);
+      if (stationIndex >= 0) {
+        assignedStation.villagerIds.splice(stationIndex, 1);
+      }
+    });
+    villager.assignedStations.splice(0);
+
+    return detachedStationIds;
+  }
+
   function addVillagerToStation(villagerId, stationId) {
     const station = stationAssignment(stationId);
     const villager = villagers.find((entry) => entry.id === villagerId);
     if (!station || !villager || !isStationAvailable(stationId)) {
       return;
     }
+
+    if (villager.assignedStations[0] === stationId && station.villagerIds.includes(villagerId)) {
+      return;
+    }
+
+    const detachedStationIds = detachVillagerFromAssignedStations(villager);
+    detachedStationIds
+      .filter((assignedStationId) => assignedStationId !== stationId)
+      .forEach((assignedStationId) => {
+        addLog(t("log.unassignedStation", { actor: villager.name, station: stationName(assignedStationId) }));
+      });
+
     if (!station.villagerIds.includes(villagerId)) {
       station.villagerIds.push(villagerId);
     }
-    if (!villager.assignedStations.includes(stationId)) {
-      villager.assignedStations.push(stationId);
-    }
+    villager.assignedStations.push(stationId);
     addLog(t("log.assignedStation", { actor: villager.name, station: stationName(stationId) }));
     checkStockRules();
   }
@@ -357,13 +404,14 @@ export function createSurvivalManagementHelpers({
     }
 
     const action = gatherActionById(rule.actionId);
+    const preferredStationId = action?.requiresStation || "storage";
     if (!action || !isGatherUnlocked(action)) {
       if (action?.requiresStation && !isStationAvailable(action.requiresStation)) {
         return t("status.stationUnavailable");
       }
       return action?.requiresItem ? t("status.actionUnavailable") : t("taskPhase.idle");
     }
-    if (!availableVillagerForGather(action)) {
+    if (!availableVillagerForGather(action, preferredStationId)) {
       return t("status.noWorkers");
     }
     if (activeAutoTaskForRule(rule)) {
@@ -471,6 +519,7 @@ export function createSurvivalManagementHelpers({
     updateStationCraftEntryTarget,
     villagerAssignedStationsSummary,
     villagerCanTakeFromStorage,
+    villagerInventoryCount,
     villagerHasItem,
     villagerInventorySummary,
     villagerName,

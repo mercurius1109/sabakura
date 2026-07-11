@@ -68,12 +68,14 @@
           :can-start-player-recipe="canStartPlayerRecipe"
           :storage-title="storageTitle"
           :storage-transfer-entries="storageTransferEntries"
+          :storage-assigned-villagers="storageAssignedVillagers"
+          :storage-available-villagers="storageAvailableVillagers"
           :is-player-adjacent-to-storage="isPlayerAdjacentToStorage"
           :registered-stock-rules="registeredStockRules"
           :stock-rule-tooltip="stockRuleTooltip"
           :tutorial-highlight-class="tutorialHighlightClass"
           :item-definitions="itemDefinitions"
-          :inventory="inventory"
+          :inventory="resolvedInventory"
           :show-add-stock-rule-modal="showAddStockRuleModal"
           :available-stock-rules="availableStockRules"
           :draft-stock-rule-id="draftStockRuleId"
@@ -118,6 +120,8 @@
           @close-stock-rule-modal="closeStockRuleModal"
           @set-editing-stock-rule-target="editingStockRuleTarget = $event"
           @submit-stock-rule-edit="submitStockRuleEdit"
+          @add-storage-villager="addVillagerToStation($event, 'storage')"
+          @remove-storage-villager="removeVillagerFromStation($event, 'storage')"
           @transfer-villager-item-to-player="transferVillagerItemToPlayer"
           @begin-building-placement="beginBuildingPlacement"
           @add-villager="addVillager"
@@ -273,6 +277,8 @@ const {
   playerItemCards,
   playerOwnedKinds,
   storageTransferEntries,
+  storageAssignedVillagers,
+  storageAvailableVillagers,
   selectedVillagerTransferOutEntries,
   isPlayerAdjacentToSelectedVillager,
   selectedVillagerStations,
@@ -291,6 +297,7 @@ const {
   playerBuildCards,
   pendingBuildingPlacement,
   storageTitle,
+  resolvedInventory,
   selectedVillagerStationsLabel,
   playerCraftIcon,
   playerCraftTooltip,

@@ -4,6 +4,13 @@ export function actorHasItem(actor, itemId) {
   return Boolean(actor && (actor.inventory[itemId] || 0) > 0);
 }
 
+export function actorInventoryCount(actor) {
+  if (!actor?.inventory) {
+    return 0;
+  }
+  return Object.values(actor.inventory).reduce((total, amount) => total + (amount || 0), 0);
+}
+
 export function actorCanTakeRequiredItem(actor, itemId, getAvailableItemCount) {
   return actorHasItem(actor, itemId) || getAvailableItemCount(itemId) > 0;
 }

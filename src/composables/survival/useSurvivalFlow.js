@@ -15,6 +15,7 @@ export function createSurvivalFlow({
   stationCraftEntries,
   isRecipeUnlocked,
   hasActorResources,
+  actorInventoryCount,
 }) {
   function startPlannedTask(nextTask) {
     if (!nextTask) {
@@ -68,8 +69,13 @@ export function createSurvivalFlow({
     }
 
     if (task.kind === "gather") {
+      const actor = actorById(task.villagerId);
       const rule = stockRules.find((entry) => entry.actionId === task.actionId);
-      return Boolean(rule) && rule.enabled && expectedStock(rule.itemId) < rule.target;
+      const capacity = actor?.inventoryCapacity ?? Number.POSITIVE_INFINITY;
+      return Boolean(rule)
+        && rule.enabled
+        && expectedStock(rule.itemId) < rule.target
+        && actorInventoryCount(actor) < capacity;
     }
 
     if (task.source !== "station-auto" || !task.craftEntryId) {
@@ -98,7 +104,11 @@ export function createSurvivalFlow({
 
     if (task.kind === "gather") {
       const rule = stockRules.find((entry) => entry.actionId === task.actionId);
-      startGather(task.actionId, { source: task.source, ruleId: rule?.id || null });
+      startGather(task.actionId, {
+        source: task.source,
+        ruleId: rule?.id || null,
+        preferredStationId: task.station === "field" ? null : task.station,
+      });
       return;
     }
 

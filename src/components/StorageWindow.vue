@@ -11,6 +11,48 @@
 
     <div class="mt-4 rounded-2xl border border-line bg-white/80 p-4">
       <div class="flex items-center justify-between gap-2">
+        <div class="text-sm font-bold text-ink">{{ t("ui.assignVillager") }}</div>
+        <button
+          type="button"
+          class="rounded-md border border-line bg-white px-3 py-1.5 text-sm font-bold text-moss transition hover:bg-moss hover:text-white"
+          @click="showVillagerModal = true"
+        >
+          {{ t("ui.add") }}
+        </button>
+      </div>
+
+      <div v-if="assignedVillagers.length === 0" class="mt-3 text-sm text-muted">
+        {{ t("ui.noAssignedStations") }}
+      </div>
+
+      <div v-else class="mt-3 grid grid-cols-[repeat(auto-fill,minmax(88px,88px))] gap-3">
+        <button
+          v-for="villager in assignedVillagers"
+          :key="villager.id"
+          type="button"
+          class="group relative flex h-[88px] w-[88px] flex-col justify-between rounded-xl border border-line bg-[#fffdf8] px-2 py-2 text-left transition hover:-translate-y-0.5"
+        >
+          <span
+            role="button"
+            tabindex="0"
+            class="absolute right-1 top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-[#fff1e8] text-[#b4491e] opacity-0 shadow-sm ring-1 ring-[#f2b899] transition group-hover:opacity-100"
+            @click.stop="$emit('remove-villager', villager.id)"
+            @keydown.enter.stop.prevent="$emit('remove-villager', villager.id)"
+            @keydown.space.stop.prevent="$emit('remove-villager', villager.id)"
+          >
+            <svg viewBox="0 0 16 16" class="h-3.5 w-3.5 fill-current" aria-hidden="true">
+              <path d="M3.22 3.22a.75.75 0 0 1 1.06 0L8 6.94l3.72-3.72a.75.75 0 1 1 1.06 1.06L9.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06L8 9.06l-3.72 3.72a.75.75 0 1 1-1.06-1.06L6.94 8 3.22 4.28a.75.75 0 0 1 0-1.06Z" />
+            </svg>
+          </span>
+          <div class="pr-5 text-xs font-bold leading-4 text-ink">{{ villager.name }}</div>
+          <div class="flex items-center justify-center text-3xl leading-none text-ink/80" aria-hidden="true">{{ villagerIcon }}</div>
+          <div class="self-end text-[10px] font-bold leading-4 text-muted">{{ t("ui.storage") }}</div>
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-4 rounded-2xl border border-line bg-white/80 p-4">
+      <div class="flex items-center justify-between gap-2">
         <div class="text-sm font-bold text-ink">{{ t("ui.storageTargets") }}</div>
         <button
           type="button"
@@ -150,15 +192,45 @@
         </div>
       </div>
     </div>
+
+    <div v-if="showVillagerModal" class="absolute inset-0 z-30 flex items-center justify-center bg-black/35 p-4">
+      <div class="w-full max-w-md rounded-xl border border-line bg-white p-4 shadow-panel">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="text-lg font-bold">{{ t("ui.assignVillager") }}</h3>
+          <button type="button" class="text-sm font-bold text-muted" @click="showVillagerModal = false">{{ t("ui.close") }}</button>
+        </div>
+
+        <div v-if="availableVillagers.length === 0" class="mt-4 text-sm text-muted">
+          {{ t("ui.noVillagersAvailable") }}
+        </div>
+
+        <div v-else class="mt-4 grid grid-cols-[repeat(auto-fill,minmax(88px,88px))] gap-3">
+          <button
+            v-for="villager in availableVillagers"
+            :key="villager.id"
+            type="button"
+            class="flex h-[88px] w-[88px] flex-col justify-between rounded-xl border border-line bg-[#fffdf8] px-2 py-2 text-left transition hover:-translate-y-0.5"
+            @click="handleAddVillager(villager.id)"
+          >
+            <div class="text-xs font-bold leading-4 text-ink">{{ villager.name }}</div>
+            <div class="flex items-center justify-center text-3xl leading-none text-ink/80" aria-hidden="true">{{ villagerIcon }}</div>
+            <div class="self-end text-[10px] font-bold leading-4 text-moss">{{ t("ui.storage") }}</div>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
+import { ref } from "vue";
 import InventoryActionGrid from "./InventoryActionGrid.vue";
 import { useI18n } from "../i18n/index.js";
 
 const props = defineProps({
   storageTransferEntries: { type: Array, required: true },
+  assignedVillagers: { type: Array, required: true },
+  availableVillagers: { type: Array, required: true },
   isPlayerAdjacentToStorage: { type: Boolean, required: true },
   registeredStockRules: { type: Array, required: true },
   stockRuleTooltip: { type: Function, required: true },
@@ -178,7 +250,7 @@ const props = defineProps({
   isTutorialTarget: { type: Function, required: true },
 });
 
-defineEmits([
+const emit = defineEmits([
   "transfer-to-player",
   "open-add-rule",
   "open-edit-rule",
@@ -190,7 +262,16 @@ defineEmits([
   "close-edit-rule",
   "update-edit-target",
   "submit-edit-rule",
+  "add-villager",
+  "remove-villager",
 ]);
 
 const { t } = useI18n();
+const showVillagerModal = ref(false);
+const villagerIcon = "\uD83E\uDDD1";
+
+function handleAddVillager(villagerId) {
+  showVillagerModal.value = false;
+  emit("add-villager", villagerId);
+}
 </script>
