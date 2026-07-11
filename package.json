@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@9",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "dev:bg": "powershell -ExecutionPolicy Bypass -File ./scripts/dev-server.ps1 start",
