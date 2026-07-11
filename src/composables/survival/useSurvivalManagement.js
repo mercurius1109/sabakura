@@ -217,7 +217,7 @@ export function createSurvivalManagementHelpers({
 
   function villagerNote(villager) {
     const task = findTaskById(villager.taskId);
-    const inventoryText = `持ち物: ${villagerInventorySummary(villager)}`;
+    const inventoryText = t("ui.inventorySummary", { items: villagerInventorySummary(villager) });
     const stationText = `${t("ui.assignedStations")}: ${villagerAssignedStationsSummary(villager)}`;
     if (!task) {
       return `${stationText} / ${t("taskPhase.idle")} / ${inventoryText}`;

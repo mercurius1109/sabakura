@@ -88,7 +88,7 @@ export function useSurvivalCraft() {
   const playerActor = reactive(createActor({
     id: "player",
     kind: "player",
-    name: "プレイヤー",
+    name: t("ui.playerName"),
     x: 50,
     y: 78,
   }));
@@ -97,6 +97,7 @@ export function useSurvivalCraft() {
     lumberjackHut: false,
     storage: false,
   });
+  const structurePositions = reactive({});
   const constructionSites = reactive([]);
   const fieldNodes = reactive(createInitialFieldNodes());
   const villagers = reactive([
@@ -163,7 +164,16 @@ export function useSurvivalCraft() {
   }
 
   function buildingById(buildingId) {
-    return buildingDefinitions.find((building) => building.id === buildingId);
+    const building = buildingDefinitions.find((entry) => entry.id === buildingId);
+    if (!building) {
+      return null;
+    }
+
+    const positionedSite = structurePositions[buildingId]
+      || constructionSites.find((site) => site.structureId === buildingId);
+    return positionedSite
+      ? { ...building, x: positionedSite.x, y: positionedSite.y }
+      : building;
   }
 
   function itemName(itemId) {
@@ -283,6 +293,7 @@ export function useSurvivalCraft() {
   } = createConstructionSystem({
     playerActor,
     placedStructures,
+    structurePositions,
     storage,
     constructionSites,
     fieldNodes,
@@ -294,6 +305,34 @@ export function useSurvivalCraft() {
     checkConstructionSites: requestCheckConstructionSites,
     t,
   });
+
+  function cancelConstructionSite(structureId) {
+    const siteIndex = constructionSites.findIndex((site) => site.structureId === structureId);
+    if (siteIndex < 0) {
+      return false;
+    }
+
+    const site = constructionSites[siteIndex];
+    const building = buildingById(structureId);
+
+    for (let index = constructionQueue.length - 1; index >= 0; index -= 1) {
+      const task = constructionQueue[index];
+      if (task.structureId !== structureId) {
+        continue;
+      }
+      const actor = task.villagerId ? actorById(task.villagerId) : null;
+      if (actor) {
+        actor.taskId = null;
+      }
+      constructionQueue.splice(index, 1);
+    }
+
+    constructionSites.splice(siteIndex, 1);
+    delete structurePositions[structureId];
+    spawnDroppedItems(site.costs || building?.costs || {}, { x: site.x, y: site.y });
+    addLog(t("log.buildingCancelled", { building: building?.name || structureId }));
+    return true;
+  }
 
   const {
     activeAutoTaskForRule,
@@ -533,7 +572,11 @@ export function useSurvivalCraft() {
     if (!placedStructures.storage) {
       return false;
     }
-    return distanceBetween(playerActor, storagePoint) <= 6.5;
+    const storageBuilding = buildingById("storage");
+    const storageAnchor = storageBuilding
+      ? { x: storageBuilding.x, y: storageBuilding.y }
+      : storagePoint;
+    return distanceBetween(playerActor, storageAnchor) <= 6.5;
   });
 
   function isPlayerAdjacentToActor(actor) {
@@ -778,6 +821,64 @@ export function useSurvivalCraft() {
     log.splice(0);
   }
 
+  function queueForTask(task) {
+    if (!task) {
+      return null;
+    }
+    if (craftQueue.includes(task)) {
+      return craftQueue;
+    }
+    if (gatherQueue.includes(task)) {
+      return gatherQueue;
+    }
+    if (constructionQueue.includes(task)) {
+      return constructionQueue;
+    }
+    return null;
+  }
+
+  function refundTaskCosts(task, actor) {
+    if (!task || !actor || task.kind !== "craft" || task.carriedOutputs) {
+      return;
+    }
+
+    const recipe = recipeById(task.recipeId);
+    if (!recipe?.costs) {
+      return;
+    }
+
+    Object.entries(recipe.costs).forEach(([itemId, amount]) => {
+      addItem(actor.inventory, itemId, amount);
+    });
+  }
+
+  function cancelTask(taskId) {
+    const task = findTaskById(taskId);
+    if (!task) {
+      return false;
+    }
+
+    const actor = task.villagerId ? actorById(task.villagerId) : null;
+    if (actor) {
+      actor.taskId = null;
+    }
+
+    refundTaskCosts(task, actor);
+
+    const queue = queueForTask(task);
+    if (!queue) {
+      return false;
+    }
+
+    const index = queue.findIndex((entry) => entry.id === task.id);
+    if (index >= 0) {
+      queue.splice(index, 1);
+    }
+
+    addLog(t("log.taskCancelled", { task: taskLabel(task) }));
+    return true;
+  }
+
   let animationFrameId = null;
   let lastFrameAt = 0;
   let accumulatedTickMs = 0;
@@ -835,6 +936,7 @@ export function useSurvivalCraft() {
     visibleFieldNodes,
     pickupFieldNode,
     placeStructure,
+    cancelConstructionSite,
     canPlaceStructure,
     isStructurePlaced,
     buildingStatus,
@@ -897,6 +999,7 @@ export function useSurvivalCraft() {
     moveItemFromActorToActor,
     moveItemFromOtherActorToPlayer,
     dropPlayerItem,
+    cancelTask,
     clearLog,
     formatList,
     stockRuleStatus,

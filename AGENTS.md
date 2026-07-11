@@ -66,3 +66,19 @@ sessions when possible.
 
 The background dev server writes to `dev-server.log` and tracks its PID in
 `.vite-dev.pid`.
+
+## Text Encoding Policy
+
+All source files, docs, JSON, Vue SFCs, and data files in this project must be
+read and written as UTF-8 without BOM.
+
+- Never open or save project files as Shift_JIS, CP932, EUC-JP, UTF-16, or any
+  other non-UTF-8 encoding.
+- Before editing Japanese text, prefer tools and commands that explicitly
+  preserve UTF-8.
+- If a file appears mojibake-corrupted, stop and fix the encoding issue instead
+  of continuing to edit around the corrupted text.
+- When generating or rewriting files from automation, ensure the output is
+  UTF-8 and does not rely on platform-default encodings.
+- On Windows PowerShell, use UTF-8 aware commands and avoid workflows that may
+  silently re-save files in a legacy code page.

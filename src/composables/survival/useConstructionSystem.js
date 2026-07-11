@@ -3,6 +3,7 @@ import { removeItem } from "../../game/core/containers.js";
 export function createConstructionSystem({
   playerActor,
   placedStructures,
+  structurePositions,
   storage,
   constructionSites,
   fieldNodes,
@@ -107,26 +108,36 @@ export function createConstructionSystem({
     return t("status.actionPending");
   }
 
-  function placeStructure(structureId) {
+  function placeStructure(structureId, position = null) {
     const building = buildingById(structureId);
     if (!building || !canPlaceStructure(structureId)) {
       return false;
     }
+    const x = clampPlacementPosition(position?.x, building.x);
+    const y = clampPlacementPosition(position?.y, building.y);
     if (!consumeActorResources(playerActor, building)) {
       return false;
     }
+    structurePositions[structureId] = { x, y };
     constructionSites.push({
       id: makeId("construction-site"),
       structureId,
       name: building.name,
       icon: building.icon,
-      x: building.x,
-      y: building.y,
+      x,
+      y,
       duration: building.duration,
       requiresItem: "hammer",
+      costs: { ...building.costs },
     });
     addLog(t("log.placedBuilding", { building: building.name }));
     return true;
+  }
+
+  function clampPlacementPosition(value, fallback) {
+    const numeric = Number(value);
+    const resolved = Number.isFinite(numeric) ? numeric : fallback;
+    return Math.max(6, Math.min(94, resolved));
   }
 
   return {

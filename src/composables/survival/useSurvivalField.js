@@ -125,7 +125,7 @@ export function createSurvivalFieldHelpers({
     if (node.type === "tree") {
       return {
         id: `manual-${node.id}`,
-        label: node.actionLabel || "木をこる",
+        label: node.actionLabel || t("action.gatherLog"),
         itemId: node.itemId || "log",
         duration: 2400,
         amount: 2,
@@ -137,7 +137,7 @@ export function createSurvivalFieldHelpers({
         || gatherActionById(`pickup-${node.itemId}`)
         || {
           id: `pickup-${node.itemId}`,
-          label: `${itemName(node.itemId)}を拾う`,
+          label: t("ui.pickupItemAction", { item: itemName(node.itemId) }),
           itemId: node.itemId,
           duration: 1200,
           amount: 1,

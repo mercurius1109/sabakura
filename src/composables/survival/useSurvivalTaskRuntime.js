@@ -34,6 +34,13 @@ export function createSurvivalTaskRuntime({
   buildingById,
   t,
 }) {
+  function currentStorageAnchor() {
+    const storageBuilding = buildingById("storage");
+    return storageBuilding
+      ? { x: storageBuilding.x, y: storageBuilding.y }
+      : storagePoint;
+  }
+
   function beginTaskWork(task) {
     task.phase = "working";
     task.workStartedAt = now.value;
@@ -217,7 +224,7 @@ export function createSurvivalTaskRuntime({
     }
 
     if (task.targetKind === "storage") {
-      return distanceBetween(actor, storagePoint) <= 6.5;
+      return distanceBetween(actor, currentStorageAnchor()) <= 6.5;
     }
 
     return true;
@@ -292,7 +299,7 @@ export function createSurvivalTaskRuntime({
       }
       task.phase = "movingToStorage";
       task.storagePoint = storageWorkPoint(villager);
-      task.initialStorageDistance = distanceBetween(villager || storagePoint, task.storagePoint);
+      task.initialStorageDistance = distanceBetween(villager || currentStorageAnchor(), task.storagePoint);
       addLog(t("log.moveToStorage", { actor: villagerName(task.villagerId), item: itemName(task.itemId) }));
       return true;
     }
@@ -316,7 +323,7 @@ export function createSurvivalTaskRuntime({
       }
       task.phase = "movingToStorage";
       task.storagePoint = storageWorkPoint(villager);
-      task.initialStorageDistance = distanceBetween(villager || storagePoint, task.storagePoint);
+      task.initialStorageDistance = distanceBetween(villager || currentStorageAnchor(), task.storagePoint);
       addLog(t("log.moveCraftToStorage", {
         actor: villagerName(task.villagerId),
         item: recipeById(task.recipeId)?.name || t("common.craft"),

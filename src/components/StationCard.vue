@@ -120,7 +120,18 @@
       <div v-for="task in tasks" :key="task.id" class="mt-3 grid gap-1.5">
         <div class="flex items-center justify-between gap-2 text-sm font-bold">
           <span>{{ taskLabel(task) }}</span>
-          <span class="text-xs font-semibold text-muted">{{ villagerName(task.villagerId) }}</span>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold text-muted">{{ villagerName(task.villagerId) }}</span>
+            <button
+              type="button"
+              class="flex h-5 w-5 items-center justify-center rounded-full bg-[#fff1e8] text-[#b4491e] shadow-sm ring-1 ring-[#f2b899] transition hover:bg-[#ffe3d3]"
+              @click="$emit('cancel-task', task.id)"
+            >
+              <svg viewBox="0 0 16 16" class="h-3.5 w-3.5 fill-current" aria-hidden="true">
+                <path d="M3.22 3.22a.75.75 0 0 1 1.06 0L8 6.94l3.72-3.72a.75.75 0 1 1 1.06 1.06L9.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06L8 9.06l-3.72 3.72a.75.75 0 1 1-1.06-1.06L6.94 8 3.22 4.28a.75.75 0 0 1 0-1.06Z" />
+              </svg>
+            </button>
+          </div>
         </div>
         <div class="flex justify-between text-xs text-muted">
           <span>{{ taskProgress(task) }}%</span>
@@ -288,6 +299,7 @@ const emit = defineEmits([
   "remove-craft-entry",
   "update-craft-entry-target",
   "start-craft-entry",
+  "cancel-task",
 ]);
 
 const showCraftModal = ref(false);
