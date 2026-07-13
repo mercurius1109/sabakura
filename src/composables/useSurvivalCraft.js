@@ -8,19 +8,26 @@ import {
   defaultTargets,
   droppedLogOffsets,
   fieldResourceConfigs as rawFieldResourceConfigs,
-  fieldTreeNodes as rawFieldTreeNodes,
+  fieldTreeConfigs as rawFieldTreeConfigs,
   gatherActions as rawGatherActions,
   genericDropOffsets,
   playerDropPoint,
   storagePoint,
   villagerNamePool,
 } from "../game/data/survivalConfig.js";
-import { createActor, defaultActorMoveSpeedPerSecond } from "../game/core/actors.js";
+import { createActor } from "../game/core/actors.js";
 import { addItem, createContainer, createItemStore, removeItem, transferItem } from "../game/core/containers.js";
 import {
   createInitialFieldNodes as createCoreInitialFieldNodes,
   randomFieldPosition as createRandomFieldPosition,
 } from "../game/core/field.js";
+import {
+  clampWorldPosition,
+  percentOffsetToWorld,
+  percentPointToWorld,
+  WORLD_HEIGHT,
+  WORLD_WIDTH,
+} from "../game/core/world.js";
 import {
   actorCanTakeRequiredItem as canActorTakeRequiredItem,
   actorHasItem,
@@ -41,7 +48,8 @@ import { createSurvivalDerivedState } from "./survival/useSurvivalDerivedState.j
 import { createSurvivalFlow } from "./survival/useSurvivalFlow.js";
 import { t } from "../i18n/index.js";
 
-const villagerMoveSpeedPerSecond = defaultActorMoveSpeedPerSecond;
+const playerMoveSpeedPerSecond = 600;
+const villagerMoveSpeedPerSecond = 80;
 const tickIntervalMs = 250;
 const defaultGameSpeed = 1;
 
@@ -59,17 +67,25 @@ export function useSurvivalCraft() {
     description: t(station.descriptionKey),
   }));
   const gatherActions = rawGatherActions.map((action) => ({ ...action, label: t(action.labelKey) }));
-  const buildingDefinitions = rawBuildingDefinitions.map((building) => ({ ...building, name: t(building.nameKey) }));
+  const buildingDefinitions = rawBuildingDefinitions.map((building) => ({
+    ...building,
+    ...percentPointToWorld(building),
+    name: t(building.nameKey),
+  }));
   const fieldResourceConfigs = rawFieldResourceConfigs.map((config) => ({
     ...config,
     title: t(config.titleKey),
     actionLabel: t(config.actionLabelKey),
   }));
-  const fieldTreeNodes = rawFieldTreeNodes.map((node) => ({
-    ...node,
-    title: t(node.titleKey),
-    actionLabel: t(node.actionLabelKey),
+  const fieldTreeNodes = rawFieldTreeConfigs.map((config) => ({
+    ...config,
+    title: t(config.titleKey),
+    actionLabel: t(config.actionLabelKey),
   }));
+  const storagePointWorld = percentPointToWorld(storagePoint);
+  const playerDropPointWorld = percentPointToWorld(playerDropPoint);
+  const droppedLogOffsetsWorld = droppedLogOffsets.map(percentOffsetToWorld);
+  const genericDropOffsetsWorld = genericDropOffsets.map(percentOffsetToWorld);
 
   function createInitialFieldNodes() {
     return createCoreInitialFieldNodes(fieldResourceConfigs, fieldTreeNodes);
@@ -90,8 +106,7 @@ export function useSurvivalCraft() {
     id: "player",
     kind: "player",
     name: t("ui.playerName"),
-    x: 50,
-    y: 78,
+    ...percentPointToWorld({ x: 50, y: 78 }),
   }));
   const placedStructures = reactive({
     workbench: false,
@@ -105,8 +120,7 @@ export function useSurvivalCraft() {
     createActor({
       id: "villager-haru",
       name: villagerNamePool[0],
-      x: 24,
-      y: 18,
+      ...percentPointToWorld({ x: 24, y: 18 }),
     }),
   ]);
   const craftQueue = reactive([]);
@@ -217,6 +231,7 @@ export function useSurvivalCraft() {
 
   const {
     actorWorkPoint,
+    actorInteractionDistance,
     buildingWorkPoint,
     distanceBetween,
     fieldNodeById,
@@ -224,20 +239,22 @@ export function useSurvivalCraft() {
     findGatherTargetNode,
     gatherActionForNode,
     isFieldNodeVisible,
-    moveVillagerTowards,
+    moveActorForTask,
     nodeWorkPoint,
     spawnDroppedItems,
     spawnDroppedLogs,
+    storageInteractionDistance,
     storageWorkPoint,
     visibleFieldNodes,
   } = createSurvivalFieldHelpers({
     fieldNodes,
     now,
+    playerMoveSpeedPerSecond,
     villagerMoveSpeedPerSecond,
-    droppedLogOffsets,
-    genericDropOffsets,
-    playerDropPoint,
-    storagePoint,
+    droppedLogOffsets: droppedLogOffsetsWorld,
+    genericDropOffsets: genericDropOffsetsWorld,
+    playerDropPoint: playerDropPointWorld,
+    storagePoint: storagePointWorld,
     makeId,
     itemName,
     gatherActionById,
@@ -561,7 +578,7 @@ export function useSurvivalCraft() {
     playerActor,
     placedStructures,
     storageContainer,
-    storagePoint,
+    storagePoint: storagePointWorld,
     craftQueue,
     gatherQueue,
     constructionQueue,
@@ -591,8 +608,10 @@ export function useSurvivalCraft() {
     respawnFieldNodes,
     checkStockRules,
     checkConstructionSites,
-    moveVillagerTowards,
+    moveActorForTask,
+    actorInteractionDistance,
     buildingById,
+    storageInteractionDistance,
     t,
   });
 
@@ -603,15 +622,15 @@ export function useSurvivalCraft() {
     const storageBuilding = buildingById("storage");
     const storageAnchor = storageBuilding
       ? { x: storageBuilding.x, y: storageBuilding.y }
-      : storagePoint;
-    return distanceBetween(playerActor, storageAnchor) <= 6.5;
+      : storagePointWorld;
+    return distanceBetween(playerActor, storageAnchor) <= storageInteractionDistance;
   });
 
   function isPlayerAdjacentToActor(actor) {
     if (!actor || actor.id === playerActor.id) {
       return false;
     }
-    return distanceBetween(playerActor, actor) <= 5.5;
+    return distanceBetween(playerActor, actor) <= actorInteractionDistance;
   }
 
   function setGameSpeed(nextSpeed) {
@@ -687,14 +706,14 @@ export function useSurvivalCraft() {
       return false;
     }
 
-    const targetPoint = {
-      x: Math.max(6, Math.min(94, Number(position.x))),
-      y: Math.max(6, Math.min(94, Number(position.y))),
-    };
+    const targetPoint = clampWorldPosition({
+      x: Number(position.x),
+      y: Number(position.y),
+    });
     if (!Number.isFinite(targetPoint.x) || !Number.isFinite(targetPoint.y)) {
       return false;
     }
-    if (distanceBetween(playerActor, targetPoint) <= 0.5) {
+    if (distanceBetween(playerActor, targetPoint) <= 8) {
       return true;
     }
 
@@ -1083,6 +1102,8 @@ export function useSurvivalCraft() {
     clearLog,
     formatList,
     stockRuleStatus,
+    worldWidth: WORLD_WIDTH,
+    worldHeight: WORLD_HEIGHT,
   };
 }
 

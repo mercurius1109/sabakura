@@ -81,7 +81,7 @@ function craftRecipeStep(recipeId) {
       textParams: { itemKey: `item.${outputItemId}` },
       highlightTargets: recipe?.station === "hand"
         ? [
-          { kind: "field-player", id: "player" },
+          { kind: "menu", id: "craft" },
           { kind: "player-recipe", id: recipeId },
         ]
         : [
@@ -120,7 +120,7 @@ function completeStructureStep(buildingId) {
     highlightTargets: [
       { kind: "field-structure", id: buildingId },
       { kind: "field-construction", id: buildingId },
-      { kind: "field-player", id: "player" },
+      { kind: "menu", id: "inventory" },
     ],
     isCompleted: () => isStructureCompleted(buildingId),
     getRequirements: () => [],

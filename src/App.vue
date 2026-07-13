@@ -9,6 +9,11 @@
           :construction-sites="constructionSitesForField"
           :placed-structure-nodes="placedStructureNodes"
           :item-definitions="itemDefinitions"
+          :current-player-task="currentPlayerTask"
+          :villager-task-text="villagerTaskText"
+          :task-label="taskLabel"
+          :world-width="worldWidth"
+          :world-height="worldHeight"
           :pending-placement="pendingBuildingPlacement"
           :tutorial-targets="currentTutorialTargets"
           @field-click="handleFieldClick"
@@ -22,7 +27,9 @@
         />
 
         <FieldHud
+          :highlight-inventory="hasTutorialTarget('menu', 'inventory')"
           :highlight-village="hasTutorialTarget('menu', 'village')"
+          :highlight-craft="hasTutorialTarget('menu', 'craft')"
           :highlight-build="hasTutorialTarget('menu', 'build')"
           :tutorial-highlight-class="tutorialHighlightClass"
           :game-speed-options="gameSpeedOptions"
@@ -35,7 +42,15 @@
           :pending-building-placement="pendingBuildingPlacement"
           :is-log-window-visible="isLogWindowVisible"
           :log="log"
+          :minimap-construction-sites="constructionSitesForField"
+          :minimap-player="playerActor"
+          :minimap-structures="placedStructureNodes"
+          :minimap-villagers="villagers"
+          :world-width="worldWidth"
+          :world-height="worldHeight"
+          @open-inventory="openPlayerWindow"
           @open-village="openVillageWindow"
+          @open-craft="openCraftWindow"
           @open-build="openBuildWindow"
           @toggle-log="toggleLogWindow"
           @set-speed="setGameSpeed"
@@ -227,6 +242,8 @@ const {
   formatList,
   stockRuleStatus,
   stations,
+  worldWidth,
+  worldHeight,
 } = useSurvivalCraft();
 
 const {
@@ -362,6 +379,7 @@ const {
   removeStockRule,
   closeWindow,
   openPlayerWindow,
+  openCraftWindow,
   openWorkbenchWindow,
   openLumberjackHutWindow,
   openStorageCompareWindow,
@@ -400,6 +418,18 @@ const {
   placeStructure,
   pickupFieldNode,
 });
+
+function taskForActor(actorId) {
+  return gatherQueue.find((task) => task.villagerId === actorId)
+    || craftQueue.find((task) => task.villagerId === actorId)
+    || constructionQueue.find((task) => task.villagerId === actorId)
+    || null;
+}
+
+function villagerTaskText(villagerId) {
+  const task = taskForActor(villagerId);
+  return task ? taskLabel(task) : "";
+}
 </script>
 
 

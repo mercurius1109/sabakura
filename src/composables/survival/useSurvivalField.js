@@ -6,10 +6,23 @@ import {
   spawnDroppedLogs as createDroppedLogs,
   visibleFieldNodes as collectVisibleFieldNodes,
 } from "../../game/core/field.js";
+import {
+  clampWorldPosition,
+} from "../../game/core/world.js";
+
+const DEFAULT_ADJACENT_OFFSET_X = 56;
+const DEFAULT_ADJACENT_OFFSET_Y = 56;
+const RESOURCE_ADJACENT_OFFSET_X = 44;
+const RESOURCE_ADJACENT_OFFSET_Y = 44;
+const TREE_ADJACENT_OFFSET_X = 60;
+const TREE_ADJACENT_OFFSET_Y = 48;
+const DEFAULT_INTERACTION_DISTANCE = Math.ceil(Math.hypot(DEFAULT_ADJACENT_OFFSET_X, DEFAULT_ADJACENT_OFFSET_Y));
+const RESOURCE_INTERACTION_DISTANCE = Math.ceil(Math.hypot(RESOURCE_ADJACENT_OFFSET_X, RESOURCE_ADJACENT_OFFSET_Y));
 
 export function createSurvivalFieldHelpers({
   fieldNodes,
   now,
+  playerMoveSpeedPerSecond,
   villagerMoveSpeedPerSecond,
   droppedLogOffsets,
   genericDropOffsets,
@@ -36,18 +49,18 @@ export function createSurvivalFieldHelpers({
     return collectVisibleFieldNodes(fieldNodes, now.value);
   }
 
-  function clampFieldPosition(value, min = 6, max = 94) {
-    return Math.max(min, Math.min(max, value));
+  function clampFieldPosition(point) {
+    return clampWorldPosition(point);
   }
 
-  function adjacentPoint(targetX, targetY, offsetX = -3.5, offsetY = 3.5) {
-    return {
-      x: clampFieldPosition(targetX + offsetX),
-      y: clampFieldPosition(targetY + offsetY),
-    };
+  function adjacentPoint(targetX, targetY, offsetX = -DEFAULT_ADJACENT_OFFSET_X, offsetY = DEFAULT_ADJACENT_OFFSET_Y) {
+    return clampFieldPosition({
+      x: targetX + offsetX,
+      y: targetY + offsetY,
+    });
   }
 
-  function adjacentCandidates(targetX, targetY, offsetX = 3.5, offsetY = 3.5) {
+  function adjacentCandidates(targetX, targetY, offsetX = DEFAULT_ADJACENT_OFFSET_X, offsetY = DEFAULT_ADJACENT_OFFSET_Y) {
     return [
       adjacentPoint(targetX, targetY, -offsetX, offsetY),
       adjacentPoint(targetX, targetY, 0, offsetY),
@@ -60,7 +73,7 @@ export function createSurvivalFieldHelpers({
     ];
   }
 
-  function nearestAdjacentPoint(targetX, targetY, actor = null, offsetX = 3.5, offsetY = 3.5) {
+  function nearestAdjacentPoint(targetX, targetY, actor = null, offsetX = DEFAULT_ADJACENT_OFFSET_X, offsetY = DEFAULT_ADJACENT_OFFSET_Y) {
     const candidates = adjacentCandidates(targetX, targetY, offsetX, offsetY);
     if (!actor) {
       return candidates[0];
@@ -78,7 +91,9 @@ export function createSurvivalFieldHelpers({
   }
 
   function nodeWorkPoint(node, actor = null) {
-    return nearestAdjacentPoint(node.x, node.y, actor, node.type === "tree" ? 4 : 3, 3);
+    return node.type === "tree"
+      ? nearestAdjacentPoint(node.x, node.y, actor, TREE_ADJACENT_OFFSET_X, TREE_ADJACENT_OFFSET_Y)
+      : nearestAdjacentPoint(node.x, node.y, actor, RESOURCE_ADJACENT_OFFSET_X, RESOURCE_ADJACENT_OFFSET_Y);
   }
 
   function buildingWorkPoint(structureId, actor = null) {
@@ -100,7 +115,7 @@ export function createSurvivalFieldHelpers({
       return null;
     }
 
-    return nearestAdjacentPoint(targetActor.x, targetActor.y, actor, 3, 3);
+    return nearestAdjacentPoint(targetActor.x, targetActor.y, actor, RESOURCE_ADJACENT_OFFSET_X, RESOURCE_ADJACENT_OFFSET_Y);
   }
 
   function distanceBetween(a, b) {
@@ -109,8 +124,11 @@ export function createSurvivalFieldHelpers({
     return Math.sqrt(dx * dx + dy * dy);
   }
 
-  function moveVillagerTowards(villager, destination, deltaMs) {
-    return moveActorTowards(villager, destination, deltaMs, villagerMoveSpeedPerSecond);
+  function moveActorForTask(actor, destination, deltaMs) {
+    const speedPerSecond = actor?.kind === "player"
+      ? playerMoveSpeedPerSecond
+      : villagerMoveSpeedPerSecond;
+    return moveActorTowards(actor, destination, deltaMs, speedPerSecond);
   }
 
   function spawnDroppedLogs(treeNode) {
@@ -146,7 +164,7 @@ export function createSurvivalFieldHelpers({
     return null;
   }
 
-  function findGatherTargetNode(action, targetNodeId = null) {
+  function findGatherTargetNode(action, targetNodeId = null, actor = null) {
     if (targetNodeId) {
       const node = fieldNodeById(targetNodeId);
       if (!node || !isFieldNodeVisible(node)) {
@@ -158,12 +176,32 @@ export function createSurvivalFieldHelpers({
       return node.type === "pickup" && node.itemId === action.itemId ? node : null;
     }
 
-    return visibleFieldNodes().find((node) => {
+    const candidates = visibleFieldNodes().filter((node) => {
       if (action.id === "gather-log") {
         return node.type === "tree";
       }
       return node.type === "pickup" && node.itemId === action.itemId;
     });
+
+    if (candidates.length === 0) {
+      return null;
+    }
+
+    if (!actor) {
+      return candidates[0];
+    }
+
+    return candidates.reduce((best, candidate) => {
+      if (!best) {
+        return candidate;
+      }
+
+      const bestPoint = nodeWorkPoint(best, actor);
+      const candidatePoint = nodeWorkPoint(candidate, actor);
+      return distanceBetween(actor, candidatePoint) < distanceBetween(actor, bestPoint)
+        ? candidate
+        : best;
+    }, null);
   }
 
   return {
@@ -177,11 +215,13 @@ export function createSurvivalFieldHelpers({
     findGatherTargetNode,
     gatherActionForNode,
     isFieldNodeVisible,
-    moveVillagerTowards,
+    moveActorForTask,
     nearestAdjacentPoint,
     nodeWorkPoint,
+    actorInteractionDistance: RESOURCE_INTERACTION_DISTANCE,
     spawnDroppedItems,
     spawnDroppedLogs,
+    storageInteractionDistance: DEFAULT_INTERACTION_DISTANCE,
     storageWorkPoint,
     visibleFieldNodes,
   };

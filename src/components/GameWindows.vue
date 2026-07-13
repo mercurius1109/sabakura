@@ -3,6 +3,7 @@
     <div
       class="pointer-events-auto absolute left-1/2 top-24 max-h-[calc(100vh-7rem)] w-[min(64rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-[28px] border border-white/55 bg-[#f7f0e4]/95 shadow-panel backdrop-blur"
       :class="selectedWindow.type === 'player' || selectedWindow.type === 'village' || selectedWindow.type === 'build'
+        || selectedWindow.type === 'craft'
         ? 'max-w-[26rem]'
         : ''"
     >
@@ -25,14 +26,32 @@
           :recipe-button-class="playerRecipeButtonClass"
           :recipe-icon="playerCraftIcon"
           :can-start-recipe="canStartPlayerRecipe"
-          :show-build-section="true"
-          :build-cards="playerBuildCards"
-          :build-tooltip="playerBuildTooltip"
-          :build-button-class="playerBuildButtonClass"
-          :can-place-structure="canPlaceStructure"
+          :show-craft-section="false"
+          @select-transfer="$emit('handle-player-transfer', $event)"
+        />
+      </template>
+
+      <template v-else-if="selectedWindow.type === 'craft'">
+        <WindowHeader :title="t('ui.handCraft')" :description="t('ui.craftInspect')" @close="$emit('close-window')" />
+        <PlayerActorPanel
+          :item-cards="playerItemCards"
+          :owned-kinds="playerOwnedKinds"
+          :transfer-caption="t('ui.playerInspect')"
+          :transfer-disabled="false"
+          :transfer-disabled-text="''"
+          :task="currentPlayerTask"
+          :task-label="taskLabel"
+          :task-progress="taskProgress"
+          :remaining-seconds="remainingSeconds"
+          :on-cancel-task="cancelTask"
+          :is-busy="isPlayerBusy"
+          :recipes="playerRecipes"
+          :recipe-tooltip="playerCraftTooltip"
+          :recipe-button-class="playerRecipeButtonClass"
+          :recipe-icon="playerCraftIcon"
+          :can-start-recipe="canStartPlayerRecipe"
           @select-transfer="$emit('handle-player-transfer', $event)"
           @start-recipe="$emit('start-player-craft', $event)"
-          @start-building="$emit('begin-building-placement', $event)"
         />
       </template>
 
@@ -87,8 +106,8 @@
               :recipe-button-class="playerRecipeButtonClass"
               :recipe-icon="playerCraftIcon"
               :can-start-recipe="canStartPlayerRecipe"
+              :show-craft-section="false"
               @select-transfer="$emit('handle-player-transfer', $event)"
-              @start-recipe="$emit('start-player-craft', $event)"
             />
           </div>
           <StationWindow
@@ -145,8 +164,8 @@
               :recipe-button-class="playerRecipeButtonClass"
               :recipe-icon="playerCraftIcon"
               :can-start-recipe="canStartPlayerRecipe"
+              :show-craft-section="false"
               @select-transfer="$emit('handle-player-transfer', $event)"
-              @start-recipe="$emit('start-player-craft', $event)"
             />
           </div>
           <StorageWindow
@@ -209,8 +228,8 @@
               :recipe-button-class="playerRecipeButtonClass"
               :recipe-icon="playerCraftIcon"
               :can-start-recipe="canStartPlayerRecipe"
+              :show-craft-section="false"
               @select-transfer="$emit('handle-player-transfer', $event)"
-              @start-recipe="$emit('start-player-craft', $event)"
             />
           </div>
           <VillagerCompareWindow

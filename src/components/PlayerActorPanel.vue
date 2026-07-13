@@ -11,16 +11,7 @@
       @select="(itemId) => $emit('select-transfer', itemId)"
     />
 
-    <TaskPanel
-      class="mt-4"
-      :task="task"
-      :task-label="taskLabel"
-      :task-progress="taskProgress"
-      :remaining-seconds="remainingSeconds"
-      :on-cancel="onCancelTask"
-    />
-
-    <div class="mt-4 rounded-2xl border border-line bg-white/80 p-4">
+    <div v-if="showCraftSection" class="mt-4">
       <div class="flex items-center justify-between gap-2">
         <div class="text-sm font-bold text-ink">{{ t("ui.handCraft") }}</div>
         <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-moss">
@@ -72,7 +63,6 @@
 
 <script setup>
 import InventoryGrid from "./InventoryGrid.vue";
-import TaskPanel from "./TaskPanel.vue";
 import { useI18n } from "../i18n/index.js";
 
 defineProps({
@@ -92,6 +82,7 @@ defineProps({
   recipeButtonClass: { type: Function, required: true },
   recipeIcon: { type: Function, required: true },
   canStartRecipe: { type: Function, required: true },
+  showCraftSection: { type: Boolean, default: true },
   showBuildSection: { type: Boolean, default: false },
   buildCards: { type: Array, default: () => [] },
   buildTooltip: { type: Function, default: () => "" },

@@ -35,8 +35,10 @@ export function createSurvivalTaskRuntime({
   respawnFieldNodes,
   checkStockRules,
   checkConstructionSites,
-  moveVillagerTowards,
+  moveActorForTask,
+  actorInteractionDistance,
   buildingById,
+  storageInteractionDistance,
   t,
 }) {
   function currentStorageAnchor() {
@@ -226,11 +228,11 @@ export function createSurvivalTaskRuntime({
       if (!targetActor) {
         return false;
       }
-      return distanceBetween(actor, targetActor) <= 5.5;
+      return distanceBetween(actor, targetActor) <= actorInteractionDistance;
     }
 
     if (task.targetKind === "storage") {
-      return distanceBetween(actor, currentStorageAnchor()) <= 6.5;
+      return distanceBetween(actor, currentStorageAnchor()) <= storageInteractionDistance;
     }
 
     return true;
@@ -328,7 +330,7 @@ export function createSurvivalTaskRuntime({
       }
       const villagerCarryLimit = villager?.inventoryCapacity ?? task.carryLimit ?? Number.POSITIVE_INFINITY;
       const nextAction = gatherActionById(task.actionId);
-      const nextNode = nextAction ? findGatherTargetNode(nextAction) : null;
+      const nextNode = nextAction ? findGatherTargetNode(nextAction, null, villager) : null;
       const canContinueSameHaul = Boolean(
         nextNode
         && actorInventoryCount(villager) < villagerCarryLimit
@@ -399,7 +401,7 @@ export function createSurvivalTaskRuntime({
       task.targetPoint = destination;
     }
 
-    const arrived = moveVillagerTowards(villager, destination, deltaMs);
+    const arrived = moveActorForTask(villager, destination, deltaMs);
     if (!arrived) {
       return;
     }

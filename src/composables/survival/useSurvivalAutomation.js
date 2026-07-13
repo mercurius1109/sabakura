@@ -23,6 +23,16 @@ export function createSurvivalAutomation({
   randomFieldPosition,
   startConstruction,
 }) {
+  function stockRulePriority(rule) {
+    const expected = expectedStock(rule.itemId);
+    const safeTarget = Math.max(1, rule.target || 0);
+    return {
+      expected,
+      shortage: Math.max(0, safeTarget - expected),
+      fulfillment: expected / safeTarget,
+    };
+  }
+
   function autoCraftAssignedStations() {
     stations.forEach((station) => {
       stationCraftEntries(station.id).forEach((entry) => {
@@ -62,16 +72,32 @@ export function createSurvivalAutomation({
   }
 
   function checkStockRules() {
-    stockRules.forEach((rule) => {
-      normalizeRule(rule);
-      const expected = expectedStock(rule.itemId);
-      if (!rule.enabled || expected >= rule.target || activeAutoTaskForRule(rule)) {
-        return;
-      }
+    const candidateRules = stockRules
+      .map((rule) => {
+        normalizeRule(rule);
+        return rule;
+      })
+      .filter((rule) => {
+        const expected = expectedStock(rule.itemId);
+        return rule.enabled && expected < rule.target && !activeAutoTaskForRule(rule);
+      })
+      .sort((left, right) => {
+        const leftPriority = stockRulePriority(left);
+        const rightPriority = stockRulePriority(right);
+        if (leftPriority.fulfillment !== rightPriority.fulfillment) {
+          return leftPriority.fulfillment - rightPriority.fulfillment;
+        }
+        if (leftPriority.shortage !== rightPriority.shortage) {
+          return rightPriority.shortage - leftPriority.shortage;
+        }
+        return left.itemId.localeCompare(right.itemId);
+      });
 
+    candidateRules.forEach((rule) => {
       const action = gatherActionById(rule.actionId);
       const preferredStationId = action?.requiresStation || "storage";
-      if (!action || !isGatherUnlocked(action) || !availableVillagerForGather(action, preferredStationId) || !findGatherTargetNode(action)) {
+      const villager = action ? availableVillagerForGather(action, preferredStationId) : null;
+      if (!action || !isGatherUnlocked(action) || !villager || !findGatherTargetNode(action, null, villager)) {
         return;
       }
       startGather(action.id, { source: "auto", ruleId: rule.id, preferredStationId });

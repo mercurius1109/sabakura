@@ -1,4 +1,5 @@
 import { removeItem } from "../../game/core/containers.js";
+import { clampWorldPoint } from "../../game/core/world.js";
 
 export function createConstructionSystem({
   playerActor,
@@ -113,8 +114,8 @@ export function createConstructionSystem({
     if (!building || !canPlaceStructure(structureId)) {
       return false;
     }
-    const x = clampPlacementPosition(position?.x, building.x);
-    const y = clampPlacementPosition(position?.y, building.y);
+    const x = clampPlacementPosition(position?.x, building.x, "x");
+    const y = clampPlacementPosition(position?.y, building.y, "y");
     if (!consumeActorResources(playerActor, building)) {
       return false;
     }
@@ -134,10 +135,11 @@ export function createConstructionSystem({
     return true;
   }
 
-  function clampPlacementPosition(value, fallback) {
+  function clampPlacementPosition(value, fallback, axis = "x") {
     const numeric = Number(value);
     const resolved = Number.isFinite(numeric) ? numeric : fallback;
-    return Math.max(6, Math.min(94, resolved));
+    const clamped = clampWorldPoint({ x: resolved, y: resolved });
+    return axis === "y" ? clamped.y : clamped.x;
   }
 
   return {

@@ -1,5 +1,5 @@
 <template>
-  <section class="relative h-full min-h-[720px] overflow-hidden bg-[#dce8c8]" @click="emitFieldClick">
+  <section ref="fieldRef" class="relative h-full min-h-[720px] overflow-hidden bg-[#dce8c8]" @click="emitFieldClick">
     <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.5),transparent_20%),radial-gradient(circle_at_80%_30%,rgba(255,255,255,0.28),transparent_18%),linear-gradient(180deg,#bcd48e_0%,#9dc06f_52%,#83a95b_100%)]"></div>
     <div class="absolute inset-x-0 bottom-0 h-[32%] bg-[linear-gradient(180deg,rgba(112,154,70,0)_0%,rgba(103,145,63,0.18)_30%,rgba(93,123,56,0.78)_100%)]"></div>
 
@@ -11,15 +11,13 @@
         v-for="node in resourceNodes"
         :key="node.id"
         type="button"
-        class="transition hover:scale-105"
+        class="flex items-center justify-center rounded-full transition hover:scale-105"
         :class="isTutorialTarget('field-resource', node.id) ? resourceHighlightClass : ''"
-        :style="fieldPositionStyle(node.x, node.y)"
+        :style="[fieldPositionStyle(node.x, node.y), resourceButtonStyle(node)]"
+        :title="nodeTitle(node)"
         @click.stop="$emit('select-resource', node.id)"
       >
-        <div class="rounded-full border border-white/70 bg-white/65 px-3 py-2 shadow-lg backdrop-blur">
-          <div class="text-center text-3xl leading-none">{{ nodeIcon(node) }}</div>
-          <div class="mt-1 text-xs font-bold text-ink">{{ nodeTitle(node) }}</div>
-        </div>
+        <div :class="resourceIconClass(node)">{{ nodeIcon(node) }}</div>
       </button>
 
       <button
@@ -59,30 +57,40 @@
         v-if="player"
         :key="player.id"
         type="button"
-        class="z-10 transition hover:scale-105"
-        :class="isTutorialTarget('field-player', 'player') ? cardHighlightClass : ''"
+        class="z-10 flex h-14 w-14 items-center justify-center rounded-full transition hover:scale-105"
         :style="actorPositionStyle(player, 10)"
-        @click.stop="$emit('select-player', player.id)"
+        :title="player.name"
       >
-        <div class="rounded-2xl border-2 border-[#2d6a4f] bg-[#f4fbf2]/95 px-3 py-2 shadow-lg ring-2 ring-white/70 backdrop-blur">
-          <div class="text-center text-3xl leading-none">{{ playerIcon }}</div>
-          <div class="mt-1 text-xs font-bold text-ink">{{ player.name }}</div>
-        </div>
+        <div class="text-center text-5xl leading-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.32)]">{{ playerIcon }}</div>
       </button>
+      <div
+        v-if="playerTaskText"
+        :style="fieldPositionStyle(player?.renderX ?? player?.x ?? 0, (player?.renderY ?? player?.y ?? 0) + 42, 10)"
+        class="pointer-events-none z-10 whitespace-nowrap rounded-full bg-white/78 px-3 py-1 text-xs font-bold text-ink shadow-md backdrop-blur"
+      >
+        {{ playerTaskText }}
+      </div>
 
       <button
         v-for="villager in villagers"
         :key="villager.id"
         type="button"
-        class="transition hover:scale-105"
+        class="flex h-12 w-12 items-center justify-center rounded-full transition hover:scale-105"
         :style="actorPositionStyle(villager, 1)"
+        :title="villager.name"
         @click.stop="$emit('select-villager', villager.id)"
       >
-        <div class="rounded-2xl border border-white/70 bg-[#f7f0dd]/85 px-3 py-2 shadow-lg backdrop-blur">
-          <div class="text-center text-3xl leading-none">{{ villagerIcon }}</div>
-          <div class="mt-1 text-xs font-bold text-ink">{{ villager.name }}</div>
-        </div>
+        <div class="text-center text-4xl leading-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.28)]">{{ villagerIcon }}</div>
       </button>
+      <div
+        v-for="villager in villagers"
+        :key="`task-${villager.id}`"
+        v-show="villagerTaskText(villager.id)"
+        :style="fieldPositionStyle(villager?.renderX ?? villager?.x ?? 0, (villager?.renderY ?? villager?.y ?? 0) + 36, 1)"
+        class="pointer-events-none whitespace-nowrap rounded-full bg-white/78 px-3 py-1 text-xs font-bold text-ink shadow-md backdrop-blur"
+      >
+        {{ villagerTaskText(villager.id) }}
+      </div>
 
       <button
         v-if="pendingPlacement"
@@ -99,6 +107,9 @@
 </template>
 
 <script setup>
+import { computed, onMounted, onUnmounted, ref } from "vue";
+import { clampWorldPoint } from "../game/core/world.js";
+
 const props = defineProps({
   resourceNodes: { type: Array, required: true },
   player: { type: Object, required: false, default: null },
@@ -106,8 +117,13 @@ const props = defineProps({
   constructionSites: { type: Array, required: true },
   placedStructureNodes: { type: Array, required: true },
   itemDefinitions: { type: Object, required: true },
+  currentPlayerTask: { type: Object, required: false, default: null },
   pendingPlacement: { type: Object, required: false, default: null },
+  taskLabel: { type: Function, required: true },
+  villagerTaskText: { type: Function, required: true },
   tutorialTargets: { type: Array, required: false, default: () => [] },
+  worldWidth: { type: Number, required: true },
+  worldHeight: { type: Number, required: true },
 });
 
 const emit = defineEmits([
@@ -126,12 +142,31 @@ const playerIcon = "\uD83D\uDE42";
 const villagerIcon = "\uD83E\uDDD1";
 const resourceHighlightClass = "tutorial-highlight tutorial-highlight-round";
 const cardHighlightClass = "tutorial-highlight tutorial-highlight-card";
+const fieldRef = ref(null);
+const viewportWidth = ref(1280);
+const viewportHeight = ref(720);
+
+const camera = computed(() => {
+  const targetX = props.player?.renderX ?? props.player?.x ?? props.worldWidth / 2;
+  const targetY = props.player?.renderY ?? props.player?.y ?? props.worldHeight / 2;
+  const maxCameraX = Math.max(0, props.worldWidth - viewportWidth.value);
+  const maxCameraY = Math.max(0, props.worldHeight - viewportHeight.value);
+
+  return {
+    x: Math.max(0, Math.min(maxCameraX, targetX - viewportWidth.value / 2)),
+    y: Math.max(0, Math.min(maxCameraY, targetY - viewportHeight.value / 2)),
+  };
+});
+
+const playerTaskText = computed(() => (
+  props.currentPlayerTask ? props.taskLabel(props.currentPlayerTask) : ""
+));
 
 function fieldPositionStyle(x, y, zIndex = null) {
   return {
     position: "absolute",
-    left: `${x}%`,
-    top: `${y}%`,
+    left: `${x - camera.value.x}px`,
+    top: `${y - camera.value.y}px`,
     transform: "translate(-50%, -50%)",
     ...(zIndex === null ? {} : { zIndex }),
   };
@@ -153,19 +188,46 @@ function nodeTitle(node) {
   return node.title || props.itemDefinitions[node.itemId]?.name || "";
 }
 
+function isTreeNode(node) {
+  return node?.type === "tree";
+}
+
+function resourceButtonStyle(node) {
+  return isTreeNode(node)
+    ? {
+      width: "3rem",
+      height: "3rem",
+    }
+    : {
+      width: "3rem",
+      height: "3rem",
+    };
+}
+
+function resourceIconClass(node) {
+  return isTreeNode(node)
+    ? "text-center text-4xl leading-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.28)]"
+    : "text-center text-4xl leading-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.28)]";
+}
+
 function isTutorialTarget(kind, id) {
   return props.tutorialTargets.some((target) => target.kind === kind && target.id === id);
 }
 
 function emitFieldClick(event) {
   const rect = event.currentTarget.getBoundingClientRect();
-  const x = clampPercent(((event.clientX - rect.left) / rect.width) * 100);
-  const y = clampPercent(((event.clientY - rect.top) / rect.height) * 100);
-  emit("field-click", { x, y });
-}
-
-function clampPercent(value) {
-  return Math.max(6, Math.min(94, Number(value.toFixed(2))));
+  const point = clampWorldPoint(
+    {
+      x: event.clientX - rect.left + camera.value.x,
+      y: event.clientY - rect.top + camera.value.y,
+    },
+    props.worldWidth,
+    props.worldHeight,
+  );
+  emit("field-click", {
+    x: Number(point.x.toFixed(2)),
+    y: Number(point.y.toFixed(2)),
+  });
 }
 
 function selectStructure(structureId) {
@@ -180,4 +242,22 @@ function selectStructure(structureId) {
   }
   return null;
 }
+
+function updateViewport() {
+  if (!fieldRef.value) {
+    return;
+  }
+  const rect = fieldRef.value.getBoundingClientRect();
+  viewportWidth.value = rect.width || viewportWidth.value;
+  viewportHeight.value = rect.height || viewportHeight.value;
+}
+
+onMounted(() => {
+  updateViewport();
+  window.addEventListener("resize", updateViewport);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("resize", updateViewport);
+});
 </script>

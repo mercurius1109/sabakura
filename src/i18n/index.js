@@ -5,10 +5,13 @@ const messages = {
   ja: {
     ui: {
       inventory: "インベントリ",
+      menuInventory: "持ち物",
       menuVillagers: "村人",
+      menuCraft: "クラフト",
       menuBuild: "建築",
       menuLog: "ログ",
       speed: "速度",
+      minimap: "ミニマップ",
       logTitle: "ログ",
       cancel: "キャンセル",
       clear: "クリア",
@@ -38,6 +41,7 @@ const messages = {
       villageInspect: "村人を追加し、現在の状態を確認します。",
       build: "建築",
       buildInspect: "フィールドに新しい建築予定地を配置します。",
+      craftInspect: "手作業クラフトを行います。",
       facilityInspect: "村人の担当と自動作業の設定を行います。",
       close: "閉じる",
       currentTask: "現在のタスク",
@@ -194,10 +198,13 @@ const messages = {
   en: {
     ui: {
       inventory: "Inventory",
+      menuInventory: "Inventory",
       menuVillagers: "Villagers",
+      menuCraft: "Craft",
       menuBuild: "Build",
       menuLog: "Log",
       speed: "Speed",
+      minimap: "Minimap",
       logTitle: "Log",
       cancel: "Cancel",
       clear: "Clear",
@@ -227,6 +234,7 @@ const messages = {
       villageInspect: "Add villagers and inspect their current state.",
       build: "Construction",
       buildInspect: "Place a new construction site on the field.",
+      craftInspect: "Craft items by hand.",
       facilityInspect: "Assign villagers and configure automatic production.",
       close: "Close",
       currentTask: "Current Task",

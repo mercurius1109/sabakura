@@ -139,6 +139,10 @@ export function useAppInteractions(options) {
     selectedWindow.value = { type: "workbench" };
   }
 
+  function openCraftWindow() {
+    selectedWindow.value = { type: "craft" };
+  }
+
   function openLumberjackHutWindow() {
     selectedWindow.value = { type: "lumberjackHut" };
   }
@@ -215,6 +219,7 @@ export function useAppInteractions(options) {
     removeStockRule,
     closeWindow,
     openPlayerWindow,
+    openCraftWindow,
     openWorkbenchWindow,
     openLumberjackHutWindow,
     openStorageCompareWindow,

@@ -238,10 +238,11 @@ export function createSurvivalTaskStarters({
   }
 
   function canStartGather(action) {
+    const villager = availableVillagerForGather(action);
     return Boolean(action)
       && isGatherUnlocked(action)
-      && Boolean(availableVillagerForGather(action))
-      && Boolean(findGatherTargetNode(action));
+      && Boolean(villager)
+      && Boolean(findGatherTargetNode(action, null, villager));
   }
 
   function startActorGatherTask(actor, action, targetNode, options = {}) {
@@ -336,8 +337,7 @@ export function createSurvivalTaskStarters({
 
   function startGather(actionId, options = {}) {
     const action = gatherActionById(actionId);
-    const targetNode = action ? findGatherTargetNode(action, options.targetNodeId || null) : null;
-    if (!action || !targetNode || !isGatherUnlocked(action)) {
+    if (!action || !isGatherUnlocked(action)) {
       if (action?.requiresItem) {
         addLog(t("log.itemMissingActionShort", { item: itemName(action.requiresItem), action: action.label }));
       }
@@ -348,6 +348,13 @@ export function createSurvivalTaskStarters({
     const villager = availableVillagerForGather(action, preferredStationId);
     if (!villager) {
       addLog(t("log.noVillagerForStation", { station: stationName(preferredStationId || "hand") }));
+      return false;
+    }
+    const targetNode = findGatherTargetNode(action, options.targetNodeId || null, villager);
+    if (!targetNode) {
+      if (action?.requiresItem) {
+        addLog(t("log.itemMissingActionShort", { item: itemName(action.requiresItem), action: action.label }));
+      }
       return false;
     }
     if (action.requiresItem) {

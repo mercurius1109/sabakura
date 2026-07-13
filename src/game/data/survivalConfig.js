@@ -23,9 +23,17 @@ export const defaultTargets = {
   stoneAxe: 1,
 };
 
-export const fieldTreeNodes = [
-  { id: "tree-a", type: "tree", itemId: "log", titleKey: "field.tree", actionLabelKey: "action.gatherLog", requiresItem: "stoneAxe", x: 19, y: 74, respawnMs: 14000 },
-  { id: "tree-b", type: "tree", itemId: "log", titleKey: "field.tree", actionLabelKey: "action.gatherLog", requiresItem: "stoneAxe", x: 77, y: 68, respawnMs: 16000 },
+export const fieldTreeConfigs = [
+  {
+    prefix: "tree",
+    type: "tree",
+    itemId: "log",
+    titleKey: "field.tree",
+    actionLabelKey: "action.gatherLog",
+    requiresItem: "stoneAxe",
+    count: 12,
+    respawnMs: 15000,
+  },
 ];
 
 export const droppedLogOffsets = [
