@@ -153,6 +153,7 @@
             :storage-transfer-entries="storageTransferEntries"
             :assigned-villagers="storageAssignedVillagers"
             :available-villagers="storageAvailableVillagers"
+            :station-name-by-id="stationName"
             :is-player-adjacent-to-storage="isPlayerAdjacentToStorage"
             :registered-stock-rules="registeredStockRules"
             :stock-rule-tooltip="stockRuleTooltip"

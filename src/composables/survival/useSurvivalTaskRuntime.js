@@ -273,9 +273,30 @@ export function createSurvivalTaskRuntime({
       }
 
       if (node.type === "tree") {
+        const spawnedStartIndex = fieldNodes.length;
         node.hiddenUntil = now.value + node.respawnMs;
         spawnDroppedLogs(node);
         addLog(t("log.choppedTree", { actor: villagerName(task.villagerId) }));
+
+        const villager = actorById(task.villagerId);
+        if (task.workerType === "villager" && villager && placedStructures.storage) {
+          const spawnedLogs = fieldNodes.slice(spawnedStartIndex).filter((entry) =>
+            entry.type === "pickup" && entry.itemId === task.itemId && entry.transient,
+          );
+
+          if (spawnedLogs.length > 0) {
+            task.resumeActionId = task.resumeActionId || task.actionId;
+            task.actionId = `pickup-${task.itemId}`;
+            task.amount = 1;
+            task.targetNodeId = spawnedLogs[0].id;
+            task.targetPoint = nodeWorkPoint(spawnedLogs[0], villager);
+            task.initialTargetDistance = distanceBetween(villager, task.targetPoint);
+            task.phase = "movingToTarget";
+            task.workStartedAt = null;
+            return true;
+          }
+        }
+
         completeGatherTask(task, { skipDeposit: true });
         return true;
       } else if (node.transient) {

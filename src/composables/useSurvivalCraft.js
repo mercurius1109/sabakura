@@ -423,9 +423,9 @@ export function useSurvivalCraft() {
     startConstruction,
     startCraft,
     startGather,
-    startPlayerConstruction,
+    startPlayerConstruction: startPlayerConstructionTask,
     startPlayerCraft: startPlayerCraftTask,
-    startPlayerFieldTask,
+    startPlayerFieldTask: startPlayerFieldTaskCore,
     startStationCraftEntry,
   } = createSurvivalTaskStarters({
     now,
@@ -472,7 +472,24 @@ export function useSurvivalCraft() {
   });
 
   function startPlayerCraft(recipeId) {
+    if (!cancelPlayerTaskForManualAction()) {
+      return false;
+    }
     return startPlayerCraftTask(recipeId, isPlayerBusy);
+  }
+
+  function startPlayerFieldTask(nodeId) {
+    if (!cancelPlayerTaskForManualAction()) {
+      return false;
+    }
+    return startPlayerFieldTaskCore(nodeId);
+  }
+
+  function startPlayerConstruction(structureId) {
+    if (!cancelPlayerTaskForManualAction()) {
+      return false;
+    }
+    return startPlayerConstructionTask(structureId);
   }
 
   function canStartPlayerRecipeWithState(recipe) {
@@ -618,10 +635,7 @@ export function useSurvivalCraft() {
     if (!playerActor) {
       return false;
     }
-    if (playerActor.taskId && !findTaskById(playerActor.taskId)) {
-      playerActor.taskId = null;
-    }
-    if (playerActor.taskId !== null) {
+    if (!cancelPlayerTaskForManualAction()) {
       return false;
     }
 
@@ -665,15 +679,52 @@ export function useSurvivalCraft() {
     return true;
   }
 
+  function movePlayerTo(position) {
+    if (!playerActor || !position) {
+      return false;
+    }
+    if (!cancelPlayerTaskForManualAction()) {
+      return false;
+    }
+
+    const targetPoint = {
+      x: Math.max(6, Math.min(94, Number(position.x))),
+      y: Math.max(6, Math.min(94, Number(position.y))),
+    };
+    if (!Number.isFinite(targetPoint.x) || !Number.isFinite(targetPoint.y)) {
+      return false;
+    }
+    if (distanceBetween(playerActor, targetPoint) <= 0.5) {
+      return true;
+    }
+
+    const task = {
+      id: makeId("move"),
+      kind: "approach",
+      label: `Move to (${targetPoint.x.toFixed(0)}, ${targetPoint.y.toFixed(0)})`,
+      workerType: "player",
+      villagerId: playerActor.id,
+      station: "field",
+      source: "manual",
+      phase: "movingToTarget",
+      targetPoint,
+      initialTargetDistance: distanceBetween(playerActor, targetPoint),
+      workStartedAt: null,
+      duration: 1,
+      actorId: null,
+      targetKind: "field",
+    };
+
+    playerActor.taskId = task.id;
+    gatherQueue.push(task);
+    return true;
+  }
+
   function queuePlayerTransfer(itemId, direction, actorId = null, targetKind = "storage") {
     if (!playerActor) {
       return false;
     }
-    if (playerActor.taskId && !findTaskById(playerActor.taskId)) {
-      playerActor.taskId = null;
-    }
-    if (playerActor.taskId !== null) {
-      addLog(`${playerActor.name} is busy right now.`);
+    if (!cancelPlayerTaskForManualAction()) {
       return false;
     }
 
@@ -808,11 +859,7 @@ export function useSurvivalCraft() {
     if (!playerActor || amount !== 1) {
       return false;
     }
-    if (playerActor.taskId && !findTaskById(playerActor.taskId)) {
-      playerActor.taskId = null;
-    }
-    if (playerActor.taskId !== null) {
-      addLog(`${playerActor.name} is busy right now.`);
+    if (!cancelPlayerTaskForManualAction()) {
       return false;
     }
     if (!actorHasItem(playerActor, itemId)) {
@@ -888,6 +935,27 @@ export function useSurvivalCraft() {
 
     addLog(t("log.taskCancelled", { task: taskLabel(task) }));
     return true;
+  }
+
+  function cancelPlayerTaskForManualAction() {
+    if (!playerActor?.taskId) {
+      return true;
+    }
+
+    const task = findTaskById(playerActor.taskId);
+    if (!task) {
+      playerActor.taskId = null;
+      return true;
+    }
+
+    const isPlayerTask = task.workerType === "player"
+      || task.workerType === "self"
+      || task.villagerId === playerActor.id;
+    if (!isPlayerTask) {
+      return false;
+    }
+
+    return cancelTask(task.id);
   }
 
   let animationFrameId = null;
@@ -1005,6 +1073,7 @@ export function useSurvivalCraft() {
     isPlayerAdjacentToStorage,
     isPlayerAdjacentToActor,
     approachTransferTarget,
+    movePlayerTo,
     moveItemFromActorToStorage,
     moveItemFromStorageToActor,
     moveItemFromActorToActor,

@@ -133,8 +133,8 @@ export function createSurvivalFieldHelpers({
       };
     }
     if (node.type === "pickup") {
-      return gatherActionById(`gather-${node.itemId}`)
-        || gatherActionById(`pickup-${node.itemId}`)
+      return gatherActionById(`pickup-${node.itemId}`)
+        || gatherActionById(`gather-${node.itemId}`)
         || {
           id: `pickup-${node.itemId}`,
           label: t("ui.pickupItemAction", { item: itemName(node.itemId) }),

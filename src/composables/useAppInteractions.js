@@ -15,6 +15,7 @@ export function useAppInteractions(options) {
     playerActor,
     onRuleChanged,
     approachTransferTarget,
+    movePlayerTo,
     moveItemFromActorToStorage,
     moveItemFromStorageToActor,
     moveItemFromActorToActor,
@@ -182,6 +183,7 @@ export function useAppInteractions(options) {
 
   function handleFieldClick(position) {
     if (!pendingBuildingPlacementId.value) {
+      movePlayerTo(position);
       return;
     }
 

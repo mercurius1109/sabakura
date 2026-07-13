@@ -214,7 +214,9 @@
           >
             <div class="text-xs font-bold leading-4 text-ink">{{ villager.name }}</div>
             <div class="flex items-center justify-center text-3xl leading-none text-ink/80" aria-hidden="true">{{ villagerIcon }}</div>
-            <div class="self-end text-[10px] font-bold leading-4 text-moss">{{ t("ui.storage") }}</div>
+            <div class="self-end max-w-full truncate text-[10px] font-bold leading-4 text-moss">
+              {{ villagerAssignedStationLabel(villager) }}
+            </div>
           </button>
         </div>
       </div>
@@ -231,6 +233,7 @@ const props = defineProps({
   storageTransferEntries: { type: Array, required: true },
   assignedVillagers: { type: Array, required: true },
   availableVillagers: { type: Array, required: true },
+  stationNameById: { type: Function, required: false, default: null },
   isPlayerAdjacentToStorage: { type: Boolean, required: true },
   registeredStockRules: { type: Array, required: true },
   stockRuleTooltip: { type: Function, required: true },
@@ -273,5 +276,13 @@ const villagerIcon = "\uD83E\uDDD1";
 function handleAddVillager(villagerId) {
   showVillagerModal.value = false;
   emit("add-villager", villagerId);
+}
+
+function villagerAssignedStationLabel(villager) {
+  const assignedStationId = villager.assignedStations?.[0] || null;
+  if (!assignedStationId) {
+    return t("ui.noAssignedStations");
+  }
+  return props.stationNameById ? props.stationNameById(assignedStationId) : assignedStationId;
 }
 </script>

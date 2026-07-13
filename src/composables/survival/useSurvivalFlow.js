@@ -70,7 +70,8 @@ export function createSurvivalFlow({
 
     if (task.kind === "gather") {
       const actor = actorById(task.villagerId);
-      const rule = stockRules.find((entry) => entry.actionId === task.actionId);
+      const taskActionId = task.resumeActionId || task.actionId;
+      const rule = stockRules.find((entry) => entry.actionId === taskActionId);
       const capacity = actor?.inventoryCapacity ?? Number.POSITIVE_INFINITY;
       return Boolean(rule)
         && rule.enabled
@@ -103,8 +104,9 @@ export function createSurvivalFlow({
     }
 
     if (task.kind === "gather") {
-      const rule = stockRules.find((entry) => entry.actionId === task.actionId);
-      startGather(task.actionId, {
+      const taskActionId = task.resumeActionId || task.actionId;
+      const rule = stockRules.find((entry) => entry.actionId === taskActionId);
+      startGather(taskActionId, {
         source: task.source,
         ruleId: rule?.id || null,
         preferredStationId: task.station === "field" ? null : task.station,
