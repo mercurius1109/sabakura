@@ -1,0 +1,309 @@
+import { computed } from "vue";
+import { clampWorldPosition } from "../../game/core/world.js";
+
+export function createPlayerActions({
+  playerActor,
+  storage,
+  storageContainer,
+  placedStructures,
+  storagePointWorld,
+  buildingById,
+  actorById,
+  actorWorkPoint,
+  storageWorkPoint,
+  distanceBetween,
+  storageInteractionDistance,
+  actorInteractionDistance,
+  cancelPlayerTaskForManualAction,
+  scheduleActorTask,
+  makeId,
+  addLog,
+  itemName,
+  actorHasItem,
+  transferItem,
+  removeItem,
+  spawnDroppedItems,
+}) {
+  const isPlayerAdjacentToStorage = computed(() => {
+    if (!placedStructures.storage) {
+      return false;
+    }
+    const storageBuilding = buildingById("storage");
+    const storageAnchor = storageBuilding
+      ? { x: storageBuilding.x, y: storageBuilding.y }
+      : storagePointWorld;
+    return distanceBetween(playerActor, storageAnchor) <= storageInteractionDistance;
+  });
+
+  function isPlayerAdjacentToActor(actor) {
+    if (!actor || actor.id === playerActor.id) {
+      return false;
+    }
+    return distanceBetween(playerActor, actor) <= actorInteractionDistance;
+  }
+
+  function playerTransferTargetPoint(targetKind, actorId = null) {
+    if (targetKind === "storage") {
+      return storageWorkPoint(playerActor);
+    }
+
+    const actor = actorById(actorId);
+    return actor ? actorWorkPoint(actor, playerActor) : null;
+  }
+
+  function approachTransferTarget(targetKind = "storage", actorId = null) {
+    if (!playerActor) {
+      return false;
+    }
+    if (!cancelPlayerTaskForManualAction()) {
+      return false;
+    }
+
+    if (targetKind === "storage" && isPlayerAdjacentToStorage.value) {
+      return true;
+    }
+
+    const targetActor = targetKind === "actor" ? actorById(actorId) : null;
+    if (targetKind === "actor" && isPlayerAdjacentToActor(targetActor)) {
+      return true;
+    }
+
+    const targetPoint = playerTransferTargetPoint(targetKind, actorId);
+    if (!targetPoint) {
+      return false;
+    }
+
+    const label = targetKind === "storage"
+      ? `Move to ${storageContainer.name}`
+      : `Move to ${targetActor?.name || "actor"}`;
+
+    const task = {
+      id: makeId("approach"),
+      kind: "move",
+      label,
+      workerType: "player",
+      villagerId: playerActor.id,
+      station: targetKind,
+      source: "manual",
+      phase: "movingToTarget",
+      targetPoint,
+      initialTargetDistance: distanceBetween(playerActor, targetPoint),
+      workStartedAt: null,
+      duration: 1,
+      actorId,
+      targetKind,
+    };
+
+    return scheduleActorTask(playerActor, task);
+  }
+
+  function movePlayerTo(position) {
+    if (!playerActor || !position) {
+      return false;
+    }
+    if (!cancelPlayerTaskForManualAction()) {
+      return false;
+    }
+
+    const targetPoint = clampWorldPosition({
+      x: Number(position.x),
+      y: Number(position.y),
+    });
+    if (!Number.isFinite(targetPoint.x) || !Number.isFinite(targetPoint.y)) {
+      return false;
+    }
+    if (distanceBetween(playerActor, targetPoint) <= 8) {
+      return true;
+    }
+
+    const task = {
+      id: makeId("move"),
+      kind: "move",
+      label: `Move to (${targetPoint.x.toFixed(0)}, ${targetPoint.y.toFixed(0)})`,
+      workerType: "player",
+      villagerId: playerActor.id,
+      station: "field",
+      source: "manual",
+      phase: "movingToTarget",
+      targetPoint,
+      initialTargetDistance: distanceBetween(playerActor, targetPoint),
+      workStartedAt: null,
+      duration: 1,
+      actorId: null,
+      targetKind: "field",
+    };
+
+    return scheduleActorTask(playerActor, task);
+  }
+
+  function queuePlayerTransfer(itemId, direction, actorId = null, targetKind = "storage") {
+    if (!playerActor) {
+      return false;
+    }
+    if (!cancelPlayerTaskForManualAction()) {
+      return false;
+    }
+
+    const targetActor = targetKind === "actor" ? actorById(actorId) : null;
+    const playerOwnsItem = actorHasItem(playerActor, itemId);
+    const storageOwnsItem = (storage[itemId] || 0) > 0;
+    const actorOwnsItem = targetActor ? actorHasItem(targetActor, itemId) : false;
+
+    if ((direction === "toStorage" || direction === "toActor") && !playerOwnsItem) {
+      addLog(`${playerActor.name} does not have ${itemName(itemId)}.`);
+      return false;
+    }
+    if (direction === "fromStorage" && !storageOwnsItem) {
+      addLog(`${itemName(itemId)} is not in storage.`);
+      return false;
+    }
+    if (direction === "fromActor" && !actorOwnsItem) {
+      addLog(`${targetActor?.name || "Actor"} does not have ${itemName(itemId)}.`);
+      return false;
+    }
+
+    const targetPoint = playerTransferTargetPoint(targetKind, actorId);
+    if (!targetPoint) {
+      return false;
+    }
+
+    const task = {
+      id: makeId("transfer"),
+      kind: "transfer",
+      label: direction === "toStorage"
+        ? `Store ${itemName(itemId)}`
+        : direction === "fromStorage"
+          ? `Take ${itemName(itemId)}`
+          : direction === "toActor"
+            ? `Give ${itemName(itemId)}`
+            : `Take ${itemName(itemId)}`,
+      itemId,
+      amount: 1,
+      workerType: "player",
+      villagerId: playerActor.id,
+      station: targetKind,
+      source: "manual",
+      phase: "movingToTarget",
+      targetPoint,
+      initialTargetDistance: distanceBetween(playerActor, targetPoint),
+      workStartedAt: null,
+      duration: 300,
+      transferDirection: direction,
+      actorId,
+      targetKind,
+    };
+
+    scheduleActorTask(playerActor, task);
+    if (direction === "toStorage") {
+      addLog(`${playerActor.name} is moving ${itemName(itemId)} to storage.`);
+    } else if (direction === "fromStorage") {
+      addLog(`${playerActor.name} is going to take ${itemName(itemId)} from storage.`);
+    } else if (direction === "toActor") {
+      addLog(`${playerActor.name} is bringing ${itemName(itemId)} to ${targetActor?.name || "actor"}.`);
+    } else {
+      addLog(`${playerActor.name} is going to take ${itemName(itemId)} from ${targetActor?.name || "actor"}.`);
+    }
+    return true;
+  }
+
+  function moveItemFromActorToStorage(actor, itemId, amount = 1) {
+    if (!placedStructures.storage || !actor || actor.id !== playerActor.id || amount !== 1) {
+      return false;
+    }
+    if (!isPlayerAdjacentToStorage.value) {
+      addLog(`${playerActor.name} must stand next to storage to move items.`);
+      return false;
+    }
+    if (!transferItem(playerActor, storageContainer, itemId, amount)) {
+      addLog(`${playerActor.name} does not have ${itemName(itemId)}.`);
+      return false;
+    }
+    addLog(`${playerActor.name} moved ${itemName(itemId)} to ${storageContainer.name}.`);
+    return true;
+  }
+
+  function moveItemFromStorageToActor(actor, itemId, amount = 1) {
+    if (!placedStructures.storage || !actor || actor.id !== playerActor.id || amount !== 1) {
+      return false;
+    }
+    if (!isPlayerAdjacentToStorage.value) {
+      addLog(`${playerActor.name} must stand next to storage to move items.`);
+      return false;
+    }
+    if (!transferItem(storageContainer, playerActor, itemId, amount)) {
+      addLog(`${itemName(itemId)} is not in storage.`);
+      return false;
+    }
+    addLog(`${playerActor.name} took ${itemName(itemId)} from ${storageContainer.name}.`);
+    return true;
+  }
+
+  function moveItemFromActorToActor(sourceActor, targetActor, itemId, amount = 1) {
+    if (!sourceActor || !targetActor || sourceActor.id !== playerActor.id || targetActor.id === playerActor.id || amount !== 1) {
+      return false;
+    }
+    if (!isPlayerAdjacentToActor(targetActor)) {
+      addLog(`${playerActor.name} must stand next to ${targetActor.name} to move items.`);
+      return false;
+    }
+    if (!transferItem(playerActor, targetActor, itemId, amount)) {
+      addLog(`${playerActor.name} does not have ${itemName(itemId)}.`);
+      return false;
+    }
+    addLog(`${playerActor.name} gave ${itemName(itemId)} to ${targetActor.name}.`);
+    return true;
+  }
+
+  function moveItemFromOtherActorToPlayer(sourceActor, targetActor, itemId, amount = 1) {
+    if (!sourceActor || !targetActor || sourceActor.id === playerActor.id || targetActor.id !== playerActor.id || amount !== 1) {
+      return false;
+    }
+    if (!isPlayerAdjacentToActor(sourceActor)) {
+      addLog(`${playerActor.name} must stand next to ${sourceActor.name} to move items.`);
+      return false;
+    }
+    if (!transferItem(sourceActor, playerActor, itemId, amount)) {
+      addLog(`${sourceActor.name} does not have ${itemName(itemId)}.`);
+      return false;
+    }
+    addLog(`${playerActor.name} took ${itemName(itemId)} from ${sourceActor.name}.`);
+    return true;
+  }
+
+  function dropPlayerItem(itemId, amount = 1) {
+    if (!playerActor || amount !== 1) {
+      return false;
+    }
+    if (!cancelPlayerTaskForManualAction()) {
+      return false;
+    }
+    if (!actorHasItem(playerActor, itemId)) {
+      addLog(`${playerActor.name} does not have ${itemName(itemId)}.`);
+      return false;
+    }
+    if (!removeItem(playerActor.inventory, itemId, amount)) {
+      return false;
+    }
+
+    const dropOrigin = clampWorldPosition({
+      x: playerActor.x + 96,
+      y: playerActor.y + 56,
+    });
+    spawnDroppedItems({ [itemId]: amount }, dropOrigin);
+    addLog(`${playerActor.name} dropped ${itemName(itemId)}.`);
+    return true;
+  }
+
+  return {
+    approachTransferTarget,
+    dropPlayerItem,
+    isPlayerAdjacentToActor,
+    isPlayerAdjacentToStorage,
+    moveItemFromActorToActor,
+    moveItemFromActorToStorage,
+    moveItemFromOtherActorToPlayer,
+    moveItemFromStorageToActor,
+    movePlayerTo,
+    queuePlayerTransfer,
+  };
+}

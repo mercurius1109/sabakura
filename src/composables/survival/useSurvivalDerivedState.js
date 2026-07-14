@@ -18,11 +18,10 @@ export function createSurvivalDerivedState({
 }) {
   const playerRecipes = computed(() => recipes.filter((recipe) => recipe.station === "hand"));
 
-  const isPlayerBusy = computed(() =>
-    [...gatherQueue, ...craftQueue, ...constructionQueue].some((task) =>
+  const isPlayerBusy = computed(() => playerActor.taskQueue?.length > 0
+    || [...gatherQueue, ...craftQueue, ...constructionQueue].some((task) =>
       task.villagerId === playerActor.id || task.workerType === "self",
-    ),
-  );
+    ));
 
   const availableStations = computed(() => stations.filter((station) => isStationAvailable(station.id)));
 

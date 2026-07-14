@@ -72,6 +72,7 @@ defineProps({
   transferDisabled: { type: Boolean, default: false },
   transferDisabledText: { type: String, default: "" },
   task: { type: Object, default: null },
+  tasks: { type: Array, default: () => [] },
   taskLabel: { type: Function, required: true },
   taskProgress: { type: Function, required: true },
   remainingSeconds: { type: Function, required: true },

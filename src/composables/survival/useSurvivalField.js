@@ -9,6 +9,7 @@ import {
 import {
   clampWorldPosition,
 } from "../../game/core/world.js";
+import { t } from "../../i18n/index.js";
 
 const DEFAULT_ADJACENT_OFFSET_X = 56;
 const DEFAULT_ADJACENT_OFFSET_Y = 56;

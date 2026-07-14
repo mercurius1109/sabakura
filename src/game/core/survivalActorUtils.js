@@ -39,16 +39,26 @@ export function taskLabel(task, { gatherActionById, recipeById, buildingById }) 
   if (!task) {
     return t("ui.noActiveTask");
   }
+  if (task.phase === "movingToTarget" || task.phase === "movingToStorage") {
+    return taskPhaseLabel(task);
+  }
+  if (task.kind === "gather") {
+    const item = task.itemId ? t(`item.${task.itemId}`) : gatherActionById(task.actionId)?.label || t("common.gather");
+    return t("task.gathering", { item });
+  }
+  if (task.kind === "build") {
+    return t("task.building", { building: buildingById(task.structureId)?.name || t("common.build") });
+  }
+  if (task.kind === "transfer") {
+    return t("task.transferring", { item: task.itemId ? t(`item.${task.itemId}`) : t("common.item") });
+  }
+  if (task.kind === "craft") {
+    return t("task.crafting", { recipe: recipeById(task.recipeId)?.name || t("common.craft") });
+  }
   if (task.label) {
     return task.label;
   }
-  if (task.kind === "gather") {
-    return task.label || gatherActionById(task.actionId)?.label || t("common.gather");
-  }
-  if (task.kind === "build") {
-    return `${buildingById(task.structureId)?.name || t("common.build")} ${t("common.build")}`;
-  }
-  return recipeById(task.recipeId)?.name || t("common.craft");
+  return t("ui.noActiveTask");
 }
 
 export function inventorySummary(actor, itemName) {

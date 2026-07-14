@@ -16,6 +16,7 @@ export function createSurvivalManagementHelpers({
   createActor,
   stationById,
   buildingById,
+  findTaskById,
   gatherActionById,
   itemName,
   actorHasItem,
@@ -34,6 +35,10 @@ export function createSurvivalManagementHelpers({
   checkConstructionSites,
   t,
 }) {
+  function actorIsBusy(actor) {
+    return Boolean(actor?.currentTaskId || actor?.taskQueue?.length);
+  }
+
   function stationName(stationId) {
     if (stationId === "hand") {
       return t("common.handCraft");
@@ -110,7 +115,7 @@ export function createSurvivalManagementHelpers({
   }
 
   function availableVillagerForStation(stationId) {
-    return villagers.find((villager) => villager.taskId === null && assignedVillagerIds(stationId).includes(villager.id));
+    return villagers.find((villager) => !actorIsBusy(villager) && assignedVillagerIds(stationId).includes(villager.id));
   }
 
   function stationHasPendingCraftWork(stationId) {
@@ -150,7 +155,7 @@ export function createSurvivalManagementHelpers({
 
   function firstAvailableVillager(candidates, action = null) {
     return candidates.find((villager) => {
-      if (villager.taskId !== null) {
+      if (actorIsBusy(villager)) {
         return false;
       }
       if (!action?.requiresItem) {
@@ -179,7 +184,7 @@ export function createSurvivalManagementHelpers({
       return null;
     }
     return villagers.find((villager) =>
-      villager.taskId === null
+      !actorIsBusy(villager)
       && assignedVillagerIds(recipe.station).includes(villager.id)
     );
   }
@@ -204,12 +209,6 @@ export function createSurvivalManagementHelpers({
     return villagers.find((entry) => entry.id === actorId) || null;
   }
 
-  function findTaskById(taskId) {
-    return craftQueue.find((task) => task.id === taskId)
-      || gatherQueue.find((task) => task.id === taskId)
-      || constructionQueue.find((task) => task.id === taskId);
-  }
-
   function taskLabel(task) {
     return buildTaskLabel(task, { gatherActionById, recipeById, buildingById });
   }
@@ -231,7 +230,7 @@ export function createSurvivalManagementHelpers({
   }
 
   function villagerNote(villager) {
-    const task = findTaskById(villager.taskId);
+    const task = findTaskById(villager.currentTaskId) || findTaskById(villager.taskQueue?.[0]);
     const inventoryText = t("ui.inventorySummary", { items: villagerInventorySummary(villager) });
     const stationText = `${t("ui.assignedStations")}: ${villagerAssignedStationsSummary(villager)}`;
     if (!task) {

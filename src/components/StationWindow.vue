@@ -16,6 +16,7 @@
       :item-definitions="itemDefinitions"
       :station-name-by-id="stationNameById"
       :task-label="taskLabel"
+      :task-display-text="taskDisplayText"
       :villager-name="villagerName"
       :task-progress="taskProgress"
       :remaining-seconds="remainingSeconds"
@@ -52,6 +53,7 @@ defineProps({
   itemDefinitions: { type: Object, required: true },
   stationNameById: { type: Function, required: true },
   taskLabel: { type: Function, required: true },
+  taskDisplayText: { type: Function, required: true },
   villagerName: { type: Function, required: true },
   taskProgress: { type: Function, required: true },
   remainingSeconds: { type: Function, required: true },

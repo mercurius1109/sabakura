@@ -46,6 +46,7 @@ import { createSurvivalTaskRuntime } from "./survival/useSurvivalTaskRuntime.js"
 import { createSurvivalAutomation } from "./survival/useSurvivalAutomation.js";
 import { createSurvivalDerivedState } from "./survival/useSurvivalDerivedState.js";
 import { createSurvivalFlow } from "./survival/useSurvivalFlow.js";
+import { createPlayerActions } from "./survival/usePlayerActions.js";
 import { t } from "../i18n/index.js";
 
 const playerMoveSpeedPerSecond = 600;
@@ -123,6 +124,7 @@ export function useSurvivalCraft() {
       ...percentPointToWorld({ x: 24, y: 18 }),
     }),
   ]);
+  const tasksById = reactive({});
   const craftQueue = reactive([]);
   const gatherQueue = reactive([]);
   const constructionQueue = reactive([]);
@@ -193,6 +195,150 @@ export function useSurvivalCraft() {
 
   function itemName(itemId) {
     return itemDefinitions[itemId]?.name || itemId;
+  }
+
+  function localActorById(actorId) {
+    if (actorId === playerActor.id) {
+      return playerActor;
+    }
+    return villagers.find((entry) => entry.id === actorId) || null;
+  }
+
+  function ownerActorIdForTask(task) {
+    if (!task) {
+      return null;
+    }
+    return task.ownerActorId || task.villagerId || (task.workerType === "self" ? playerActor.id : null);
+  }
+
+  function registerTask(task) {
+    if (!task?.id) {
+      return null;
+    }
+    tasksById[task.id] = task;
+    return task;
+  }
+
+  function unregisterTask(taskId) {
+    if (!taskId || !tasksById[taskId]) {
+      return null;
+    }
+    const task = tasksById[taskId];
+    delete tasksById[taskId];
+    return task;
+  }
+
+  function findTaskById(taskId) {
+    return taskId ? tasksById[taskId] || null : null;
+  }
+
+  function activeQueueForTask(task) {
+    if (!task) {
+      return null;
+    }
+    if (task.kind === "craft") {
+      return craftQueue;
+    }
+    if (task.kind === "build") {
+      return constructionQueue;
+    }
+    return gatherQueue;
+  }
+
+  function activateQueuedTask(actor, task) {
+    const queue = activeQueueForTask(task);
+    if (!actor || !task || !queue) {
+      return false;
+    }
+    if (task.phase === "working" && !task.workStartedAt) {
+      task.workStartedAt = now.value;
+    }
+    task.ownerActorId = actor.id;
+    registerTask(task);
+    actor.taskId = task.id;
+    actor.currentTaskId = task.id;
+    if (!queue.some((entry) => entry.id === task.id)) {
+      queue.push(task);
+    }
+    return true;
+  }
+
+  function scheduleActorTask(actor, task) {
+    if (!actor || !task) {
+      return false;
+    }
+    task.ownerActorId = actor.id;
+    registerTask(task);
+    if (!actor.taskQueue.includes(task.id)) {
+      actor.taskQueue.push(task.id);
+    }
+    if (actor.taskQueue[0] === task.id && actor.taskId === null) {
+      return activateQueuedTask(actor, task);
+    }
+    return true;
+  }
+
+  function normalizeTaskForActivation(task, actor) {
+    if (!task || !actor) {
+      return task;
+    }
+    return task;
+  }
+
+  function promoteNextActorTask(actor) {
+    if (!actor || actor.taskId !== null) {
+      return false;
+    }
+    const nextTask = findTaskById(actor.taskQueue[0]);
+    if (!nextTask) {
+      return false;
+    }
+    return activateQueuedTask(actor, normalizeTaskForActivation(nextTask, actor));
+  }
+
+  function removeTaskFromActorQueue(task) {
+    const actor = localActorById(ownerActorIdForTask(task));
+    if (!actor || !task) {
+      return null;
+    }
+    const taskIndex = actor.taskQueue.findIndex((taskId) => taskId === task.id);
+    if (taskIndex >= 0) {
+      actor.taskQueue.splice(taskIndex, 1);
+    }
+    if (actor.taskId === task.id) {
+      actor.taskId = null;
+      actor.currentTaskId = null;
+    }
+    unregisterTask(task.id);
+    promoteNextActorTask(actor);
+    return actor;
+  }
+
+  function removeTaskFromActiveState(task) {
+    if (!task) {
+      return false;
+    }
+    const queue = queueForTask(task);
+    if (queue) {
+      const index = queue.findIndex((entry) => entry.id === task.id);
+      if (index >= 0) {
+        queue.splice(index, 1);
+      }
+    }
+    removeTaskFromActorQueue(task);
+    return true;
+  }
+
+  function clearActorQueuedTasks(actor) {
+    if (!actor) {
+      return;
+    }
+    actor.taskQueue.forEach((taskId) => {
+      unregisterTask(taskId);
+    });
+    actor.taskQueue.splice(0);
+    actor.taskId = null;
+    actor.currentTaskId = null;
   }
 
   function requestCheckStockRules() {
@@ -367,7 +513,7 @@ export function useSurvivalCraft() {
     availableVillagerForRecipe,
     canStartStationCraftEntry,
     craftEntryStatus,
-    findTaskById,
+    findTaskById: managementFindTaskById,
     isGatherUnlocked,
     isPlayerActor,
     isRecipeUnlocked,
@@ -485,6 +631,7 @@ export function useSurvivalCraft() {
     storageWorkPoint,
     distanceBetween,
     actorInventoryCount,
+    scheduleActorTask,
     t,
   });
 
@@ -518,7 +665,6 @@ export function useSurvivalCraft() {
     pickupFieldNode,
     restartVillagerTask,
     shouldVillagerContinue,
-    startPlannedTask,
   } = createSurvivalFlow({
     playerActor,
     stockRules,
@@ -604,6 +750,7 @@ export function useSurvivalCraft() {
     findGatherTargetNode,
     addItemToStore: addItem,
     removeItemFromStore: removeItem,
+    consumeActorResources,
     restartVillagerTask,
     respawnFieldNodes,
     checkStockRules,
@@ -612,26 +759,46 @@ export function useSurvivalCraft() {
     actorInteractionDistance,
     buildingById,
     storageInteractionDistance,
+    removeTaskFromActiveState,
+    scheduleActorTask,
+    makeId,
     t,
   });
 
-  const isPlayerAdjacentToStorage = computed(() => {
-    if (!placedStructures.storage) {
-      return false;
-    }
-    const storageBuilding = buildingById("storage");
-    const storageAnchor = storageBuilding
-      ? { x: storageBuilding.x, y: storageBuilding.y }
-      : storagePointWorld;
-    return distanceBetween(playerActor, storageAnchor) <= storageInteractionDistance;
+  const {
+    approachTransferTarget,
+    dropPlayerItem,
+    isPlayerAdjacentToActor,
+    isPlayerAdjacentToStorage,
+    moveItemFromActorToActor,
+    moveItemFromActorToStorage,
+    moveItemFromOtherActorToPlayer,
+    moveItemFromStorageToActor,
+    movePlayerTo,
+    queuePlayerTransfer,
+  } = createPlayerActions({
+    playerActor,
+    storage,
+    storageContainer,
+    placedStructures,
+    storagePointWorld,
+    buildingById,
+    actorById,
+    actorWorkPoint,
+    storageWorkPoint,
+    distanceBetween,
+    storageInteractionDistance,
+    actorInteractionDistance,
+    cancelPlayerTaskForManualAction,
+    scheduleActorTask,
+    makeId,
+    addLog,
+    itemName,
+    actorHasItem,
+    transferItem,
+    removeItem,
+    spawnDroppedItems,
   });
-
-  function isPlayerAdjacentToActor(actor) {
-    if (!actor || actor.id === playerActor.id) {
-      return false;
-    }
-    return distanceBetween(playerActor, actor) <= actorInteractionDistance;
-  }
 
   function setGameSpeed(nextSpeed) {
     if (![0.1, 1, 10].includes(nextSpeed)) {
@@ -639,259 +806,6 @@ export function useSurvivalCraft() {
     }
     gameSpeed.value = nextSpeed;
     addLog(`Game speed set to x${nextSpeed}.`);
-  }
-
-  function playerTransferTargetPoint(targetKind, actorId = null) {
-    if (targetKind === "storage") {
-      return storageWorkPoint(playerActor);
-    }
-
-    const actor = actorById(actorId);
-    return actor ? actorWorkPoint(actor, playerActor) : null;
-  }
-
-  function approachTransferTarget(targetKind = "storage", actorId = null) {
-    if (!playerActor) {
-      return false;
-    }
-    if (!cancelPlayerTaskForManualAction()) {
-      return false;
-    }
-
-    if (targetKind === "storage" && isPlayerAdjacentToStorage.value) {
-      return true;
-    }
-
-    const targetActor = targetKind === "actor" ? actorById(actorId) : null;
-    if (targetKind === "actor" && isPlayerAdjacentToActor(targetActor)) {
-      return true;
-    }
-
-    const targetPoint = playerTransferTargetPoint(targetKind, actorId);
-    if (!targetPoint) {
-      return false;
-    }
-
-    const label = targetKind === "storage"
-      ? `Move to ${storageContainer.name}`
-      : `Move to ${targetActor?.name || "actor"}`;
-
-    const task = {
-      id: makeId("approach"),
-      kind: "approach",
-      label,
-      workerType: "player",
-      villagerId: playerActor.id,
-      station: targetKind,
-      source: "manual",
-      phase: "movingToTarget",
-      targetPoint,
-      initialTargetDistance: distanceBetween(playerActor, targetPoint),
-      workStartedAt: null,
-      duration: 1,
-      actorId,
-      targetKind,
-    };
-
-    playerActor.taskId = task.id;
-    gatherQueue.push(task);
-    return true;
-  }
-
-  function movePlayerTo(position) {
-    if (!playerActor || !position) {
-      return false;
-    }
-    if (!cancelPlayerTaskForManualAction()) {
-      return false;
-    }
-
-    const targetPoint = clampWorldPosition({
-      x: Number(position.x),
-      y: Number(position.y),
-    });
-    if (!Number.isFinite(targetPoint.x) || !Number.isFinite(targetPoint.y)) {
-      return false;
-    }
-    if (distanceBetween(playerActor, targetPoint) <= 8) {
-      return true;
-    }
-
-    const task = {
-      id: makeId("move"),
-      kind: "approach",
-      label: `Move to (${targetPoint.x.toFixed(0)}, ${targetPoint.y.toFixed(0)})`,
-      workerType: "player",
-      villagerId: playerActor.id,
-      station: "field",
-      source: "manual",
-      phase: "movingToTarget",
-      targetPoint,
-      initialTargetDistance: distanceBetween(playerActor, targetPoint),
-      workStartedAt: null,
-      duration: 1,
-      actorId: null,
-      targetKind: "field",
-    };
-
-    playerActor.taskId = task.id;
-    gatherQueue.push(task);
-    return true;
-  }
-
-  function queuePlayerTransfer(itemId, direction, actorId = null, targetKind = "storage") {
-    if (!playerActor) {
-      return false;
-    }
-    if (!cancelPlayerTaskForManualAction()) {
-      return false;
-    }
-
-    const targetActor = targetKind === "actor" ? actorById(actorId) : null;
-    const playerOwnsItem = actorHasItem(playerActor, itemId);
-    const storageOwnsItem = (storage[itemId] || 0) > 0;
-    const actorOwnsItem = targetActor ? actorHasItem(targetActor, itemId) : false;
-
-    if ((direction === "toStorage" || direction === "toActor") && !playerOwnsItem) {
-      addLog(`${playerActor.name} does not have ${itemName(itemId)}.`);
-      return false;
-    }
-    if (direction === "fromStorage" && !storageOwnsItem) {
-      addLog(`${itemName(itemId)} is not in storage.`);
-      return false;
-    }
-    if (direction === "fromActor" && !actorOwnsItem) {
-      addLog(`${targetActor?.name || "Actor"} does not have ${itemName(itemId)}.`);
-      return false;
-    }
-
-    const targetPoint = playerTransferTargetPoint(targetKind, actorId);
-    if (!targetPoint) {
-      return false;
-    }
-
-    const task = {
-      id: makeId("transfer"),
-      kind: "transfer",
-      label: direction === "toStorage"
-        ? `Store ${itemName(itemId)}`
-        : direction === "fromStorage"
-          ? `Take ${itemName(itemId)}`
-          : direction === "toActor"
-            ? `Give ${itemName(itemId)}`
-            : `Take ${itemName(itemId)}`,
-      itemId,
-      amount: 1,
-      workerType: "player",
-      villagerId: playerActor.id,
-      station: targetKind,
-      source: "manual",
-      phase: "movingToTarget",
-      targetPoint,
-      initialTargetDistance: distanceBetween(playerActor, targetPoint),
-      workStartedAt: null,
-      duration: 300,
-      transferDirection: direction,
-      actorId,
-      targetKind,
-    };
-
-    playerActor.taskId = task.id;
-    gatherQueue.push(task);
-    if (direction === "toStorage") {
-      addLog(`${playerActor.name} is moving ${itemName(itemId)} to storage.`);
-    } else if (direction === "fromStorage") {
-      addLog(`${playerActor.name} is going to take ${itemName(itemId)} from storage.`);
-    } else if (direction === "toActor") {
-      addLog(`${playerActor.name} is bringing ${itemName(itemId)} to ${targetActor?.name || "actor"}.`);
-    } else {
-      addLog(`${playerActor.name} is going to take ${itemName(itemId)} from ${targetActor?.name || "actor"}.`);
-    }
-    return true;
-  }
-
-  function moveItemFromActorToStorage(actor, itemId, amount = 1) {
-    if (!placedStructures.storage || !actor || actor.id !== playerActor.id || amount !== 1) {
-      return false;
-    }
-    if (!isPlayerAdjacentToStorage.value) {
-      addLog(`${playerActor.name} must stand next to storage to move items.`);
-      return false;
-    }
-    if (!transferItem(playerActor, storageContainer, itemId, amount)) {
-      addLog(`${playerActor.name} does not have ${itemName(itemId)}.`);
-      return false;
-    }
-    addLog(`${playerActor.name} moved ${itemName(itemId)} to ${storageContainer.name}.`);
-    return true;
-  }
-
-  function moveItemFromStorageToActor(actor, itemId, amount = 1) {
-    if (!placedStructures.storage || !actor || actor.id !== playerActor.id || amount !== 1) {
-      return false;
-    }
-    if (!isPlayerAdjacentToStorage.value) {
-      addLog(`${playerActor.name} must stand next to storage to move items.`);
-      return false;
-    }
-    if (!transferItem(storageContainer, playerActor, itemId, amount)) {
-      addLog(`${itemName(itemId)} is not in storage.`);
-      return false;
-    }
-    addLog(`${playerActor.name} took ${itemName(itemId)} from ${storageContainer.name}.`);
-    return true;
-  }
-
-  function moveItemFromActorToActor(sourceActor, targetActor, itemId, amount = 1) {
-    if (!sourceActor || !targetActor || sourceActor.id !== playerActor.id || targetActor.id === playerActor.id || amount !== 1) {
-      return false;
-    }
-    if (!isPlayerAdjacentToActor(targetActor)) {
-      addLog(`${playerActor.name} must stand next to ${targetActor.name} to move items.`);
-      return false;
-    }
-    if (!transferItem(playerActor, targetActor, itemId, amount)) {
-      addLog(`${playerActor.name} does not have ${itemName(itemId)}.`);
-      return false;
-    }
-    addLog(`${playerActor.name} gave ${itemName(itemId)} to ${targetActor.name}.`);
-    return true;
-  }
-
-  function moveItemFromOtherActorToPlayer(sourceActor, targetActor, itemId, amount = 1) {
-    if (!sourceActor || !targetActor || sourceActor.id === playerActor.id || targetActor.id !== playerActor.id || amount !== 1) {
-      return false;
-    }
-    if (!isPlayerAdjacentToActor(sourceActor)) {
-      addLog(`${playerActor.name} must stand next to ${sourceActor.name} to move items.`);
-      return false;
-    }
-    if (!transferItem(sourceActor, playerActor, itemId, amount)) {
-      addLog(`${sourceActor.name} does not have ${itemName(itemId)}.`);
-      return false;
-    }
-    addLog(`${playerActor.name} took ${itemName(itemId)} from ${sourceActor.name}.`);
-    return true;
-  }
-
-  function dropPlayerItem(itemId, amount = 1) {
-    if (!playerActor || amount !== 1) {
-      return false;
-    }
-    if (!cancelPlayerTaskForManualAction()) {
-      return false;
-    }
-    if (!actorHasItem(playerActor, itemId)) {
-      addLog(`${playerActor.name} does not have ${itemName(itemId)}.`);
-      return false;
-    }
-    if (!removeItem(playerActor.inventory, itemId, amount)) {
-      return false;
-    }
-
-    spawnDroppedItems({ [itemId]: amount }, { x: playerActor.x, y: playerActor.y });
-    addLog(`${playerActor.name} dropped ${itemName(itemId)}.`);
-    return true;
   }
 
   function clearLog() {
@@ -914,67 +828,71 @@ export function useSurvivalCraft() {
     return null;
   }
 
-  function refundTaskCosts(task, actor) {
-    if (!task || !actor || task.kind !== "craft" || task.carriedOutputs) {
-      return;
-    }
-
-    const recipe = recipeById(task.recipeId);
-    if (!recipe?.costs) {
-      return;
-    }
-
-    Object.entries(recipe.costs).forEach(([itemId, amount]) => {
-      addItem(actor.inventory, itemId, amount);
-    });
-  }
-
   function cancelTask(taskId) {
     const task = findTaskById(taskId);
     if (!task) {
       return false;
     }
-
-    const actor = task.villagerId ? actorById(task.villagerId) : null;
-    if (actor) {
-      actor.taskId = null;
-    }
-
-    refundTaskCosts(task, actor);
-
-    const queue = queueForTask(task);
-    if (!queue) {
-      return false;
-    }
-
-    const index = queue.findIndex((entry) => entry.id === task.id);
-    if (index >= 0) {
-      queue.splice(index, 1);
-    }
+    removeTaskFromActiveState(task);
 
     addLog(t("log.taskCancelled", { task: taskLabel(task) }));
     return true;
   }
 
-  function cancelPlayerTaskForManualAction() {
-    if (!playerActor?.taskId) {
-      return true;
-    }
-
-    const task = findTaskById(playerActor.taskId);
-    if (!task) {
-      playerActor.taskId = null;
-      return true;
-    }
-
-    const isPlayerTask = task.workerType === "player"
-      || task.workerType === "self"
-      || task.villagerId === playerActor.id;
-    if (!isPlayerTask) {
+  function cancelTasksForActor(actorId, { suppressLog = false } = {}) {
+    if (!actorId) {
       return false;
     }
 
-    return cancelTask(task.id);
+    const targetActor = actorById(actorId);
+    const queues = [gatherQueue, craftQueue, constructionQueue];
+    const tasks = queues.flatMap((queue) => queue.filter((task) => task.villagerId === actorId));
+    if (tasks.length === 0) {
+      if (targetActor) {
+        clearActorQueuedTasks(targetActor);
+      }
+      return true;
+    }
+
+    tasks.forEach((task) => {
+      removeTaskFromActiveState(task);
+
+      if (!suppressLog) {
+        addLog(t("log.taskCancelled", { task: taskLabel(task) }));
+      }
+    });
+
+    if (targetActor) {
+      clearActorQueuedTasks(targetActor);
+    }
+
+    return true;
+  }
+
+  function cancelPlayerTaskForManualAction() {
+    if (!playerActor) {
+      return false;
+    }
+
+    const playerTasks = [
+      ...gatherQueue.filter((task) => task.villagerId === playerActor.id || task.workerType === "self"),
+      ...craftQueue.filter((task) => task.villagerId === playerActor.id || task.workerType === "self"),
+      ...constructionQueue.filter((task) => task.villagerId === playerActor.id || task.workerType === "self"),
+    ];
+
+    if (playerTasks.length === 0) {
+      clearActorQueuedTasks(playerActor);
+      return true;
+    }
+
+    playerTasks.forEach((task) => {
+      removeTaskFromActiveState(task);
+
+      addLog(t("log.taskCancelled", { task: taskLabel(task) }));
+    });
+
+    clearActorQueuedTasks(playerActor);
+    return true;
   }
 
   let animationFrameId = null;
@@ -1082,7 +1000,9 @@ export function useSurvivalCraft() {
     startPlayerConstruction,
     startStationCraftEntry,
     recipeById,
+    findTaskById,
     taskLabel,
+    taskPhaseLabel,
     stockRuleSourceLabel,
     villagerName,
     taskProgress,

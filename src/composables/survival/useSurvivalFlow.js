@@ -17,30 +17,6 @@ export function createSurvivalFlow({
   hasActorResources,
   actorInventoryCount,
 }) {
-  function startPlannedTask(nextTask) {
-    if (!nextTask) {
-      return false;
-    }
-
-    if (nextTask.kind === "actor-gather") {
-      return startActorFieldTask(actorById(nextTask.actorId), nextTask.nodeId, nextTask.options || {});
-    }
-
-    if (nextTask.kind === "gather") {
-      return startGather(nextTask.actionId, nextTask.options || {});
-    }
-
-    if (nextTask.kind === "build") {
-      return startConstruction(nextTask.structureId);
-    }
-
-    if (nextTask.kind === "craft") {
-      return startCraft(nextTask.recipeId, nextTask.options || {});
-    }
-
-    return false;
-  }
-
   function pickupFieldNode(nodeId) {
     const node = fieldNodeById(nodeId);
     if (!node || !isFieldNodeVisible(node)) {
@@ -94,11 +70,6 @@ export function createSurvivalFlow({
   }
 
   function restartVillagerTask(task) {
-    if (task.nextTask) {
-      startPlannedTask(task.nextTask);
-      return;
-    }
-
     if (!shouldVillagerContinue(task)) {
       return;
     }
@@ -122,6 +93,5 @@ export function createSurvivalFlow({
     pickupFieldNode,
     restartVillagerTask,
     shouldVillagerContinue,
-    startPlannedTask,
   };
 }

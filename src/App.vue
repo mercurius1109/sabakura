@@ -9,9 +9,10 @@
           :construction-sites="constructionSitesForField"
           :placed-structure-nodes="placedStructureNodes"
           :item-definitions="itemDefinitions"
-          :current-player-task="currentPlayerTask"
-          :villager-task-text="villagerTaskText"
+          :current-player-task-entries="playerTaskQueueEntries"
+          :villager-task-entry-map="villagerTaskEntryMap"
           :task-label="taskLabel"
+          :task-display-text="fieldTaskText"
           :world-width="worldWidth"
           :world-height="worldHeight"
           :pending-placement="pendingBuildingPlacement"
@@ -71,6 +72,7 @@
           :player-transfer-disabled="playerTransferDisabled"
           :player-transfer-disabled-text="playerTransferDisabledText"
           :current-player-task="currentPlayerTask"
+          :current-player-tasks="playerTaskList"
           :task-label="taskLabel"
           :task-progress="taskProgress"
           :remaining-seconds="remainingSeconds"
@@ -107,6 +109,7 @@
           :is-player-adjacent-to-selected-villager="isPlayerAdjacentToSelectedVillager"
           :selected-villager-stations="selectedVillagerStations"
           :current-selected-villager-task="currentSelectedVillagerTask"
+          :current-selected-villager-tasks="selectedVillagerTaskList"
           :player-build-cards="playerBuildCards"
           :player-build-tooltip="playerBuildTooltip"
           :player-build-button-class="playerBuildButtonClass"
@@ -156,7 +159,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import FieldHud from "./components/FieldHud.vue";
 import GameField from "./components/GameField.vue";
 import GameWindows from "./components/GameWindows.vue";
@@ -222,8 +225,10 @@ const {
   recipeById,
   buildingById,
   taskLabel,
+  taskPhaseLabel,
   stationName,
   villagerName,
+  findTaskById,
   taskProgress,
   remainingSeconds,
   gameSpeed,
@@ -364,6 +369,7 @@ const {
   stationName,
   isStationAvailable,
   formatList,
+  findTaskById,
 });
 
 const {
@@ -420,16 +426,99 @@ const {
 });
 
 function taskForActor(actorId) {
+  const actor = actorId === playerActor.id
+    ? playerActor
+    : villagers.find((villager) => villager.id === actorId);
+  const currentTask = actor?.currentTaskId ? findTaskById(actor.currentTaskId) : null;
+  if (currentTask) {
+    return currentTask;
+  }
+  if (actor?.taskQueue?.length) {
+    const queuedTask = findTaskById(actor.taskQueue[0]);
+    if (queuedTask) {
+      return queuedTask;
+    }
+  }
   return gatherQueue.find((task) => task.villagerId === actorId)
     || craftQueue.find((task) => task.villagerId === actorId)
     || constructionQueue.find((task) => task.villagerId === actorId)
     || null;
 }
 
-function villagerTaskText(villagerId) {
-  const task = taskForActor(villagerId);
-  return task ? taskLabel(task) : "";
+function tasksForActor(actorId) {
+  const actor = actorId === playerActor.id
+    ? playerActor
+    : villagers.find((villager) => villager.id === actorId);
+  if (!actor) {
+    return [];
+  }
+
+  const queueTaskIds = Array.isArray(actor.taskQueue) ? actor.taskQueue : [];
+  const queueTasks = queueTaskIds
+    .map((taskId) => findTaskById(taskId))
+    .filter(Boolean);
+
+  if (queueTasks.length > 0) {
+    return queueTasks;
+  }
+
+  const fallbackTask = taskForActor(actorId);
+  return fallbackTask ? [fallbackTask] : [];
 }
+
+function fieldTaskText(task) {
+  if (!task) {
+    return "";
+  }
+  if (task.phase === "movingToTarget" || task.phase === "movingToStorage") {
+    return taskPhaseLabel(task);
+  }
+  return taskLabel(task);
+}
+
+function queuedTaskText(task) {
+  if (!task) {
+    return "";
+  }
+  if (task.kind === "gather" || task.kind === "craft" || task.kind === "build" || task.kind === "transfer") {
+    return taskLabel({ ...task, phase: "working" });
+  }
+  return fieldTaskText(task);
+}
+
+function taskQueueEntries(actorId) {
+  const tasks = tasksForActor(actorId);
+  if (tasks.length === 0) {
+    return [];
+  }
+
+  const entries = tasks
+    .map((task, index) => {
+      const text = index === 0 ? fieldTaskText(task) : queuedTaskText(task);
+      if (!text) {
+        return null;
+      }
+      const progress = taskProgress(task);
+      return {
+        text,
+        progress: progress > 0 ? progress : null,
+      };
+    })
+    .filter(Boolean);
+
+  return entries;
+}
+
+const playerTaskQueueEntries = computed(() => taskQueueEntries(playerActor.id));
+const playerTaskList = computed(() => tasksForActor(playerActor.id));
+
+const villagerTaskEntryMap = computed(() => Object.fromEntries(
+  villagers.map((villager) => [villager.id, taskQueueEntries(villager.id)]),
+));
+
+const selectedVillagerTaskList = computed(() => (
+  selectedVillager.value ? tasksForActor(selectedVillager.value.id) : []
+));
 </script>
 
 

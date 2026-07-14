@@ -57,18 +57,25 @@
         v-if="player"
         :key="player.id"
         type="button"
-        class="z-10 flex h-14 w-14 items-center justify-center rounded-full transition hover:scale-105"
+        class="pointer-events-none z-10 flex h-14 w-14 items-center justify-center rounded-full transition"
         :style="actorPositionStyle(player, 10)"
         :title="player.name"
       >
         <div class="text-center text-5xl leading-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.32)]">{{ playerIcon }}</div>
       </button>
       <div
-        v-if="playerTaskText"
-        :style="fieldPositionStyle(player?.renderX ?? player?.x ?? 0, (player?.renderY ?? player?.y ?? 0) + 42, 10)"
-        class="pointer-events-none z-10 whitespace-nowrap rounded-full bg-white/78 px-3 py-1 text-xs font-bold text-ink shadow-md backdrop-blur"
+        v-if="playerTaskEntries.length"
+        :style="fieldPositionStyle(player?.renderX ?? player?.x ?? 0, (player?.renderY ?? player?.y ?? 0) + 48, 10)"
+        class="pointer-events-none z-10 flex min-w-[120px] flex-col gap-1"
       >
-        {{ playerTaskText }}
+        <div
+          v-for="(taskEntry, index) in playerTaskEntries"
+          :key="`player-task-${index}`"
+          class="whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold leading-4 text-ink shadow-md backdrop-blur"
+          :style="taskEntryStyle(taskEntry)"
+        >
+          {{ taskEntry.text }}
+        </div>
       </div>
 
       <button
@@ -85,11 +92,18 @@
       <div
         v-for="villager in villagers"
         :key="`task-${villager.id}`"
-        v-show="villagerTaskText(villager.id)"
-        :style="fieldPositionStyle(villager?.renderX ?? villager?.x ?? 0, (villager?.renderY ?? villager?.y ?? 0) + 36, 1)"
-        class="pointer-events-none whitespace-nowrap rounded-full bg-white/78 px-3 py-1 text-xs font-bold text-ink shadow-md backdrop-blur"
+        v-show="villagerTaskEntries(villager.id).length"
+        :style="fieldPositionStyle(villager?.renderX ?? villager?.x ?? 0, (villager?.renderY ?? villager?.y ?? 0) + 42, 1)"
+        class="pointer-events-none flex min-w-[120px] flex-col gap-1"
       >
-        {{ villagerTaskText(villager.id) }}
+        <div
+          v-for="(taskEntry, index) in villagerTaskEntries(villager.id)"
+          :key="`${villager.id}-task-${index}`"
+          class="whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold leading-4 text-ink shadow-md backdrop-blur"
+          :style="taskEntryStyle(taskEntry)"
+        >
+          {{ taskEntry.text }}
+        </div>
       </div>
 
       <button
@@ -117,10 +131,10 @@ const props = defineProps({
   constructionSites: { type: Array, required: true },
   placedStructureNodes: { type: Array, required: true },
   itemDefinitions: { type: Object, required: true },
-  currentPlayerTask: { type: Object, required: false, default: null },
+  currentPlayerTaskEntries: { type: Array, required: false, default: () => [] },
   pendingPlacement: { type: Object, required: false, default: null },
   taskLabel: { type: Function, required: true },
-  villagerTaskText: { type: Function, required: true },
+  villagerTaskEntryMap: { type: Object, required: true },
   tutorialTargets: { type: Array, required: false, default: () => [] },
   worldWidth: { type: Number, required: true },
   worldHeight: { type: Number, required: true },
@@ -158,9 +172,27 @@ const camera = computed(() => {
   };
 });
 
-const playerTaskText = computed(() => (
-  props.currentPlayerTask ? props.taskLabel(props.currentPlayerTask) : ""
-));
+const playerTaskEntries = computed(() => Array.isArray(props.currentPlayerTaskEntries) ? props.currentPlayerTaskEntries : []);
+const villagerTaskEntryMap = computed(() => props.villagerTaskEntryMap || {});
+
+function villagerTaskEntries(villagerId) {
+  const entries = villagerTaskEntryMap.value?.[villagerId];
+  return Array.isArray(entries) ? entries : [];
+}
+
+function taskEntryStyle(taskEntry) {
+  const progress = Number(taskEntry?.progress);
+  if (!Number.isFinite(progress) || progress <= 0) {
+    return {
+      backgroundColor: "rgba(255,255,255,0.78)",
+    };
+  }
+
+  const clamped = Math.max(0, Math.min(100, progress));
+  return {
+    backgroundImage: `linear-gradient(90deg, rgba(148, 196, 91, 0.75) 0%, rgba(148, 196, 91, 0.75) ${clamped}%, rgba(255,255,255,0.78) ${clamped}%, rgba(255,255,255,0.78) 100%)`,
+  };
+}
 
 function fieldPositionStyle(x, y, zIndex = null) {
   return {

@@ -23,8 +23,8 @@
           <span class="max-w-[56px] truncate text-[10px] font-bold leading-4 text-muted">
             {{ villagerStationsLabel(villager) }}
           </span>
-          <span class="rounded-full px-2 py-1 text-[10px] font-bold leading-none" :class="villager.taskId ? 'bg-orange-100 text-ambered' : 'bg-emerald-100 text-moss'">
-            {{ villager.taskId ? t("ui.busy") : t("ui.idle") }}
+          <span class="rounded-full px-2 py-1 text-[10px] font-bold leading-none" :class="(villager.currentTaskId || villager.taskQueue?.length) ? 'bg-orange-100 text-ambered' : 'bg-emerald-100 text-moss'">
+            {{ (villager.currentTaskId || villager.taskQueue?.length) ? t("ui.busy") : t("ui.idle") }}
           </span>
         </div>
       </button>

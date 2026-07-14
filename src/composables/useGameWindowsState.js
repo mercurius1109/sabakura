@@ -41,6 +41,7 @@ export function useGameWindowsState(options) {
     stationName,
     isStationAvailable,
     formatList,
+    findTaskById,
   } = options;
 
   const tutorialHighlightClass = "tutorial-highlight tutorial-highlight-ui";
@@ -98,8 +99,8 @@ export function useGameWindowsState(options) {
     Boolean(draftStockRuleId.value) && Number(draftStockRuleTarget.value) >= 1,
   );
 
-  const currentPlayerTask = computed(() => taskForActor(playerActor.id, playerActor.id, gatherQueue, craftQueue, constructionQueue));
-  const currentSelectedVillagerTask = computed(() => taskForActor(selectedVillager.value?.id || null, playerActor.id, gatherQueue, craftQueue, constructionQueue));
+  const currentPlayerTask = computed(() => taskForActor(playerActor, playerActor.id, gatherQueue, craftQueue, constructionQueue, findTaskById));
+  const currentSelectedVillagerTask = computed(() => taskForActor(selectedVillager.value, playerActor.id, gatherQueue, craftQueue, constructionQueue, findTaskById));
 
   const selectedStationWindow = computed(() => {
     const stationId = selectedWindow.value?.type;
@@ -331,16 +332,28 @@ function actionableEntries(store, itemDefinitions) {
   return itemCardsFromStore(store, itemDefinitions).filter((item) => item.amount > 0);
 }
 
-function taskForActor(actorId, playerActorId, gatherQueue, craftQueue, constructionQueue) {
-  if (!actorId) {
+function taskForActor(actor, playerActorId, gatherQueue, craftQueue, constructionQueue, findTaskById) {
+  if (!actor) {
     return null;
   }
 
+  const currentTask = findTaskById(actor.currentTaskId);
+  if (currentTask) {
+    return currentTask;
+  }
+
+  if (actor.taskQueue?.length) {
+    const queuedTask = findTaskById(actor.taskQueue[0]);
+    if (queuedTask) {
+      return queuedTask;
+    }
+  }
+
   return [...gatherQueue, ...craftQueue, ...constructionQueue].find((task) => {
-    if (task.villagerId === actorId) {
+    if (task.villagerId === actor.id) {
       return true;
     }
-    return task.workerType === "self" && actorId === playerActorId;
+    return task.workerType === "self" && actor.id === playerActorId;
   }) || null;
 }
 

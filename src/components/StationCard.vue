@@ -119,7 +119,7 @@
 
       <div v-for="task in tasks" :key="task.id" class="mt-3 grid gap-1.5">
         <div class="flex items-center justify-between gap-2 text-sm font-bold">
-          <span>{{ taskLabel(task) }}</span>
+          <span>{{ taskDisplayText(task) }}</span>
           <div class="flex items-center gap-2">
             <span class="text-xs font-semibold text-muted">{{ villagerName(task.villagerId) }}</span>
             <button
@@ -284,6 +284,7 @@ const props = defineProps({
   itemDefinitions: { type: Object, required: true },
   stationNameById: { type: Function, required: false, default: null },
   taskLabel: { type: Function, required: true },
+  taskDisplayText: { type: Function, required: true },
   villagerName: { type: Function, required: true },
   taskProgress: { type: Function, required: true },
   remainingSeconds: { type: Function, required: true },

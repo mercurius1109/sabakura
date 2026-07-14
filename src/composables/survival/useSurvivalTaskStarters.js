@@ -39,10 +39,141 @@ export function createSurvivalTaskStarters({
   storageWorkPoint,
   distanceBetween,
   actorInventoryCount,
+  scheduleActorTask,
   t,
 }) {
   function autoSuffix(source) {
     return source === "auto" || source === "station-auto" ? t("log.autoSuffix") : "";
+  }
+
+  function isAtTarget(actor, targetPoint) {
+    return distanceBetween(actor, targetPoint) <= 0.0001;
+  }
+
+  function scheduleFollowUpTask(actor, nextTask = null) {
+    if (!actor || !nextTask) {
+      return false;
+    }
+    return scheduleActorTask(actor, nextTask);
+  }
+
+  function createGatherTask(actor, action, targetNode, options = {}) {
+    return {
+      id: makeId(isPlayerActor(actor) ? "player-gather" : "gather"),
+      kind: "gather",
+      actionId: action.id,
+      itemId: action.itemId,
+      amount: action.amount,
+      workerType: isPlayerActor(actor) ? "player" : "villager",
+      villagerId: actor.id,
+      station: options.preferredStationId || action.requiresStation || "field",
+      source: options.source || "manual",
+      ruleId: options.ruleId || null,
+      targetNodeId: targetNode.id,
+      phase: "working",
+      targetPoint: null,
+      initialTargetDistance: 0,
+      workStartedAt: null,
+      duration: action.duration,
+      dropToStorage: options.dropToStorage ?? !isPlayerActor(actor),
+      carriedOutputs: null,
+      keepOutputs: options.keepOutputs ?? isPlayerActor(actor),
+      carryLimit: actor.inventoryCapacity ?? Number.POSITIVE_INFINITY,
+      deliveryTarget: options.deliveryTarget ?? action.amount,
+      carriedAmount: 0,
+    };
+  }
+
+  function createCraftTask(villager, recipeId, recipe, workerType, source, options = {}) {
+    return {
+      id: makeId("task"),
+      kind: "craft",
+      recipeId,
+      workerType,
+      villagerId: villager.id,
+      station: recipe.station,
+      source,
+      phase: "working",
+      targetPoint: null,
+      initialTargetDistance: 0,
+      workStartedAt: null,
+      carriedOutputs: recipe.outputs,
+      craftEntryId: options.craftEntryId || null,
+      startedAt: now.value,
+      duration: recipe.duration,
+    };
+  }
+
+  function createConstructionTask(actor, structureId, building, workerType) {
+    return {
+      id: makeId("construction"),
+      kind: "build",
+      structureId,
+      workerType,
+      villagerId: actor.id,
+      station: "construction",
+      phase: "working",
+      targetPoint: null,
+      initialTargetDistance: 0,
+      workStartedAt: null,
+      startedAt: now.value,
+      duration: building.duration,
+    };
+  }
+
+  function createTransferTask(actor, itemId, amount, direction, targetKind, actorId = null, source = "manual") {
+    return {
+      id: makeId("transfer"),
+      kind: "transfer",
+      label: direction === "toStorage"
+        ? t("log.moveToStorage", { actor: actor.name, item: itemName(itemId) })
+        : direction === "fromStorage"
+          ? t("log.takeFromStorage", { actor: actor.name, item: itemName(itemId) })
+          : direction === "toActor"
+            ? `${actor.name} gives ${itemName(itemId)}`
+            : `${actor.name} takes ${itemName(itemId)}`,
+      itemId,
+      amount,
+      workerType: isPlayerActor(actor) ? "player" : "villager",
+      villagerId: actor.id,
+      station: targetKind,
+      source,
+      phase: "working",
+      workStartedAt: null,
+      duration: 1,
+      transferDirection: direction,
+      actorId,
+      targetKind,
+    };
+  }
+
+  function startActorApproachTask(actor, targetPoint, label, nextTask = null) {
+    if (!actor || !targetPoint || actor.taskId !== null) {
+      return false;
+    }
+
+    const task = {
+      id: makeId(isPlayerActor(actor) ? "player-move" : "approach"),
+      kind: "move",
+      label,
+      workerType: isPlayerActor(actor) ? "player" : "villager",
+      villagerId: actor.id,
+      station: "field",
+      source: "manual",
+      phase: "movingToTarget",
+      targetPoint,
+      initialTargetDistance: distanceBetween(actor, targetPoint),
+      workStartedAt: null,
+      duration: 1,
+      actorId: null,
+      targetKind: "field",
+    };
+
+    const started = scheduleActorTask(actor, task);
+    if (started) {
+      scheduleFollowUpTask(actor, nextTask);
+    }
+    return started;
   }
 
   function startActorPickupTask(actor, node, nextTask = null) {
@@ -51,33 +182,20 @@ export function createSurvivalTaskStarters({
     }
 
     const targetPoint = nodeWorkPoint(node, actor);
-    const task = {
-      id: makeId("pickup"),
-      kind: "gather",
-      actionId: null,
-      label: t("log.moveToPickup", { actor: actor.name, item: itemName(node.itemId) }),
+    const task = createGatherTask(actor, {
+      id: `pickup-${node.itemId}`,
       itemId: node.itemId,
       amount: 1,
-      workerType: isPlayerActor(actor) ? "player" : "villager",
-      villagerId: actor.id,
-      station: "field",
-      source: "fetch",
-      ruleId: null,
-      targetNodeId: node.id,
-      phase: "movingToTarget",
-      targetPoint,
-      initialTargetDistance: distanceBetween(actor, targetPoint),
-      workStartedAt: null,
       duration: 1000,
-      carriedOutputs: null,
-      keepOutputs: true,
-      nextTask,
-    };
+    }, node, { source: "fetch", keepOutputs: true });
 
-    actor.taskId = task.id;
-    gatherQueue.push(task);
-    addLog(t("log.moveToPickup", { actor: actor.name, item: itemName(node.itemId) }));
-    return true;
+    const started = isAtTarget(actor, targetPoint)
+      ? scheduleActorTask(actor, task)
+      : startActorApproachTask(actor, targetPoint, t("log.moveToPickup", { actor: actor.name, item: itemName(node.itemId) }), task);
+    if (started) {
+      scheduleFollowUpTask(actor, nextTask);
+    }
+    return started;
   }
 
   function startActorStorageFetchTask(actor, itemId, amount = 1, nextTask = null) {
@@ -86,31 +204,15 @@ export function createSurvivalTaskStarters({
     }
 
     const targetPoint = storageWorkPoint(actor);
-    const task = {
-      id: makeId("transfer"),
-      kind: "transfer",
-      label: t("log.takeFromStorage", { actor: actor.name, item: itemName(itemId) }),
-      itemId,
-      amount,
-      workerType: isPlayerActor(actor) ? "player" : "villager",
-      villagerId: actor.id,
-      station: "storage",
-      source: "fetch",
-      phase: "movingToTarget",
-      targetPoint,
-      initialTargetDistance: distanceBetween(actor, targetPoint),
-      workStartedAt: null,
-      duration: 300,
-      transferDirection: "fromStorage",
-      actorId: null,
-      targetKind: "storage",
-      nextTask,
-    };
-
-    actor.taskId = task.id;
-    gatherQueue.push(task);
+    const task = createTransferTask(actor, itemId, amount, "fromStorage", "storage", null, "fetch");
+    const started = isAtTarget(actor, targetPoint)
+      ? scheduleActorTask(actor, task)
+      : startActorApproachTask(actor, targetPoint, t("log.moveToStorage", { actor: actor.name, item: itemName(itemId) }), task);
+    if (started) {
+      scheduleFollowUpTask(actor, nextTask);
+    }
     addLog(t("log.moveToStorage", { actor: actor.name, item: itemName(itemId) }));
-    return true;
+    return started;
   }
 
   function startActorStorageDeliveryTask(actor, itemId, amount = 1, nextTask = null) {
@@ -119,31 +221,15 @@ export function createSurvivalTaskStarters({
     }
 
     const targetPoint = storageWorkPoint(actor);
-    const task = {
-      id: makeId("transfer"),
-      kind: "transfer",
-      label: t("log.moveToStorage", { actor: actor.name, item: itemName(itemId) }),
-      itemId,
-      amount,
-      workerType: isPlayerActor(actor) ? "player" : "villager",
-      villagerId: actor.id,
-      station: "storage",
-      source: "deliver",
-      phase: "movingToTarget",
-      targetPoint,
-      initialTargetDistance: distanceBetween(actor, targetPoint),
-      workStartedAt: null,
-      duration: 300,
-      transferDirection: "toStorage",
-      actorId: null,
-      targetKind: "storage",
-      nextTask,
-    };
-
-    actor.taskId = task.id;
-    gatherQueue.push(task);
+    const task = createTransferTask(actor, itemId, amount, "toStorage", "storage", null, "deliver");
+    const started = isAtTarget(actor, targetPoint)
+      ? scheduleActorTask(actor, task)
+      : startActorApproachTask(actor, targetPoint, t("log.moveToStorage", { actor: actor.name, item: itemName(itemId) }), task);
+    if (started) {
+      scheduleFollowUpTask(actor, nextTask);
+    }
     addLog(t("log.moveToStorage", { actor: actor.name, item: itemName(itemId) }));
-    return true;
+    return started;
   }
 
   function ensureVillagerHasRequiredItem(villager, itemId, nextTask = null) {
@@ -225,15 +311,12 @@ export function createSurvivalTaskStarters({
       return false;
     }
 
-    startActorStorageFetchTask(villager, itemId, missingAmount, {
-      kind: "craft",
-      recipeId: recipe.id,
-      options: {
-        workerType: "villager",
-        source,
-        craftEntryId,
-      },
-    });
+    startActorStorageFetchTask(
+      villager,
+      itemId,
+      missingAmount,
+      createCraftTask(villager, recipe.id, recipe, "villager", source, { craftEntryId }),
+    );
     return villager.taskId !== null;
   }
 
@@ -250,36 +333,15 @@ export function createSurvivalTaskStarters({
       return false;
     }
 
+    const task = createGatherTask(actor, action, targetNode, options);
     const targetPoint = nodeWorkPoint(targetNode, actor);
-    const task = {
-      id: makeId(isPlayerActor(actor) ? "player-gather" : "gather"),
-      kind: "gather",
-      actionId: action.id,
-      itemId: action.itemId,
-      amount: action.amount,
-      workerType: isPlayerActor(actor) ? "player" : "villager",
-      villagerId: actor.id,
-      station: options.preferredStationId || action.requiresStation || "field",
-      source: options.source || "manual",
-      ruleId: options.ruleId || null,
-      targetNodeId: targetNode.id,
-      phase: "movingToTarget",
-      targetPoint,
-      initialTargetDistance: distanceBetween(actor, targetPoint),
-      workStartedAt: null,
-      duration: action.duration,
-      dropToStorage: options.dropToStorage ?? !isPlayerActor(actor),
-      carriedOutputs: null,
-      keepOutputs: options.keepOutputs ?? isPlayerActor(actor),
-      carryLimit: actor.inventoryCapacity ?? Number.POSITIVE_INFINITY,
-      deliveryTarget: options.deliveryTarget ?? action.amount,
-      carriedAmount: 0,
-      nextTask: options.nextTask || null,
-    };
-
-    actor.taskId = task.id;
-    gatherQueue.push(task);
-    return true;
+    const started = isAtTarget(actor, targetPoint)
+      ? scheduleActorTask(actor, task)
+      : startActorApproachTask(actor, targetPoint, t("log.moveToAction", { actor: actor.name, action: action.label }), task);
+    if (started) {
+      scheduleFollowUpTask(actor, options.nextTask);
+    }
+    return started;
   }
 
   function startActorFieldTask(actor, nodeId, options = {}) {
@@ -288,8 +350,9 @@ export function createSurvivalTaskStarters({
     if (!actor) {
       return false;
     }
-    if (actor.taskId && !findTaskById(actor.taskId)) {
+    if (actor.currentTaskId && !findTaskById(actor.currentTaskId)) {
       actor.taskId = null;
+      actor.currentTaskId = null;
     }
 
     if (!node || !action || actor.taskId !== null) {
@@ -297,12 +360,7 @@ export function createSurvivalTaskStarters({
     }
 
     const prepared = action.requiresItem
-      ? prepareActorRequiredItem(actor, action.requiresItem, {
-        kind: "actor-gather",
-        actorId: actor.id,
-        nodeId: node.id,
-        options,
-      })
+      ? prepareActorRequiredItem(actor, action.requiresItem, createGatherTask(actor, action, node, options))
       : true;
     if (!prepared) {
       const heldCount = actor.inventory[action.requiresItem] || 0;
@@ -323,16 +381,45 @@ export function createSurvivalTaskStarters({
     if (!started) {
       return false;
     }
-    addLog(t("log.moveToAction", { actor: actor.name, action: action.label }));
     return true;
   }
 
   function startPlayerFieldTask(nodeId) {
-    return startActorFieldTask(playerActor, nodeId, {
+    const node = fieldNodeById(nodeId);
+    const action = node ? gatherActionForNode(node) : null;
+    if (!node || !action) {
+      return false;
+    }
+
+    if (action.requiresItem && !actorHasItem(playerActor, action.requiresItem)) {
+      return startActorFieldTask(playerActor, nodeId, {
+        source: "manual",
+        keepOutputs: true,
+        dropToStorage: false,
+      });
+    }
+
+    const targetPoint = nodeWorkPoint(node, playerActor);
+    const nextTask = createGatherTask(playerActor, action, node, {
       source: "manual",
       keepOutputs: true,
       dropToStorage: false,
+      suppressMoveLog: true,
     });
+
+    const started = isAtTarget(playerActor, targetPoint)
+      ? scheduleActorTask(playerActor, nextTask)
+      : startActorApproachTask(
+        playerActor,
+        targetPoint,
+        t("log.moveToAction", { actor: playerActor.name, action: action.label }),
+        nextTask,
+      );
+    if (!started) {
+      return false;
+    }
+
+    return true;
   }
 
   function startGather(actionId, options = {}) {
@@ -358,17 +445,16 @@ export function createSurvivalTaskStarters({
       return false;
     }
     if (action.requiresItem) {
-      const prepared = prepareVillagerRequiredItem(villager, action.requiresItem, {
-        kind: "actor-gather",
-        actorId: villager.id,
-        nodeId: targetNode.id,
-        options: {
+      const prepared = prepareVillagerRequiredItem(
+        villager,
+        action.requiresItem,
+        createGatherTask(villager, action, targetNode, {
           source: options.source || "manual",
           ruleId: options.ruleId || null,
           dropToStorage: true,
           preferredStationId,
-        },
-      });
+        }),
+      );
       if (!prepared) {
         if (villager.taskId) {
           return true;
@@ -427,9 +513,6 @@ export function createSurvivalTaskStarters({
     }
 
     if (workerType === "self") {
-      if (!consumeActorResources(playerActor, recipe)) {
-        return false;
-      }
       const task = {
         id: makeId("task"),
         kind: "craft",
@@ -445,7 +528,7 @@ export function createSurvivalTaskStarters({
         startedAt: now.value,
         duration: recipe.duration,
       };
-      craftQueue.push(task);
+      scheduleActorTask(playerActor, task);
       addLog(t("log.playerCraftStarted", { recipe: recipe.name }));
       return true;
     }
@@ -470,31 +553,18 @@ export function createSurvivalTaskStarters({
     if (villager.taskId !== null) {
       return true;
     }
-    if (!consumeActorResources(villager, recipe)) {
+    const task = createCraftTask(villager, recipeId, recipe, workerType, source, options);
+    const targetPoint = buildingWorkPoint(recipe.station, villager);
+    const started = isAtTarget(villager, targetPoint)
+      ? scheduleActorTask(villager, task)
+      : startActorApproachTask(villager, targetPoint, t("log.villagerCraftStarted", {
+        actor: villager.name,
+        recipe: recipe.name,
+        suffix: autoSuffix(source),
+      }), task);
+    if (!started) {
       return false;
     }
-
-    const targetPoint = buildingWorkPoint(recipe.station, villager);
-    const task = {
-      id: makeId("task"),
-      kind: "craft",
-      recipeId,
-      workerType,
-      villagerId: villager.id,
-      station: recipe.station,
-      source,
-      phase: "movingToTarget",
-      targetPoint,
-      initialTargetDistance: distanceBetween(villager, targetPoint),
-      workStartedAt: null,
-      carriedOutputs: recipe.outputs,
-      craftEntryId: options.craftEntryId || null,
-      startedAt: now.value,
-      duration: recipe.duration,
-    };
-
-    villager.taskId = task.id;
-    craftQueue.push(task);
     addLog(t("log.villagerCraftStarted", {
       actor: villager.name,
       recipe: recipe.name,
@@ -524,17 +594,19 @@ export function createSurvivalTaskStarters({
 
     const workerType = options.workerType || "villager";
     if (workerType === "player") {
-      if (playerActor.taskId && !findTaskById(playerActor.taskId)) {
+      if (playerActor.currentTaskId && !findTaskById(playerActor.currentTaskId)) {
         playerActor.taskId = null;
+        playerActor.currentTaskId = null;
       }
       if (playerActor.taskId !== null) {
         return false;
       }
       if (!actorHasItem(playerActor, "hammer")) {
-        const prepared = prepareActorRequiredItem(playerActor, "hammer", {
-          kind: "build",
-          structureId,
-        });
+        const prepared = prepareActorRequiredItem(
+          playerActor,
+          "hammer",
+          createConstructionTask(playerActor, structureId, building, "player"),
+        );
         if (prepared && playerActor.taskId !== null) {
           return true;
         }
@@ -542,24 +614,14 @@ export function createSurvivalTaskStarters({
         return false;
       }
 
+      const task = createConstructionTask(playerActor, structureId, building, "player");
       const targetPoint = buildingWorkPoint(structureId, playerActor);
-      const task = {
-        id: makeId("construction"),
-        kind: "build",
-        structureId,
-        workerType: "player",
-        villagerId: playerActor.id,
-        station: "construction",
-        phase: "movingToTarget",
-        targetPoint,
-        initialTargetDistance: distanceBetween(playerActor, targetPoint),
-        workStartedAt: null,
-        startedAt: now.value,
-        duration: building.duration,
-      };
-
-      playerActor.taskId = task.id;
-      constructionQueue.push(task);
+      const started = isAtTarget(playerActor, targetPoint)
+        ? scheduleActorTask(playerActor, task)
+        : startActorApproachTask(playerActor, targetPoint, t("log.playerBuildStarted", { building: building.name }), task);
+      if (!started) {
+        return false;
+      }
       addLog(t("log.playerBuildStarted", { building: building.name }));
       return true;
     }
@@ -568,10 +630,11 @@ export function createSurvivalTaskStarters({
     if (!villager) {
       return false;
     }
-    const prepared = prepareVillagerRequiredItem(villager, "hammer", {
-      kind: "build",
-      structureId,
-    });
+    const prepared = prepareVillagerRequiredItem(
+      villager,
+      "hammer",
+      createConstructionTask(villager, structureId, building, "villager"),
+    );
     if (!prepared) {
       return villager.taskId !== null;
     }
@@ -579,24 +642,14 @@ export function createSurvivalTaskStarters({
       return true;
     }
 
+    const task = createConstructionTask(villager, structureId, building, "villager");
     const targetPoint = buildingWorkPoint(structureId, villager);
-    const task = {
-      id: makeId("construction"),
-      kind: "build",
-      structureId,
-      workerType: "villager",
-      villagerId: villager.id,
-      station: "construction",
-      phase: "movingToTarget",
-      targetPoint,
-      initialTargetDistance: distanceBetween(villager, targetPoint),
-      workStartedAt: null,
-      startedAt: now.value,
-      duration: building.duration,
-    };
-
-    villager.taskId = task.id;
-    constructionQueue.push(task);
+    const started = isAtTarget(villager, targetPoint)
+      ? scheduleActorTask(villager, task)
+      : startActorApproachTask(villager, targetPoint, t("log.villagerBuildStarted", { actor: villager.name, building: building.name }), task);
+    if (!started) {
+      return false;
+    }
     addLog(t("log.villagerBuildStarted", { actor: villager.name, building: building.name }));
     return true;
   }
@@ -611,6 +664,7 @@ export function createSurvivalTaskStarters({
     prepareVillagerRequiredItem,
     startActorFieldTask,
     startActorGatherTask,
+    startActorApproachTask,
     startActorPickupTask,
     startConstruction,
     startCraft,

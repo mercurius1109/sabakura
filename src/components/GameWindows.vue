@@ -16,7 +16,9 @@
           :transfer-disabled="playerTransferDisabled"
           :transfer-disabled-text="playerTransferDisabledText"
           :task="currentPlayerTask"
+          :tasks="currentPlayerTasks"
           :task-label="taskLabel"
+          :task-display-text="taskDisplayText"
           :task-progress="taskProgress"
           :remaining-seconds="remainingSeconds"
           :on-cancel-task="cancelTask"
@@ -40,7 +42,9 @@
           :transfer-disabled="false"
           :transfer-disabled-text="''"
           :task="currentPlayerTask"
+          :tasks="currentPlayerTasks"
           :task-label="taskLabel"
+          :task-display-text="taskDisplayText"
           :task-progress="taskProgress"
           :remaining-seconds="remainingSeconds"
           :on-cancel-task="cancelTask"
@@ -96,7 +100,9 @@
               :transfer-disabled="false"
               :transfer-disabled-text="''"
               :task="currentPlayerTask"
+              :tasks="currentPlayerTasks"
               :task-label="taskLabel"
+              :task-display-text="taskDisplayText"
               :task-progress="taskProgress"
               :remaining-seconds="remainingSeconds"
               :on-cancel-task="cancelTask"
@@ -126,6 +132,7 @@
             :item-definitions="itemDefinitions"
             :station-name-by-id="stationName"
             :task-label="taskLabel"
+            :task-display-text="taskDisplayText"
             :villager-name="villagerName"
             :task-progress="taskProgress"
             :remaining-seconds="remainingSeconds"
@@ -154,7 +161,9 @@
               :transfer-disabled="playerTransferDisabled"
               :transfer-disabled-text="playerTransferDisabledText"
               :task="currentPlayerTask"
+              :tasks="currentPlayerTasks"
               :task-label="taskLabel"
+              :task-display-text="taskDisplayText"
               :task-progress="taskProgress"
               :remaining-seconds="remainingSeconds"
               :on-cancel-task="cancelTask"
@@ -218,7 +227,9 @@
               :transfer-disabled="playerTransferDisabled"
               :transfer-disabled-text="playerTransferDisabledText"
               :task="currentPlayerTask"
+              :tasks="currentPlayerTasks"
               :task-label="taskLabel"
+              :task-display-text="taskDisplayText"
               :task-progress="taskProgress"
               :remaining-seconds="remainingSeconds"
               :on-cancel-task="cancelTask"
@@ -237,7 +248,9 @@
             :is-player-adjacent="isPlayerAdjacentToSelectedVillager"
             :stations="selectedVillagerStations"
             :task="currentSelectedVillagerTask"
+            :tasks="currentSelectedVillagerTasks"
             :task-label="taskLabel"
+            :task-display-text="taskDisplayText"
             :task-progress="taskProgress"
             :remaining-seconds="remainingSeconds"
             :on-cancel-task="cancelTask"
@@ -272,7 +285,9 @@ const props = defineProps({
   playerTransferDisabled: { type: Boolean, required: true },
   playerTransferDisabledText: { type: String, required: true },
   currentPlayerTask: { type: Object, default: null },
+  currentPlayerTasks: { type: Array, required: true },
   taskLabel: { type: Function, required: true },
+  taskDisplayText: { type: Function, required: true },
   taskProgress: { type: Function, required: true },
   remainingSeconds: { type: Function, required: true },
   cancelTask: { type: Function, required: true },
@@ -308,6 +323,7 @@ const props = defineProps({
   isPlayerAdjacentToSelectedVillager: { type: Boolean, required: true },
   selectedVillagerStations: { type: Array, required: true },
   currentSelectedVillagerTask: { type: Object, default: null },
+  currentSelectedVillagerTasks: { type: Array, required: true },
   playerBuildCards: { type: Array, required: true },
   playerBuildTooltip: { type: Function, required: true },
   playerBuildButtonClass: { type: Function, required: true },

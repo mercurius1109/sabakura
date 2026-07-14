@@ -26,7 +26,9 @@
     <TaskPanel
       class="mt-4"
       :task="task"
+      :tasks="tasks"
       :task-label="taskLabel"
+      :task-display-text="taskDisplayText"
       :task-progress="taskProgress"
       :remaining-seconds="remainingSeconds"
       :on-cancel="onCancelTask"
@@ -44,7 +46,9 @@ defineProps({
   isPlayerAdjacent: { type: Boolean, required: true },
   stations: { type: Array, required: true },
   task: { type: Object, default: null },
+  tasks: { type: Array, default: () => [] },
   taskLabel: { type: Function, required: true },
+  taskDisplayText: { type: Function, required: true },
   taskProgress: { type: Function, required: true },
   remainingSeconds: { type: Function, required: true },
   onCancelTask: { type: Function, default: null },
