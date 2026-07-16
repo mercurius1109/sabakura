@@ -159,9 +159,6 @@ export function createSurvivalManagementHelpers({
 
   function firstAvailableVillager(candidates, action = null) {
     return candidates.find((villager) => {
-      if (!actorCanWork(villager)) {
-        return false;
-      }
       if (actorIsBusy(villager)) {
         return false;
       }

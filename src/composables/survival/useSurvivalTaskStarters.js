@@ -386,10 +386,6 @@ export function createSurvivalTaskStarters({
   }
 
   function startPlayerFieldTask(nodeId) {
-    if (!actorCanWork(playerActor)) {
-      addLog(t("log.tooHungryToWork", { actor: playerActor.name }));
-      return false;
-    }
     const node = fieldNodeById(nodeId);
     const action = node ? gatherActionForNode(node) : null;
     if (!node || !action) {
