@@ -64,8 +64,18 @@
         <div class="text-center text-5xl leading-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.32)]">{{ playerIcon }}</div>
       </button>
       <div
+        v-if="actorSpeechText(player)"
+        :style="speechBubblePositionStyle(player?.renderX ?? player?.x ?? 0, (player?.renderY ?? player?.y ?? 0) - 62, 11)"
+        class="pointer-events-none z-10"
+      >
+        <div class="relative rounded-2xl border border-[#d8c9b7] bg-white/95 px-3 py-2 text-xs font-bold leading-4 text-ink shadow-lg">
+          {{ actorSpeechText(player) }}
+          <div class="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-[#d8c9b7] bg-white/95"></div>
+        </div>
+      </div>
+      <div
         v-if="playerTaskEntries.length"
-        :style="fieldPositionStyle(player?.renderX ?? player?.x ?? 0, (player?.renderY ?? player?.y ?? 0) + 48, 10)"
+        :style="taskStackPositionStyle(player?.renderX ?? player?.x ?? 0, (player?.renderY ?? player?.y ?? 0) + 48, 10)"
         class="pointer-events-none z-10 flex min-w-[120px] flex-col gap-1"
       >
         <div
@@ -91,9 +101,21 @@
       </button>
       <div
         v-for="villager in villagers"
+        :key="`speech-${villager.id}`"
+        v-show="actorSpeechText(villager)"
+        :style="speechBubblePositionStyle(villager?.renderX ?? villager?.x ?? 0, (villager?.renderY ?? villager?.y ?? 0) - 56, 2)"
+        class="pointer-events-none"
+      >
+        <div class="relative rounded-2xl border border-[#d8c9b7] bg-white/95 px-3 py-2 text-xs font-bold leading-4 text-ink shadow-lg">
+          {{ actorSpeechText(villager) }}
+          <div class="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-[#d8c9b7] bg-white/95"></div>
+        </div>
+      </div>
+      <div
+        v-for="villager in villagers"
         :key="`task-${villager.id}`"
         v-show="villagerTaskEntries(villager.id).length"
-        :style="fieldPositionStyle(villager?.renderX ?? villager?.x ?? 0, (villager?.renderY ?? villager?.y ?? 0) + 42, 1)"
+        :style="taskStackPositionStyle(villager?.renderX ?? villager?.x ?? 0, (villager?.renderY ?? villager?.y ?? 0) + 42, 1)"
         class="pointer-events-none flex min-w-[120px] flex-col gap-1"
       >
         <div
@@ -110,7 +132,7 @@
         v-if="pendingPlacement"
         type="button"
         class="absolute inset-0 z-20 cursor-crosshair bg-white/5"
-        @click="emitFieldClick"
+        @click.stop="emitFieldClick"
       >
         <div class="pointer-events-none absolute left-1/2 top-6 -translate-x-1/2 rounded-full border border-white/70 bg-white/80 px-4 py-2 text-sm font-bold text-ink shadow-lg backdrop-blur">
           {{ pendingPlacement.name }}
@@ -133,6 +155,7 @@ const props = defineProps({
   itemDefinitions: { type: Object, required: true },
   currentPlayerTaskEntries: { type: Array, required: false, default: () => [] },
   pendingPlacement: { type: Object, required: false, default: null },
+  currentTime: { type: Number, required: false, default: 0 },
   taskLabel: { type: Function, required: true },
   villagerTaskEntryMap: { type: Object, required: true },
   tutorialTargets: { type: Array, required: false, default: () => [] },
@@ -207,6 +230,33 @@ function actorPositionStyle(actor, zIndex = null) {
   return fieldPositionStyle(actor?.renderX ?? actor?.x ?? 0, actor?.renderY ?? actor?.y ?? 0, zIndex);
 }
 
+function taskStackPositionStyle(x, y, zIndex = null) {
+  return {
+    position: "absolute",
+    left: `${x - camera.value.x}px`,
+    top: `${y - camera.value.y}px`,
+    transform: "translateX(-50%)",
+    ...(zIndex === null ? {} : { zIndex }),
+  };
+}
+
+function speechBubblePositionStyle(x, y, zIndex = null) {
+  return {
+    position: "absolute",
+    left: `${x - camera.value.x}px`,
+    top: `${y - camera.value.y}px`,
+    transform: "translate(-50%, -100%)",
+    ...(zIndex === null ? {} : { zIndex }),
+  };
+}
+
+function actorSpeechText(actor) {
+  if (!actor?.speechText) {
+    return "";
+  }
+  return actor.speechUntil > props.currentTime ? actor.speechText : "";
+}
+
 function nodeIcon(node) {
   if (node.type === "tree") {
     return treeIcon;
@@ -223,7 +273,18 @@ function isTreeNode(node) {
   return node?.type === "tree";
 }
 
+function isRockNode(node) {
+  return node?.type === "rock";
+}
+
 function resourceButtonStyle(node) {
+  if (isRockNode(node)) {
+    return {
+      width: "4.5rem",
+      height: "4.5rem",
+    };
+  }
+
   return isTreeNode(node)
     ? {
       width: "3rem",
@@ -236,6 +297,10 @@ function resourceButtonStyle(node) {
 }
 
 function resourceIconClass(node) {
+  if (isRockNode(node)) {
+    return "text-center text-6xl leading-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.28)]";
+  }
+
   return isTreeNode(node)
     ? "text-center text-4xl leading-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.28)]"
     : "text-center text-4xl leading-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.28)]";

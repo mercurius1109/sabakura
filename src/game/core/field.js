@@ -28,6 +28,7 @@ export function createInitialFieldNodes(resourceConfigs, treeNodes) {
         itemId: config.itemId,
         title: config.title,
         actionLabel: config.actionLabel,
+        requiresItem: config.requiresItem,
         x: position.x,
         y: position.y,
         respawnMs: config.respawnMs,

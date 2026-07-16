@@ -44,6 +44,7 @@ export function createSurvivalTaskRuntime({
   scheduleActorTask,
   makeId,
   itemDefinitions,
+  showActorSpeech,
   t,
 }) {
   const {
@@ -109,6 +110,7 @@ export function createSurvivalTaskRuntime({
     enqueueMoveThenTask,
     enqueueStorageTransfers,
     itemDefinitions,
+    showActorSpeech,
     t,
   });
 

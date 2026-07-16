@@ -92,6 +92,7 @@ const messages = {
       currentOfTarget: "{current}/{target}",
       inventorySummary: "持ち物: {items}",
       pickupItemAction: "{item}を拾う",
+      itemMissingSpeech: "{item}がないよ",
     },
     taskPhase: {
       idle: "待機中",
@@ -141,6 +142,7 @@ const messages = {
       plank: "板材",
       stick: "木の棒",
       stoneAxe: "石斧",
+      stonePickaxe: "石つるはし",
       hammer: "ハンマー",
       berryJam: "ベリージャム",
     },
@@ -148,6 +150,7 @@ const messages = {
       plank: "板材",
       stick: "木の棒",
       stoneAxe: "石斧",
+      stonePickaxe: "石つるはし",
       hammer: "ハンマー",
       berryJam: "ベリージャム",
     },
@@ -171,6 +174,7 @@ const messages = {
       gatherStone: "石を拾う",
       gatherWildBerry: "ワイルドベリーを摘む",
       gatherLog: "木をこる",
+      gatherRock: "岩を掘る",
     },
     building: {
       workbench: "作業台",
@@ -182,6 +186,7 @@ const messages = {
       tree: "木",
       branch: "木の棒",
       stone: "石",
+      rock: "岩",
       berryBush: "ベリーの茂み",
     },
     log: {
@@ -312,6 +317,7 @@ const messages = {
       currentOfTarget: "{current}/{target}",
       inventorySummary: "Inventory: {items}",
       pickupItemAction: "Pick up {item}",
+      itemMissingSpeech: "No {item}",
     },
     taskPhase: {
       idle: "Idle",
@@ -361,6 +367,7 @@ const messages = {
       plank: "Plank",
       stick: "Stick",
       stoneAxe: "Stone Axe",
+      stonePickaxe: "Stone Pickaxe",
       hammer: "Hammer",
       berryJam: "Berry Jam",
     },
@@ -368,6 +375,7 @@ const messages = {
       plank: "Plank",
       stick: "Stick",
       stoneAxe: "Stone Axe",
+      stonePickaxe: "Stone Pickaxe",
       hammer: "Hammer",
       berryJam: "Berry Jam",
     },
@@ -391,6 +399,7 @@ const messages = {
       gatherStone: "Pick up stone",
       gatherWildBerry: "Pick wild berry",
       gatherLog: "Chop tree",
+      gatherRock: "Mine rock",
     },
     building: {
       workbench: "Workbench",
@@ -402,6 +411,7 @@ const messages = {
       tree: "Tree",
       branch: "Branch",
       stone: "Stone",
+      rock: "Rock",
       berryBush: "Berry Bush",
     },
     log: {

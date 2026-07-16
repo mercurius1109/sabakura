@@ -51,11 +51,6 @@ export function createSurvivalTaskRuntimeLoop({
   }
 
   function processWorkingTask(task) {
-    if (task.kind === "transfer") {
-      completeTransferTask(task);
-      return;
-    }
-
     if (!task.startedValidationDone) {
       task.startedValidationDone = true;
       if (!validateTaskStart(task)) {

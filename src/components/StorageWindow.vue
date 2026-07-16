@@ -141,6 +141,18 @@
           >
         </label>
 
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button
+            v-for="amount in [-100, -10, -1, 1, 10, 100]"
+            :key="`add-target-${amount}`"
+            type="button"
+            class="rounded-md border border-line bg-white px-3 py-1.5 text-sm font-bold text-moss transition hover:bg-moss hover:text-white"
+            @click="$emit('update-add-target', adjustTargetValue(draftStockRuleTarget, amount, 1))"
+          >
+            {{ amount > 0 ? `+${amount}` : amount }}
+          </button>
+        </div>
+
         <button
           type="button"
           class="mt-4 w-full rounded-md bg-leaf px-4 py-2.5 font-bold text-white transition hover:bg-moss"
@@ -173,6 +185,18 @@
             @input="$emit('update-edit-target', Number($event.target.value))"
           >
         </label>
+
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button
+            v-for="amount in [-100, -10, -1, 1, 10, 100]"
+            :key="`edit-target-${amount}`"
+            type="button"
+            class="rounded-md border border-line bg-white px-3 py-1.5 text-sm font-bold text-moss transition hover:bg-moss hover:text-white"
+            @click="$emit('update-edit-target', adjustTargetValue(editingStockRuleTarget, amount, 1))"
+          >
+            {{ amount > 0 ? `+${amount}` : amount }}
+          </button>
+        </div>
 
         <div class="mt-4 flex gap-2">
           <button
@@ -284,5 +308,10 @@ function villagerAssignedStationLabel(villager) {
     return t("ui.noAssignedStations");
   }
   return props.stationNameById ? props.stationNameById(assignedStationId) : assignedStationId;
+}
+
+function adjustTargetValue(currentValue, delta, minValue) {
+  const nextValue = (Number(currentValue) || 0) + delta;
+  return Math.max(minValue, nextValue);
 }
 </script>

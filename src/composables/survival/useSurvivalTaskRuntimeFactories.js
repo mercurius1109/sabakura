@@ -14,6 +14,8 @@ export function createSurvivalTaskRuntimeFactories({
   buildingById,
   t,
 }) {
+  const TRANSFER_TASK_DURATION_MS = 900;
+
   function currentStorageAnchor() {
     const storageBuilding = buildingById("storage");
     return storageBuilding
@@ -56,7 +58,7 @@ export function createSurvivalTaskRuntimeFactories({
       station: targetKind,
       source,
       workStartedAt: null,
-      duration: 1,
+      duration: TRANSFER_TASK_DURATION_MS,
       transferDirection,
       actorId,
       targetKind,
@@ -107,6 +109,13 @@ export function createSurvivalTaskRuntimeFactories({
     return enqueueTask(actor, nextTask);
   }
 
+  function createTransferTasks(actor, itemId, amount, transferDirection, targetKind = "storage", actorId = null, source = "manual") {
+    const count = Math.max(0, Math.floor(amount));
+    return Array.from({ length: count }, () =>
+      createTransferTask(actor, itemId, 1, transferDirection, targetKind, actorId, source),
+    );
+  }
+
   function enqueueStorageTransfers(actor, outputs, sourceLogKey = "log.moveCraftToStorage") {
     if (!actor || !outputs || Object.keys(outputs).length === 0) {
       return false;
@@ -116,7 +125,10 @@ export function createSurvivalTaskRuntimeFactories({
     let needsMove = !isAtPoint(actor, storagePointTarget);
 
     Object.entries(outputs).forEach(([itemId, amount]) => {
-      const transferTask = createTransferTask(actor, itemId, amount, "toStorage", "storage", null, "deliver");
+      const transferTasks = createTransferTasks(actor, itemId, amount, "toStorage", "storage", null, "deliver");
+      if (transferTasks.length === 0) {
+        return;
+      }
       if (!queuedAny && needsMove) {
         const moveTask = createMoveTask(
           actor,
@@ -127,7 +139,9 @@ export function createSurvivalTaskRuntimeFactories({
         enqueueTask(actor, moveTask);
         needsMove = false;
       }
-      enqueueTask(actor, transferTask);
+      transferTasks.forEach((transferTask) => {
+        enqueueTask(actor, transferTask);
+      });
       queuedAny = true;
     });
 

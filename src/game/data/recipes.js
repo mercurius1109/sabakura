@@ -27,6 +27,15 @@ export const recipes = [
     outputs: { stoneAxe: 1 },
   },
   {
+    id: "stonePickaxe",
+    nameKey: "recipe.stonePickaxe",
+    station: "workbench",
+    requiresFacility: "workbench",
+    duration: 8000,
+    costs: { stone: 3, stick: 2 },
+    outputs: { stonePickaxe: 1 },
+  },
+  {
     id: "hammer",
     nameKey: "recipe.hammer",
     station: "hand",

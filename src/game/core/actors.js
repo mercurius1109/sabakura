@@ -21,6 +21,8 @@ export function createActor({
   inventoryCapacity = kind === "player" ? Number.POSITIVE_INFINITY : 10,
   maxFullness = 100,
   fullness = maxFullness,
+  speechText = "",
+  speechUntil = 0,
 }) {
   return {
     id,
@@ -40,6 +42,8 @@ export function createActor({
     inventory: inventory || reactive(createItemStore()),
     maxFullness,
     fullness,
+    speechText,
+    speechUntil,
   };
 }
 

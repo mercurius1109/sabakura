@@ -7,6 +7,7 @@ export function createItemStore() {
     plank: 0,
     stick: 0,
     stoneAxe: 0,
+    stonePickaxe: 0,
     hammer: 0,
     berryJam: 0,
   };

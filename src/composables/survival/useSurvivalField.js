@@ -17,6 +17,8 @@ const RESOURCE_ADJACENT_OFFSET_X = 44;
 const RESOURCE_ADJACENT_OFFSET_Y = 44;
 const TREE_ADJACENT_OFFSET_X = 60;
 const TREE_ADJACENT_OFFSET_Y = 48;
+const ROCK_ADJACENT_OFFSET_X = 72;
+const ROCK_ADJACENT_OFFSET_Y = 56;
 const DEFAULT_INTERACTION_DISTANCE = Math.ceil(Math.hypot(DEFAULT_ADJACENT_OFFSET_X, DEFAULT_ADJACENT_OFFSET_Y));
 const RESOURCE_INTERACTION_DISTANCE = Math.ceil(Math.hypot(RESOURCE_ADJACENT_OFFSET_X, RESOURCE_ADJACENT_OFFSET_Y));
 
@@ -92,9 +94,13 @@ export function createSurvivalFieldHelpers({
   }
 
   function nodeWorkPoint(node, actor = null) {
-    return node.type === "tree"
-      ? nearestAdjacentPoint(node.x, node.y, actor, TREE_ADJACENT_OFFSET_X, TREE_ADJACENT_OFFSET_Y)
-      : nearestAdjacentPoint(node.x, node.y, actor, RESOURCE_ADJACENT_OFFSET_X, RESOURCE_ADJACENT_OFFSET_Y);
+    if (node.type === "tree") {
+      return nearestAdjacentPoint(node.x, node.y, actor, TREE_ADJACENT_OFFSET_X, TREE_ADJACENT_OFFSET_Y);
+    }
+    if (node.type === "rock") {
+      return nearestAdjacentPoint(node.x, node.y, actor, ROCK_ADJACENT_OFFSET_X, ROCK_ADJACENT_OFFSET_Y);
+    }
+    return nearestAdjacentPoint(node.x, node.y, actor, RESOURCE_ADJACENT_OFFSET_X, RESOURCE_ADJACENT_OFFSET_Y);
   }
 
   function buildingWorkPoint(structureId, actor = null) {
@@ -151,6 +157,16 @@ export function createSurvivalFieldHelpers({
         requiresItem: node.requiresItem || "stoneAxe",
       };
     }
+    if (node.type === "rock") {
+      return {
+        id: `manual-${node.id}`,
+        label: node.actionLabel || t("action.gatherRock"),
+        itemId: node.itemId || "stone",
+        duration: 2600,
+        amount: 3,
+        requiresItem: node.requiresItem || "stonePickaxe",
+      };
+    }
     if (node.type === "pickup") {
       return gatherActionById(`pickup-${node.itemId}`)
         || gatherActionById(`gather-${node.itemId}`)
@@ -174,12 +190,18 @@ export function createSurvivalFieldHelpers({
       if (action.id === "gather-log") {
         return node.type === "tree" ? node : null;
       }
+      if (action.id === "gather-rock") {
+        return node.type === "rock" ? node : null;
+      }
       return node.type === "pickup" && node.itemId === action.itemId ? node : null;
     }
 
     const candidates = visibleFieldNodes().filter((node) => {
       if (action.id === "gather-log") {
         return node.type === "tree";
+      }
+      if (action.id === "gather-rock") {
+        return node.type === "rock";
       }
       return node.type === "pickup" && node.itemId === action.itemId;
     });

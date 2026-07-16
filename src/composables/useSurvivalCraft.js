@@ -56,6 +56,7 @@ const defaultGameSpeed = 1;
 const fullnessDecayPerSecond = 0.2;
 const autoEatThreshold = 35;
 const eatDurationMs = 1800;
+const actorSpeechDurationMs = 2200;
 
 export function useSurvivalCraft() {
   const itemDefinitions = Object.fromEntries(
@@ -383,6 +384,14 @@ export function useSurvivalCraft() {
     actor.renderY = actor.prevY + (actor.y - actor.prevY) * alpha;
   }
 
+  function showActorSpeech(actor, text, durationMs = actorSpeechDurationMs) {
+    if (!actor || !text) {
+      return;
+    }
+    actor.speechText = text;
+    actor.speechUntil = now.value + durationMs;
+  }
+
   const {
     actorWorkPoint,
     actorInteractionDistance,
@@ -642,6 +651,7 @@ export function useSurvivalCraft() {
     distanceBetween,
     actorInventoryCount,
     actorCanWork,
+    showActorSpeech,
     scheduleActorTask,
     t,
   });
@@ -772,6 +782,7 @@ export function useSurvivalCraft() {
     scheduleActorTask,
     makeId,
     itemDefinitions,
+    showActorSpeech,
     t,
   });
 

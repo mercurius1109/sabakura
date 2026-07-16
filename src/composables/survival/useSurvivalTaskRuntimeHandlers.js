@@ -30,6 +30,7 @@ export function createSurvivalTaskRuntimeHandlers({
   enqueueMoveThenTask,
   enqueueStorageTransfers,
   itemDefinitions,
+  showActorSpeech,
   t,
 }) {
   function restoreActorFullness(actor, amount) {
@@ -217,6 +218,7 @@ export function createSurvivalTaskRuntimeHandlers({
           actor: villagerName(task.villagerId),
           count: 0,
         }));
+        showActorSpeech(worker, t("ui.itemMissingSpeech", { item: itemName(task.requiresItem) }));
         removeTaskFromActiveState(task);
         return false;
       }

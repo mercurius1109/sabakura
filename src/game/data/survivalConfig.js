@@ -8,6 +8,7 @@ export const gatherActions = [
   { id: "gather-stone", labelKey: "action.gatherStone", itemId: "stone", duration: 1400, amount: 1 },
   { id: "gather-wildBerry", labelKey: "action.gatherWildBerry", itemId: "wildBerry", duration: 1500, amount: 1 },
   { id: "gather-log", labelKey: "action.gatherLog", itemId: "log", duration: 2400, amount: 2, requiresItem: "stoneAxe", requiresStation: "lumberjackHut" },
+  { id: "gather-rock", labelKey: "action.gatherRock", itemId: "stone", duration: 2600, amount: 3, requiresItem: "stonePickaxe" },
 ];
 
 export const buildingDefinitions = [
@@ -24,6 +25,7 @@ export const defaultTargets = {
   wildBerry: 6,
   stick: 8,
   stoneAxe: 1,
+  stonePickaxe: 1,
   berryJam: 2,
 };
 
@@ -37,6 +39,16 @@ export const fieldTreeConfigs = [
     requiresItem: "stoneAxe",
     count: 12,
     respawnMs: 15000,
+  },
+  {
+    prefix: "rock",
+    type: "rock",
+    itemId: "stone",
+    titleKey: "field.rock",
+    actionLabelKey: "action.gatherRock",
+    requiresItem: "stonePickaxe",
+    count: 6,
+    respawnMs: 18000,
   },
 ];
 

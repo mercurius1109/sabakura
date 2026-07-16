@@ -25,6 +25,8 @@ export function createPlayerActions({
   removeItem,
   spawnDroppedItems,
 }) {
+  const TRANSFER_TASK_DURATION_MS = 900;
+
   function createPlayerMoveTask(targetPoint, label, targetKind = "field", actorId = null, station = targetKind) {
     return {
       id: makeId("move"),
@@ -198,7 +200,7 @@ export function createPlayerActions({
       station: targetKind,
       source: "manual",
       workStartedAt: null,
-      duration: 300,
+      duration: TRANSFER_TASK_DURATION_MS,
       transferDirection: direction,
       actorId,
       targetKind,

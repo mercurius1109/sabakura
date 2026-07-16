@@ -11,6 +11,7 @@
           :item-definitions="itemDefinitions"
           :current-player-task-entries="playerTaskQueueEntries"
           :villager-task-entry-map="villagerTaskEntryMap"
+          :current-time="displayNow"
           :task-label="taskLabel"
           :task-display-text="fieldTaskText"
           :world-width="worldWidth"

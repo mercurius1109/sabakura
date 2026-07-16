@@ -40,9 +40,12 @@ export function createSurvivalTaskStarters({
   distanceBetween,
   actorInventoryCount,
   actorCanWork,
+  showActorSpeech,
   scheduleActorTask,
   t,
 }) {
+  const TRANSFER_TASK_DURATION_MS = 900;
+
   function autoSuffix(source) {
     return source === "auto" || source === "station-auto" ? t("log.autoSuffix") : "";
   }
@@ -133,11 +136,18 @@ export function createSurvivalTaskStarters({
       station: targetKind,
       source,
       workStartedAt: null,
-      duration: 1,
+      duration: TRANSFER_TASK_DURATION_MS,
       transferDirection: direction,
       actorId,
       targetKind,
     };
+  }
+
+  function createTransferTasks(actor, itemId, amount, direction, targetKind, actorId = null, source = "manual") {
+    const count = Math.max(0, Math.floor(amount));
+    return Array.from({ length: count }, () =>
+      createTransferTask(actor, itemId, 1, direction, targetKind, actorId, source),
+    );
   }
 
   function startActorApproachTask(actor, targetPoint, label, nextTask = null) {
@@ -195,11 +205,17 @@ export function createSurvivalTaskStarters({
     }
 
     const targetPoint = storageWorkPoint(actor);
-    const task = createTransferTask(actor, itemId, amount, "fromStorage", "storage", null, "fetch");
+    const transferTasks = createTransferTasks(actor, itemId, amount, "fromStorage", "storage", null, "fetch");
+    if (transferTasks.length === 0) {
+      return false;
+    }
     const started = isAtTarget(actor, targetPoint)
-      ? scheduleActorTask(actor, task)
-      : startActorApproachTask(actor, targetPoint, t("log.moveToStorage", { actor: actor.name, item: itemName(itemId) }), task);
+      ? scheduleActorTask(actor, transferTasks[0])
+      : startActorApproachTask(actor, targetPoint, t("log.moveToStorage", { actor: actor.name, item: itemName(itemId) }), transferTasks[0]);
     if (started) {
+      transferTasks.slice(1).forEach((task) => {
+        scheduleActorTask(actor, task);
+      });
       scheduleFollowUpTask(actor, nextTask);
     }
     addLog(t("log.moveToStorage", { actor: actor.name, item: itemName(itemId) }));
@@ -212,11 +228,17 @@ export function createSurvivalTaskStarters({
     }
 
     const targetPoint = storageWorkPoint(actor);
-    const task = createTransferTask(actor, itemId, amount, "toStorage", "storage", null, "deliver");
+    const transferTasks = createTransferTasks(actor, itemId, amount, "toStorage", "storage", null, "deliver");
+    if (transferTasks.length === 0) {
+      return false;
+    }
     const started = isAtTarget(actor, targetPoint)
-      ? scheduleActorTask(actor, task)
-      : startActorApproachTask(actor, targetPoint, t("log.moveToStorage", { actor: actor.name, item: itemName(itemId) }), task);
+      ? scheduleActorTask(actor, transferTasks[0])
+      : startActorApproachTask(actor, targetPoint, t("log.moveToStorage", { actor: actor.name, item: itemName(itemId) }), transferTasks[0]);
     if (started) {
+      transferTasks.slice(1).forEach((task) => {
+        scheduleActorTask(actor, task);
+      });
       scheduleFollowUpTask(actor, nextTask);
     }
     addLog(t("log.moveToStorage", { actor: actor.name, item: itemName(itemId) }));
@@ -361,6 +383,7 @@ export function createSurvivalTaskStarters({
         actor: actor.name,
         count: heldCount,
       }));
+      showActorSpeech(actor, t("ui.itemMissingSpeech", { item: itemName(action.requiresItem) }));
       return false;
     }
 
@@ -447,6 +470,7 @@ export function createSurvivalTaskStarters({
           item: itemName(action.requiresItem),
           action: action.label,
         }));
+        showActorSpeech(villager, t("ui.itemMissingSpeech", { item: itemName(action.requiresItem) }));
         return false;
       }
     }
@@ -606,6 +630,7 @@ export function createSurvivalTaskStarters({
           return true;
         }
         addLog(t("log.itemMissingActionShort", { item: itemName("hammer"), action: t("common.build") }));
+        showActorSpeech(playerActor, t("ui.itemMissingSpeech", { item: itemName("hammer") }));
         return false;
       }
 

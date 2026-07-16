@@ -176,6 +176,18 @@
           <input v-model.number="draftTarget" class="rounded-md border border-line bg-white px-3 py-2 text-base text-ink" type="number" min="0">
         </label>
 
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button
+            v-for="amount in [-100, -10, -1, 1, 10, 100]"
+            :key="`draft-target-${amount}`"
+            type="button"
+            class="rounded-md border border-line bg-white px-3 py-1.5 text-sm font-bold text-moss transition hover:bg-moss hover:text-white"
+            @click="draftTarget = adjustTargetValue(draftTarget, amount, 0)"
+          >
+            {{ amount > 0 ? `+${amount}` : amount }}
+          </button>
+        </div>
+
         <button
           type="button"
           class="mt-4 w-full rounded-md bg-leaf px-4 py-2.5 font-bold text-white transition hover:bg-moss"
@@ -207,6 +219,18 @@
             min="0"
           >
         </label>
+
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button
+            v-for="amount in [-100, -10, -1, 1, 10, 100]"
+            :key="`editing-target-${amount}`"
+            type="button"
+            class="rounded-md border border-line bg-white px-3 py-1.5 text-sm font-bold text-moss transition hover:bg-moss hover:text-white"
+            @click="editingCraftTarget = adjustTargetValue(editingCraftTarget, amount, 0)"
+          >
+            {{ amount > 0 ? `+${amount}` : amount }}
+          </button>
+        </div>
 
         <div class="mt-3 text-sm text-muted">
           {{ currentAmount(editingCraftEntry.id) }}/{{ editingCraftEntry.target }}
@@ -411,5 +435,10 @@ function villagerAssignedStationLabel(villager) {
     return t("ui.noAssignedStations");
   }
   return props.stationNameById ? props.stationNameById(assignedStationId) : assignedStationId;
+}
+
+function adjustTargetValue(currentValue, delta, minValue) {
+  const nextValue = (Number(currentValue) || 0) + delta;
+  return Math.max(minValue, nextValue);
 }
 </script>
