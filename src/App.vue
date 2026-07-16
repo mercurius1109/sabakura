@@ -165,7 +165,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, reactive, ref, watchEffect } from "vue";
 import FieldHud from "./components/FieldHud.vue";
 import GameField from "./components/GameField.vue";
 import GameWindows from "./components/GameWindows.vue";
@@ -237,6 +237,7 @@ const {
   villagerName,
   findTaskById,
   taskProgress,
+  displayNow,
   remainingSeconds,
   gameSpeed,
   setGameSpeed,
@@ -501,6 +502,42 @@ function queuedTaskText(task) {
   return fieldTaskText(task);
 }
 
+function actorForTask(task) {
+  if (!task) {
+    return null;
+  }
+  return task.villagerId === playerActor.id
+    ? playerActor
+    : villagers.find((villager) => villager.id === task.villagerId) || null;
+}
+
+function movingFieldTaskProgress(task) {
+  const actor = actorForTask(task);
+  if (!actor) {
+    return 0;
+  }
+
+  const currentPosition = {
+    x: Number.isFinite(actor.renderX) ? actor.renderX : actor.x,
+    y: Number.isFinite(actor.renderY) ? actor.renderY : actor.y,
+  };
+  return taskProgress(task, currentPosition);
+}
+
+function fieldTaskProgress(task) {
+  if (!task) {
+    return null;
+  }
+  if (task.phase === "movingToTarget" || task.phase === "movingToStorage") {
+    return movingFieldTaskProgress(task);
+  }
+  if (task.phase === "working") {
+    const started = task.workStartedAt || displayNow.value;
+    return Math.max(0, Math.min(100, ((displayNow.value - started) / task.duration) * 100));
+  }
+  return 0;
+}
+
 function taskQueueEntries(actorId) {
   const tasks = tasksForActor(actorId);
   if (tasks.length === 0) {
@@ -513,7 +550,7 @@ function taskQueueEntries(actorId) {
       if (!text) {
         return null;
       }
-      const progress = taskProgress(task);
+      const progress = fieldTaskProgress(task);
       return {
         text,
         progress: progress > 0 ? progress : null,
@@ -524,11 +561,83 @@ function taskQueueEntries(actorId) {
   return entries;
 }
 
-const playerTaskQueueEntries = computed(() => taskQueueEntries(playerActor.id));
 const playerTaskList = computed(() => tasksForActor(playerActor.id));
 
+const fieldTaskCache = reactive({});
+
+function isActorRenderSettled(actor) {
+  if (!actor) {
+    return true;
+  }
+  const renderX = Number.isFinite(actor.renderX) ? actor.renderX : actor.x;
+  const renderY = Number.isFinite(actor.renderY) ? actor.renderY : actor.y;
+  return Math.hypot(actor.x - renderX, actor.y - renderY) <= 0.5;
+}
+
+function isMovingTask(task) {
+  return task?.phase === "movingToTarget" || task?.phase === "movingToStorage";
+}
+
+watchEffect(() => {
+  const activeActorIds = new Set([playerActor.id, ...villagers.map((villager) => villager.id)]);
+
+  Object.keys(fieldTaskCache).forEach((actorId) => {
+    if (!activeActorIds.has(actorId)) {
+      delete fieldTaskCache[actorId];
+    }
+  });
+
+  [playerActor, ...villagers].forEach((actor) => {
+    const tasks = tasksForActor(actor.id);
+    const cachedTasks = fieldTaskCache[actor.id];
+    const cachedLeadTask = Array.isArray(cachedTasks) ? cachedTasks[0] : null;
+    const nextLeadTask = tasks[0] || null;
+
+    if (
+      cachedLeadTask
+      && cachedLeadTask.id !== nextLeadTask?.id
+      && isMovingTask(cachedLeadTask)
+      && !isActorRenderSettled(actor)
+    ) {
+      return;
+    }
+
+    if (tasks.length > 0) {
+      fieldTaskCache[actor.id] = [...tasks];
+      return;
+    }
+
+    if (isActorRenderSettled(actor)) {
+      delete fieldTaskCache[actor.id];
+    }
+  });
+});
+
+function cachedTaskQueueEntries(actorId) {
+  const tasks = fieldTaskCache[actorId];
+  if (!Array.isArray(tasks) || tasks.length === 0) {
+    return [];
+  }
+
+  return tasks
+    .map((task, index) => {
+      const text = index === 0 ? fieldTaskText(task) : queuedTaskText(task);
+      if (!text) {
+        return null;
+      }
+      const progress = fieldTaskProgress(task);
+      return {
+        text,
+        progress: progress > 0 ? progress : null,
+      };
+    })
+    .filter(Boolean);
+}
+
+const playerTaskQueueEntries = computed(() => cachedTaskQueueEntries(playerActor.id));
+
 const villagerTaskEntryMap = computed(() => Object.fromEntries(
-  villagers.map((villager) => [villager.id, taskQueueEntries(villager.id)]),
+  villagers.map((villager) => [villager.id, cachedTaskQueueEntries(villager.id)]),
 ));
 
 const selectedVillagerTaskList = computed(() => (

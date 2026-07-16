@@ -4,9 +4,9 @@ export function createSurvivalTaskRuntimeLoop({
   craftQueue,
   constructionQueue,
   actorById,
+  distanceBetween,
   moveActorForTask,
   refreshMovingDestination,
-  isTransferAdjacent,
   removeTaskFromActiveState,
   beginTaskWork,
   completeConstructionTask,
@@ -40,22 +40,25 @@ export function createSurvivalTaskRuntimeLoop({
 
     const arrived = moveActorForTask(actor, destination, deltaMs);
     if (!arrived) {
+      task.readyToCompleteAt = null;
       return;
     }
 
     if (task.phase === "movingToTarget") {
       if (task.kind === "move") {
-        if (!isTransferAdjacent(task, actor, targetActor)) {
+        if (!task.readyToCompleteAt) {
+          task.readyToCompleteAt = now.value + deltaMs;
           return;
         }
+        if (now.value < task.readyToCompleteAt) {
+          return;
+        }
+        task.readyToCompleteAt = null;
         finishTaskWork(task);
         return;
       }
 
       if (task.kind === "transfer") {
-        if (!isTransferAdjacent(task, actor, targetActor)) {
-          return;
-        }
         completeTransferTask(task);
         return;
       }
@@ -115,16 +118,31 @@ export function createSurvivalTaskRuntimeLoop({
     }
   }
 
-  function taskProgress(task) {
-    if (task.phase === "movingToTarget") {
+  function movingTaskProgress(task) {
+    const actor = actorById(task.villagerId);
+    const destination = task.phase === "movingToStorage" ? task.storagePoint : task.targetPoint;
+    if (!actor || !destination) {
       return 0;
+    }
+
+    const initialDistance = task.phase === "movingToStorage"
+      ? (task.initialStorageDistance ?? task.initialTargetDistance ?? 0)
+      : (task.initialTargetDistance ?? 0);
+    if (initialDistance <= 0) {
+      return distanceBetween(actor, destination) <= 0.0001 ? 100 : 0;
+    }
+
+    const remainingDistance = distanceBetween(actor, destination);
+    return Math.max(0, Math.min(100, (1 - (remainingDistance / initialDistance)) * 100));
+  }
+
+  function taskProgress(task) {
+    if (task.phase === "movingToTarget" || task.phase === "movingToStorage") {
+      return movingTaskProgress(task);
     }
     if (task.phase === "working") {
       const started = task.workStartedAt || now.value;
-      return Math.max(0, Math.min(100, Math.floor(((now.value - started) / task.duration) * 100)));
-    }
-    if (task.phase === "movingToStorage") {
-      return 100;
+      return Math.max(0, Math.min(100, ((now.value - started) / task.duration) * 100));
     }
     return 0;
   }

@@ -97,6 +97,7 @@ export function useSurvivalCraft() {
 
   const startedAt = Date.now();
   const now = ref(Date.now());
+  const displayNow = ref(now.value);
   const lastTickAt = ref(Date.now());
   const gameSpeed = ref(defaultGameSpeed);
   const storageContainer = reactive(createContainer({
@@ -726,7 +727,7 @@ export function useSurvivalCraft() {
 
   const {
     remainingSeconds,
-    taskProgress,
+    taskProgress: runtimeTaskProgress,
     tick,
   } = createSurvivalTaskRuntime({
     now,
@@ -870,6 +871,40 @@ export function useSurvivalCraft() {
     return Boolean(actor && actor.fullness <= autoEatThreshold);
   }
 
+  function movementGoalProgress(task, actor = null) {
+    if (!task || (task.phase !== "movingToTarget" && task.phase !== "movingToStorage")) {
+      return 0;
+    }
+
+    const movingActor = actor || actorById(task.villagerId);
+    if (!movingActor) {
+      return 0;
+    }
+
+    const initialDistance = task.phase === "movingToStorage"
+      ? (task.initialStorageDistance ?? task.initialTargetDistance ?? 0)
+      : (task.initialTargetDistance ?? 0);
+
+    const destination = task.phase === "movingToStorage" ? task.storagePoint : task.targetPoint;
+    if (!destination) {
+      return 0;
+    }
+    const remainingDistance = distanceBetween(movingActor, destination);
+
+    if (initialDistance <= 0) {
+      return remainingDistance <= 0.0001 ? 100 : 0;
+    }
+
+    return Math.max(0, Math.min(100, (1 - (remainingDistance / initialDistance)) * 100));
+  }
+
+  function taskProgress(task, actor = null) {
+    if (task?.phase === "movingToTarget" || task?.phase === "movingToStorage") {
+      return movementGoalProgress(task, actor);
+    }
+    return runtimeTaskProgress(task);
+  }
+
   function createEatTask(actor, itemId, itemSource = "inventory") {
     const food = itemDefinitions[itemId];
     if (!actor || !food?.nutrition) {
@@ -908,7 +943,7 @@ export function useSurvivalCraft() {
     [...(actor.taskQueue || [])]
       .map((taskId) => findTaskById(taskId))
       .filter(Boolean)
-      .filter((task) => task.kind !== "eat" && task.kind !== "move")
+      .filter((task) => task.kind !== "eat" && task.kind !== "move" && task.kind !== "gather")
       .forEach((task) => removeTaskFromActiveState(task));
   }
 
@@ -1064,6 +1099,7 @@ export function useSurvivalCraft() {
     }
 
     const alpha = Math.max(0, Math.min(1, accumulatedTickMs / tickIntervalMs));
+    displayNow.value = now.value + accumulatedTickMs;
 
     updateActorRenderPosition(playerActor, alpha);
     villagers.forEach((villager) => updateActorRenderPosition(villager, alpha));
@@ -1154,6 +1190,7 @@ export function useSurvivalCraft() {
     stockRuleSourceLabel,
     villagerName,
     taskProgress,
+    displayNow,
     remainingSeconds,
     gameSpeed,
     setGameSpeed,
