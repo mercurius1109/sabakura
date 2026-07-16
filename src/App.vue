@@ -19,8 +19,7 @@
           :tutorial-targets="currentTutorialTargets"
           @field-click="handleFieldClick"
           @select-resource="pickupResourceNode"
-          @select-workbench="openWorkbenchWindow"
-          @select-lumberjack-hut="openLumberjackHutWindow"
+          @select-structure="openStructureWindow"
           @select-storage="openStorageCompareWindow"
           @select-construction="handleConstructionSiteClick"
           @select-player="openPlayerWindow"
@@ -47,6 +46,10 @@
           :minimap-player="playerActor"
           :minimap-structures="placedStructureNodes"
           :minimap-villagers="villagers"
+          :player-fullness="Math.round(playerActor.fullness)"
+          :player-max-fullness="playerActor.maxFullness"
+          :player-fullness-percent="actorFullnessPercent(playerActor)"
+          :player-is-starving="actorIsStarving(playerActor)"
           :world-width="worldWidth"
           :world-height="worldHeight"
           @open-inventory="openPlayerWindow"
@@ -71,9 +74,11 @@
           :player-transfer-caption="playerTransferCaption"
           :player-transfer-disabled="playerTransferDisabled"
           :player-transfer-disabled-text="playerTransferDisabledText"
+          :player-item-actions="playerItemActions"
           :current-player-task="currentPlayerTask"
           :current-player-tasks="playerTaskList"
           :task-label="taskLabel"
+          :task-display-text="fieldTaskText"
           :task-progress="taskProgress"
           :remaining-seconds="remainingSeconds"
           :cancel-task="cancelTask"
@@ -126,6 +131,7 @@
           :villager-name="villagerName"
           @close-window="closeWindow"
           @handle-player-transfer="handlePlayerTransfer"
+          @handle-player-item-action="handlePlayerItemAction"
           @start-player-craft="startPlayerCraft"
           @transfer-storage-item-to-player="transferStorageItemToPlayer"
           @open-add-stock-rule-modal="openAddStockRuleModal"
@@ -181,6 +187,7 @@ const draftStockRuleTarget = ref(1);
 
 const {
   itemDefinitions,
+  buildingDefinitions,
   inventory,
   storage,
   placedStructures,
@@ -242,10 +249,13 @@ const {
   moveItemFromActorToActor,
   moveItemFromOtherActorToPlayer,
   dropPlayerItem,
+  eatPlayerItem,
   cancelTask,
   clearLog,
   formatList,
   stockRuleStatus,
+  actorFullnessPercent,
+  actorIsStarving,
   stations,
   worldWidth,
   worldHeight,
@@ -317,6 +327,7 @@ const {
   playerTransferDisabled,
   playerTransferDisabledText,
   playerTransferContext,
+  playerItemActions,
   playerBuildCards,
   pendingBuildingPlacement,
   storageTitle,
@@ -334,6 +345,7 @@ const {
   selectedWindow,
   currentTutorialTargets,
   itemDefinitions,
+  buildingDefinitions,
   inventory,
   storage,
   placedStructures,
@@ -376,6 +388,7 @@ const {
   transferStorageItemToPlayer,
   transferVillagerItemToPlayer,
   handlePlayerTransfer,
+  handlePlayerItemAction,
   openStockRuleModal,
   closeStockRuleModal,
   openAddStockRuleModal,
@@ -386,8 +399,7 @@ const {
   closeWindow,
   openPlayerWindow,
   openCraftWindow,
-  openWorkbenchWindow,
-  openLumberjackHutWindow,
+  openStructureWindow,
   openStorageCompareWindow,
   openVillageWindow,
   openBuildWindow,
@@ -419,6 +431,7 @@ const {
   moveItemFromActorToActor,
   moveItemFromOtherActorToPlayer,
   dropPlayerItem,
+  eatPlayerItem,
   startPlayerConstruction,
   canPlaceStructure,
   placeStructure,

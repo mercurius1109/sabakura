@@ -130,6 +130,25 @@
       </div>
     </div>
 
+    <div class="absolute bottom-4 left-4 z-10 w-[240px] max-w-[calc(100vw-2rem)] rounded-[24px] border border-white/50 bg-white/78 p-4 shadow-panel backdrop-blur">
+      <div class="flex items-center justify-between gap-2">
+        <div class="text-sm font-bold text-ink">{{ t("ui.fullness") }}</div>
+        <div
+          class="rounded-full px-2 py-1 text-[10px] font-bold leading-none"
+          :class="playerIsStarving ? 'bg-[#ffe3d3] text-[#b4491e]' : 'bg-emerald-100 text-moss'"
+        >
+          {{ playerIsStarving ? t("ui.starving") : `${playerFullness}/${playerMaxFullness}` }}
+        </div>
+      </div>
+      <div class="mt-3 h-3 overflow-hidden rounded-full border border-[#c7bdad] bg-[#eee7dd]">
+        <div
+          class="h-full rounded-full transition-[width]"
+          :class="playerIsStarving ? 'bg-[#d96c3f]' : 'bg-gradient-to-r from-[#e7b64d] via-[#9bc667] to-[#2d6a4f]'"
+          :style="{ width: `${playerFullnessPercent}%` }"
+        ></div>
+      </div>
+    </div>
+
     <div v-if="isLogWindowVisible" class="absolute bottom-4 right-4 z-10 w-[340px] max-w-[calc(100vw-2rem)] rounded-[26px] border border-white/40 bg-black/28 p-4 text-white shadow-panel backdrop-blur">
       <div class="flex items-center justify-between gap-2">
         <div class="text-sm font-bold tracking-[0.18em] text-white/80">{{ t("ui.logTitle") }}</div>
@@ -171,6 +190,10 @@ const props = defineProps({
   minimapPlayer: { type: Object, default: null },
   minimapStructures: { type: Array, default: () => [] },
   minimapVillagers: { type: Array, default: () => [] },
+  playerFullness: { type: Number, required: true },
+  playerMaxFullness: { type: Number, required: true },
+  playerFullnessPercent: { type: Number, required: true },
+  playerIsStarving: { type: Boolean, required: true },
   worldHeight: { type: Number, required: true },
   worldWidth: { type: Number, required: true },
 });

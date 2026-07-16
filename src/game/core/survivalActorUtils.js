@@ -55,6 +55,9 @@ export function taskLabel(task, { gatherActionById, recipeById, buildingById }) 
   if (task.kind === "craft") {
     return t("task.crafting", { recipe: recipeById(task.recipeId)?.name || t("common.craft") });
   }
+  if (task.kind === "eat") {
+    return t("task.eating", { item: task.itemId ? t(`item.${task.itemId}`) : t("common.item") });
+  }
   if (task.label) {
     return task.label;
   }

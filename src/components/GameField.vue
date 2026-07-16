@@ -143,8 +143,7 @@ const props = defineProps({
 const emit = defineEmits([
   "field-click",
   "select-resource",
-  "select-workbench",
-  "select-lumberjack-hut",
+  "select-structure",
   "select-storage",
   "select-construction",
   "select-player",
@@ -263,16 +262,10 @@ function emitFieldClick(event) {
 }
 
 function selectStructure(structureId) {
-  if (structureId === "workbench") {
-    return emit("select-workbench");
-  }
   if (structureId === "storage") {
     return emit("select-storage");
   }
-  if (structureId === "lumberjackHut") {
-    return emit("select-lumberjack-hut");
-  }
-  return null;
+  return emit("select-structure", structureId);
 }
 
 function updateViewport() {

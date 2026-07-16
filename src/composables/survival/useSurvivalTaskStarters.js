@@ -39,6 +39,7 @@ export function createSurvivalTaskStarters({
   storageWorkPoint,
   distanceBetween,
   actorInventoryCount,
+  actorCanWork,
   scheduleActorTask,
   t,
 }) {
@@ -385,6 +386,10 @@ export function createSurvivalTaskStarters({
   }
 
   function startPlayerFieldTask(nodeId) {
+    if (!actorCanWork(playerActor)) {
+      addLog(t("log.tooHungryToWork", { actor: playerActor.name }));
+      return false;
+    }
     const node = fieldNodeById(nodeId);
     const action = node ? gatherActionForNode(node) : null;
     if (!node || !action) {
@@ -508,7 +513,10 @@ export function createSurvivalTaskStarters({
       return false;
     }
 
-    if (workerType === "self" && (recipe.station !== "hand" || options.isPlayerBusy?.value)) {
+    if (workerType === "self" && (!actorCanWork(playerActor) || recipe.station !== "hand" || options.isPlayerBusy?.value)) {
+      if (!actorCanWork(playerActor)) {
+        addLog(t("log.tooHungryToWork", { actor: playerActor.name }));
+      }
       return false;
     }
 
@@ -594,6 +602,10 @@ export function createSurvivalTaskStarters({
 
     const workerType = options.workerType || "villager";
     if (workerType === "player") {
+      if (!actorCanWork(playerActor)) {
+        addLog(t("log.tooHungryToWork", { actor: playerActor.name }));
+        return false;
+      }
       if (playerActor.currentTaskId && !findTaskById(playerActor.currentTaskId)) {
         playerActor.taskId = null;
         playerActor.currentTaskId = null;

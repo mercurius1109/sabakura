@@ -21,6 +21,7 @@ export function useAppInteractions(options) {
     moveItemFromActorToActor,
     moveItemFromOtherActorToPlayer,
     dropPlayerItem,
+    eatPlayerItem,
     startPlayerConstruction,
     canPlaceStructure,
     placeStructure,
@@ -65,6 +66,17 @@ export function useAppInteractions(options) {
     }
 
     dropPlayerInventoryItem(itemId);
+  }
+
+  function handlePlayerItemAction({ itemId, actionId }) {
+    if (!itemId || !actionId) {
+      return;
+    }
+    if (actionId === "eat") {
+      eatPlayerItem(itemId);
+      return;
+    }
+    handlePlayerTransfer(itemId);
   }
 
   function openStockRuleModal(rule) {
@@ -135,16 +147,12 @@ export function useAppInteractions(options) {
     selectedWindow.value = { type: "player" };
   }
 
-  function openWorkbenchWindow() {
-    selectedWindow.value = { type: "workbench" };
-  }
-
   function openCraftWindow() {
     selectedWindow.value = { type: "craft" };
   }
 
-  function openLumberjackHutWindow() {
-    selectedWindow.value = { type: "lumberjackHut" };
+  function openStructureWindow(structureId) {
+    selectedWindow.value = { type: structureId };
   }
 
   function openStorageCompareWindow() {
@@ -210,6 +218,7 @@ export function useAppInteractions(options) {
     transferVillagerItemToPlayer,
     dropPlayerInventoryItem,
     handlePlayerTransfer,
+    handlePlayerItemAction,
     openStockRuleModal,
     closeStockRuleModal,
     openAddStockRuleModal,
@@ -220,8 +229,7 @@ export function useAppInteractions(options) {
     closeWindow,
     openPlayerWindow,
     openCraftWindow,
-    openWorkbenchWindow,
-    openLumberjackHutWindow,
+    openStructureWindow,
     openStorageCompareWindow,
     openVillageWindow,
     openBuildWindow,

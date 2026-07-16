@@ -9,4 +9,9 @@ export const stations = [
     nameKey: "station.lumberjackHut.name",
     descriptionKey: "station.lumberjackHut.description",
   },
+  {
+    id: "cookingStation",
+    nameKey: "station.cookingStation.name",
+    descriptionKey: "station.cookingStation.description",
+  },
 ];

@@ -29,7 +29,9 @@
           :recipe-icon="playerCraftIcon"
           :can-start-recipe="canStartPlayerRecipe"
           :show-craft-section="false"
+          :item-actions-for-item="playerItemActions"
           @select-transfer="$emit('handle-player-transfer', $event)"
+          @select-item-action="$emit('handle-player-item-action', $event)"
         />
       </template>
 
@@ -54,7 +56,9 @@
           :recipe-button-class="playerRecipeButtonClass"
           :recipe-icon="playerCraftIcon"
           :can-start-recipe="canStartPlayerRecipe"
+          :item-actions-for-item="playerItemActions"
           @select-transfer="$emit('handle-player-transfer', $event)"
+          @select-item-action="$emit('handle-player-item-action', $event)"
           @start-recipe="$emit('start-player-craft', $event)"
         />
       </template>
@@ -113,7 +117,9 @@
               :recipe-icon="playerCraftIcon"
               :can-start-recipe="canStartPlayerRecipe"
               :show-craft-section="false"
+              :item-actions-for-item="playerItemActions"
               @select-transfer="$emit('handle-player-transfer', $event)"
+              @select-item-action="$emit('handle-player-item-action', $event)"
             />
           </div>
           <StationWindow
@@ -174,7 +180,9 @@
               :recipe-icon="playerCraftIcon"
               :can-start-recipe="canStartPlayerRecipe"
               :show-craft-section="false"
+              :item-actions-for-item="playerItemActions"
               @select-transfer="$emit('handle-player-transfer', $event)"
+              @select-item-action="$emit('handle-player-item-action', $event)"
             />
           </div>
           <StorageWindow
@@ -240,12 +248,15 @@
               :recipe-icon="playerCraftIcon"
               :can-start-recipe="canStartPlayerRecipe"
               :show-craft-section="false"
+              :item-actions-for-item="playerItemActions"
               @select-transfer="$emit('handle-player-transfer', $event)"
+              @select-item-action="$emit('handle-player-item-action', $event)"
             />
           </div>
           <VillagerCompareWindow
             :transfer-entries="selectedVillagerTransferOutEntries"
             :is-player-adjacent="isPlayerAdjacentToSelectedVillager"
+            :villager="selectedVillager"
             :stations="selectedVillagerStations"
             :task="currentSelectedVillagerTask"
             :tasks="currentSelectedVillagerTasks"
@@ -284,6 +295,7 @@ const props = defineProps({
   playerTransferCaption: { type: String, required: true },
   playerTransferDisabled: { type: Boolean, required: true },
   playerTransferDisabledText: { type: String, required: true },
+  playerItemActions: { type: Function, required: true },
   currentPlayerTask: { type: Object, default: null },
   currentPlayerTasks: { type: Array, required: true },
   taskLabel: { type: Function, required: true },
@@ -343,6 +355,7 @@ const props = defineProps({
 const emit = defineEmits([
   "close-window",
   "handle-player-transfer",
+  "handle-player-item-action",
   "start-player-craft",
   "transfer-storage-item-to-player",
   "open-add-stock-rule-modal",

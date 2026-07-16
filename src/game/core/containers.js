@@ -3,10 +3,12 @@ export function createItemStore() {
     wood: 0,
     stone: 0,
     log: 0,
+    wildBerry: 0,
     plank: 0,
     stick: 0,
     stoneAxe: 0,
     hammer: 0,
+    berryJam: 0,
   };
 }
 

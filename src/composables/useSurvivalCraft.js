@@ -53,6 +53,9 @@ const playerMoveSpeedPerSecond = 600;
 const villagerMoveSpeedPerSecond = 80;
 const tickIntervalMs = 250;
 const defaultGameSpeed = 1;
+const fullnessDecayPerSecond = 0.2;
+const autoEatThreshold = 35;
+const eatDurationMs = 1800;
 
 export function useSurvivalCraft() {
   const itemDefinitions = Object.fromEntries(
@@ -112,6 +115,7 @@ export function useSurvivalCraft() {
   const placedStructures = reactive({
     workbench: false,
     lumberjackHut: false,
+    cookingStation: false,
     storage: false,
   });
   const structurePositions = reactive({});
@@ -241,6 +245,9 @@ export function useSurvivalCraft() {
     }
     if (task.kind === "build") {
       return constructionQueue;
+    }
+    if (task.kind === "eat") {
+      return gatherQueue;
     }
     return gatherQueue;
   }
@@ -511,6 +518,7 @@ export function useSurvivalCraft() {
     availableVillagerForConstruction,
     availableVillagerForGather,
     availableVillagerForRecipe,
+    actorCanWork,
     canStartStationCraftEntry,
     craftEntryStatus,
     findTaskById: managementFindTaskById,
@@ -631,6 +639,7 @@ export function useSurvivalCraft() {
     storageWorkPoint,
     distanceBetween,
     actorInventoryCount,
+    actorCanWork,
     scheduleActorTask,
     t,
   });
@@ -745,10 +754,8 @@ export function useSurvivalCraft() {
     storageWorkPoint,
     distanceBetween,
     actorInventoryCount,
-    shouldVillagerContinue,
     gatherActionById,
     findGatherTargetNode,
-    addItemToStore: addItem,
     removeItemFromStore: removeItem,
     consumeActorResources,
     restartVillagerTask,
@@ -762,6 +769,7 @@ export function useSurvivalCraft() {
     removeTaskFromActiveState,
     scheduleActorTask,
     makeId,
+    itemDefinitions,
     t,
   });
 
@@ -826,6 +834,142 @@ export function useSurvivalCraft() {
       return constructionQueue;
     }
     return null;
+  }
+
+  function edibleItemEntries() {
+    return Object.entries(itemDefinitions).filter(([, meta]) => Number(meta?.nutrition) > 0);
+  }
+
+  function bestFoodItemInInventory(actor) {
+    return edibleItemEntries()
+      .filter(([itemId]) => (actor?.inventory?.[itemId] || 0) > 0)
+      .sort((a, b) => (b[1].nutrition || 0) - (a[1].nutrition || 0))[0]?.[0] || null;
+  }
+
+  function bestFoodItemInStorage() {
+    if (!placedStructures.storage) {
+      return null;
+    }
+    return edibleItemEntries()
+      .filter(([itemId]) => (storage[itemId] || 0) > 0)
+      .sort((a, b) => (b[1].nutrition || 0) - (a[1].nutrition || 0))[0]?.[0] || null;
+  }
+
+  function actorFullnessPercent(actor) {
+    const max = Math.max(1, actor?.maxFullness || 100);
+    return Math.max(0, Math.min(100, Math.round(((actor?.fullness || 0) / max) * 100)));
+  }
+
+  function actorIsStarving(actor) {
+    return Boolean(actor && actor.fullness <= 0);
+  }
+
+  function actorNeedsFood(actor) {
+    return Boolean(actor && actor.fullness <= autoEatThreshold);
+  }
+
+  function createEatTask(actor, itemId, itemSource = "inventory") {
+    const food = itemDefinitions[itemId];
+    if (!actor || !food?.nutrition) {
+      return null;
+    }
+
+    const fromStorage = itemSource === "storage";
+    const targetPoint = fromStorage ? storageWorkPoint(actor) : null;
+    const atTarget = !fromStorage || distanceBetween(actor, targetPoint) <= 0.0001;
+    return {
+      id: makeId("eat"),
+      kind: "eat",
+      itemId,
+      itemSource,
+      workerType: actor.id === playerActor.id ? "self" : "villager",
+      villagerId: actor.id,
+      station: fromStorage ? "storage" : "hand",
+      source: "eat",
+      phase: atTarget ? "working" : "movingToTarget",
+      targetPoint,
+      initialTargetDistance: targetPoint ? distanceBetween(actor, targetPoint) : 0,
+      workStartedAt: atTarget ? now.value : null,
+      duration: eatDurationMs,
+    };
+  }
+
+  function hasQueuedEatTask(actor) {
+    return Boolean(actor?.taskQueue?.some((taskId) => findTaskById(taskId)?.kind === "eat"));
+  }
+
+  function clearNonEatTasks(actor) {
+    if (!actor) {
+      return;
+    }
+
+    [...(actor.taskQueue || [])]
+      .map((taskId) => findTaskById(taskId))
+      .filter(Boolean)
+      .filter((task) => task.kind !== "eat")
+      .forEach((task) => removeTaskFromActiveState(task));
+  }
+
+  function scheduleAutoEat(actor) {
+    if (!actor || actor.taskId !== null || hasQueuedEatTask(actor)) {
+      return false;
+    }
+
+    const carriedFood = bestFoodItemInInventory(actor);
+    const storageFood = carriedFood ? null : bestFoodItemInStorage();
+    const itemId = carriedFood || storageFood;
+    if (!itemId) {
+      return false;
+    }
+
+    const task = createEatTask(actor, itemId, carriedFood ? "inventory" : "storage");
+    return task ? scheduleActorTask(actor, task) : false;
+  }
+
+  function eatPlayerItem(itemId) {
+    const food = itemDefinitions[itemId];
+    if (!food?.nutrition || (playerActor.inventory[itemId] || 0) <= 0) {
+      return false;
+    }
+    if (!cancelPlayerTaskForManualAction()) {
+      return false;
+    }
+    const task = createEatTask(playerActor, itemId, "inventory");
+    return task ? scheduleActorTask(playerActor, task) : false;
+  }
+
+  function updateActorFullness(actor, deltaMs) {
+    if (!actor) {
+      return;
+    }
+    actor.fullness = Math.max(0, actor.fullness - (fullnessDecayPerSecond * deltaMs) / 1000);
+  }
+
+  function enforceHunger(actor) {
+    if (!actor) {
+      return;
+    }
+
+    const isPlayer = actor.id === playerActor.id;
+
+    if (actorIsStarving(actor)) {
+      clearNonEatTasks(actor);
+      if (!isPlayer) {
+        scheduleAutoEat(actor);
+      }
+      return;
+    }
+
+    if (!isPlayer && actorNeedsFood(actor) && actor.taskId === null) {
+      scheduleAutoEat(actor);
+    }
+  }
+
+  function updateFullness(deltaMs) {
+    [playerActor, ...villagers].forEach((actor) => {
+      updateActorFullness(actor, deltaMs);
+      enforceHunger(actor);
+    });
   }
 
   function cancelTask(taskId) {
@@ -911,6 +1055,7 @@ export function useSurvivalCraft() {
     while (accumulatedTickMs >= tickIntervalMs) {
       snapshotActorPosition(playerActor);
       villagers.forEach(snapshotActorPosition);
+      updateFullness(tickIntervalMs);
       tick(tickIntervalMs);
       accumulatedTickMs -= tickIntervalMs;
       lastTickAt.value = Date.now();
@@ -939,6 +1084,7 @@ export function useSurvivalCraft() {
 
   return {
     itemDefinitions,
+    buildingDefinitions,
     stations,
     inventory: activeInventory,
     storage,
@@ -1018,10 +1164,13 @@ export function useSurvivalCraft() {
     moveItemFromActorToActor,
     moveItemFromOtherActorToPlayer,
     dropPlayerItem,
+    eatPlayerItem,
     cancelTask,
     clearLog,
     formatList,
     stockRuleStatus,
+    actorFullnessPercent,
+    actorIsStarving,
     worldWidth: WORLD_WIDTH,
     worldHeight: WORLD_HEIGHT,
   };

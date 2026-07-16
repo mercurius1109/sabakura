@@ -10,6 +10,25 @@
     />
 
     <div class="mt-4 rounded-2xl border border-line bg-white/80 p-4">
+      <div class="flex items-center justify-between gap-2">
+        <div class="text-sm font-bold text-ink">{{ t("ui.fullness") }}</div>
+        <div
+          class="rounded-full px-2 py-1 text-[10px] font-bold leading-none"
+          :class="isStarving ? 'bg-[#ffe3d3] text-[#b4491e]' : 'bg-emerald-100 text-moss'"
+        >
+          {{ isStarving ? t("ui.starving") : `${currentFullness}/${maxFullness}` }}
+        </div>
+      </div>
+      <div class="mt-3 h-3 overflow-hidden rounded-full border border-[#c7bdad] bg-[#eee7dd]">
+        <div
+          class="h-full rounded-full transition-[width]"
+          :class="isStarving ? 'bg-[#d96c3f]' : 'bg-gradient-to-r from-[#e7b64d] via-[#9bc667] to-[#2d6a4f]'"
+          :style="{ width: `${fullnessPercent}%` }"
+        ></div>
+      </div>
+    </div>
+
+    <div class="mt-4 rounded-2xl border border-line bg-white/80 p-4">
       <div class="text-sm font-bold text-ink">{{ t("ui.assignedStations") }}</div>
       <div v-if="stations.length === 0" class="mt-3 text-sm text-muted">{{ t("ui.noAssignedStations") }}</div>
       <div v-else class="mt-3 grid gap-2">
@@ -37,13 +56,15 @@
 </template>
 
 <script setup>
+import { computed } from "vue";
 import InventoryActionGrid from "./InventoryActionGrid.vue";
 import TaskPanel from "./TaskPanel.vue";
 import { useI18n } from "../i18n/index.js";
 
-defineProps({
+const props = defineProps({
   transferEntries: { type: Array, required: true },
   isPlayerAdjacent: { type: Boolean, required: true },
+  villager: { type: Object, required: true },
   stations: { type: Array, required: true },
   task: { type: Object, default: null },
   tasks: { type: Array, default: () => [] },
@@ -57,4 +78,8 @@ defineProps({
 defineEmits(["transfer-to-player"]);
 
 const { t } = useI18n();
+const currentFullness = computed(() => Math.max(0, Math.round(props.villager?.fullness || 0)));
+const maxFullness = computed(() => Math.max(1, Math.round(props.villager?.maxFullness || 100)));
+const fullnessPercent = computed(() => Math.max(0, Math.min(100, Math.round((currentFullness.value / maxFullness.value) * 100))));
+const isStarving = computed(() => currentFullness.value <= 0);
 </script>

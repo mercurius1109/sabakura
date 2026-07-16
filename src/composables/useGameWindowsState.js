@@ -6,6 +6,7 @@ export function useGameWindowsState(options) {
     selectedWindow,
     currentTutorialTargets,
     itemDefinitions,
+    buildingDefinitions,
     inventory,
     storage,
     placedStructures,
@@ -104,16 +105,12 @@ export function useGameWindowsState(options) {
 
   const selectedStationWindow = computed(() => {
     const stationId = selectedWindow.value?.type;
-    if (stationId !== "workbench" && stationId !== "lumberjackHut") {
-      return null;
-    }
-
     const station = stations.find((entry) => entry.id === stationId);
     if (!station) {
       return null;
     }
 
-    const baseState = {
+    return {
       station,
       isAvailable: isStationAvailable(stationId),
       assignedVillagers: assignedVillagerList(stationId),
@@ -123,27 +120,16 @@ export function useGameWindowsState(options) {
       craftEntries: stationCraftEntries(stationId),
       highlightAddVillager: hasTutorialTarget(currentTutorialTargets, "station-action", `${stationId}:add-villager`),
       highlightAddCraft: hasTutorialTarget(currentTutorialTargets, "station-action", `${stationId}:add-craft`),
-    };
-
-    if (stationId === "workbench") {
-      return {
-        ...baseState,
-        currentAmount: (craftEntryId) => {
-          const itemId = stationTargetItemId(stationId, craftEntryId);
-          return itemId ? resolvedInventory.value[itemId] || 0 : 0;
-        },
-        expectedAmount: (craftEntryId) => stationTargetItemId(stationId, craftEntryId) ? expectedStock(stationTargetItemId(stationId, craftEntryId)) : 0,
-        craftEntryStatus: (craftEntryId) => craftEntryStatus(stationId, craftEntryId),
-        canStartEntry: (craftEntryId) => canStartStationCraftEntry(stationId, craftEntryId),
-      };
-    }
-
-    return {
-      ...baseState,
-      currentAmount: () => 0,
-      expectedAmount: () => 0,
-      craftEntryStatus: () => "",
-      canStartEntry: () => false,
+      currentAmount: (craftEntryId) => {
+        const itemId = stationTargetItemId(stationId, craftEntryId);
+        return itemId ? resolvedInventory.value[itemId] || 0 : 0;
+      },
+      expectedAmount: (craftEntryId) => {
+        const itemId = stationTargetItemId(stationId, craftEntryId);
+        return itemId ? expectedStock(itemId) : 0;
+      },
+      craftEntryStatus: (craftEntryId) => craftEntryStatus(stationId, craftEntryId),
+      canStartEntry: (craftEntryId) => canStartStationCraftEntry(stationId, craftEntryId),
     };
   });
 
@@ -177,27 +163,27 @@ export function useGameWindowsState(options) {
   const playerTransferCaption = computed(() => t("ui.transferTo", { target: playerTransferContext.value.label }));
   const playerTransferDisabled = computed(() => playerTransferContext.value.disabled);
   const playerTransferDisabledText = computed(() => playerTransferContext.value.disabledText);
+  const playerItemActions = (item) => {
+    if (!item || playerTransferContext.value.mode !== "drop") {
+      return [];
+    }
 
-  const playerBuildCards = computed(() => [
-    {
-      id: "workbench",
-      name: itemDefinitions.workbench?.name || t("item.workbench"),
-      icon: itemDefinitions.workbench?.icon || "?",
-      costs: { wood: 4 },
-    },
-    {
-      id: "storage",
-      name: itemDefinitions.storage?.name || t("item.storage"),
-      icon: itemDefinitions.storage?.icon || "?",
-      costs: { wood: 6, stone: 2 },
-    },
-    {
-      id: "lumberjackHut",
-      name: itemDefinitions.lumberjackHut?.name || t("item.lumberjackHut"),
-      icon: itemDefinitions.lumberjackHut?.icon || "?",
-      costs: { wood: 8, stone: 4 },
-    },
-  ]);
+    const actions = [];
+    if (Number(item.nutrition) > 0) {
+      actions.push({ id: "eat", label: t("ui.eat") });
+    }
+    actions.push({ id: "drop", label: t("ui.drop") });
+    return actions;
+  };
+
+  const playerBuildCards = computed(() =>
+    buildingDefinitions.map((building) => ({
+      id: building.id,
+      name: itemDefinitions[building.id]?.name || building.name || t(`item.${building.id}`),
+      icon: itemDefinitions[building.id]?.icon || building.icon || "?",
+      costs: building.costs,
+    })),
+  );
 
   const pendingBuildingPlacement = computed(() =>
     playerBuildCards.value.find((building) => building.id === pendingBuildingPlacementId.value) || null,
@@ -289,6 +275,7 @@ export function useGameWindowsState(options) {
     playerTransferDisabled,
     playerTransferDisabledText,
     playerTransferContext,
+    playerItemActions,
     playerBuildCards,
     pendingBuildingPlacement,
     storageTitle,
@@ -316,6 +303,8 @@ function itemCardsFromStore(store, itemDefinitions) {
       id,
       name: meta.name,
       icon: meta.icon,
+      kind: meta.kind,
+      nutrition: meta.nutrition || 0,
       amount: store[id] || 0,
       expected: store[id] || 0,
     }));

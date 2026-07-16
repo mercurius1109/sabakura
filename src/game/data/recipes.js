@@ -34,4 +34,13 @@ export const recipes = [
     costs: { wood: 2, stone: 1 },
     outputs: { hammer: 1 },
   },
+  {
+    id: "berryJam",
+    nameKey: "recipe.berryJam",
+    station: "cookingStation",
+    requiresFacility: "cookingStation",
+    duration: 5000,
+    costs: { wildBerry: 3, wood: 1 },
+    outputs: { berryJam: 1 },
+  },
 ];

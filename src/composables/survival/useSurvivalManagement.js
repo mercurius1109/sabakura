@@ -39,6 +39,10 @@ export function createSurvivalManagementHelpers({
     return Boolean(actor?.currentTaskId || actor?.taskQueue?.length);
   }
 
+  function actorCanWork(actor) {
+    return Boolean(actor && actor.fullness > 0);
+  }
+
   function stationName(stationId) {
     if (stationId === "hand") {
       return t("common.handCraft");
@@ -155,6 +159,9 @@ export function createSurvivalManagementHelpers({
 
   function firstAvailableVillager(candidates, action = null) {
     return candidates.find((villager) => {
+      if (!actorCanWork(villager)) {
+        return false;
+      }
       if (actorIsBusy(villager)) {
         return false;
       }
@@ -492,6 +499,7 @@ export function createSurvivalManagementHelpers({
     availableVillagerForRecipe,
     availableVillagerForStation,
     canStartStationCraftEntry,
+    actorCanWork,
     craftEntryStatus,
     findTaskById,
     generateVillagerName,
