@@ -14,6 +14,7 @@ export function createSurvivalTaskRuntimeLoop({
   completeGatherTask,
   completeTransferTask,
   finishTaskWork,
+  validateTaskStart,
   respawnFieldNodes,
   checkStockRules,
   checkConstructionSites,
@@ -53,6 +54,13 @@ export function createSurvivalTaskRuntimeLoop({
     if (task.kind === "transfer") {
       completeTransferTask(task);
       return;
+    }
+
+    if (!task.startedValidationDone) {
+      task.startedValidationDone = true;
+      if (!validateTaskStart(task)) {
+        return;
+      }
     }
 
     if (task.kind === "eat") {

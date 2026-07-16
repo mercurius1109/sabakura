@@ -78,6 +78,7 @@ export function createSurvivalTaskRuntime({
     depositVillagerOutputs,
     dropVillagerOutputsToField,
     finishTaskWork,
+    validateTaskStart,
   } = createSurvivalTaskRuntimeHandlers({
     now,
     playerActor,
@@ -133,6 +134,7 @@ export function createSurvivalTaskRuntime({
     completeGatherTask,
     completeTransferTask,
     finishTaskWork,
+    validateTaskStart,
     respawnFieldNodes,
     checkStockRules,
     checkConstructionSites,

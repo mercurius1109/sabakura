@@ -63,8 +63,10 @@ export function createSurvivalTaskStarters({
       id: makeId(isPlayerActor(actor) ? "player-gather" : "gather"),
       kind: "gather",
       actionId: action.id,
+      actionLabel: action.label,
       itemId: action.itemId,
       amount: action.amount,
+      requiresItem: action.requiresItem || null,
       workerType: isPlayerActor(actor) ? "player" : "villager",
       villagerId: actor.id,
       station: options.preferredStationId || action.requiresStation || "field",
@@ -378,14 +380,6 @@ export function createSurvivalTaskStarters({
     const action = node ? gatherActionForNode(node) : null;
     if (!node || !action) {
       return false;
-    }
-
-    if (action.requiresItem && !actorHasItem(playerActor, action.requiresItem)) {
-      return startActorFieldTask(playerActor, nodeId, {
-        source: "manual",
-        keepOutputs: true,
-        dropToStorage: false,
-      });
     }
 
     const targetPoint = nodeWorkPoint(node, playerActor);

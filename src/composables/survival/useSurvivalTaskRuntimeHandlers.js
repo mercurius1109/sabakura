@@ -207,6 +207,24 @@ export function createSurvivalTaskRuntimeHandlers({
     }
   }
 
+  function validateTaskStart(task) {
+    if (task.kind === "gather") {
+      const worker = actorById(task.villagerId);
+      if (task.requiresItem && (worker?.inventory?.[task.requiresItem] || 0) <= 0) {
+        addLog(t("log.itemMissingAction", {
+          item: itemName(task.requiresItem),
+          action: task.actionLabel || gatherActionById(task.actionId)?.label || itemName(task.itemId),
+          actor: villagerName(task.villagerId),
+          count: 0,
+        }));
+        removeTaskFromActiveState(task);
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   function finishTaskWork(task) {
     if (task.kind === "move") {
       removeTaskFromActiveState(task);
@@ -369,5 +387,6 @@ export function createSurvivalTaskRuntimeHandlers({
     depositVillagerOutputs,
     dropVillagerOutputsToField,
     finishTaskWork,
+    validateTaskStart,
   };
 }
