@@ -14,6 +14,7 @@ export function useAppInteractions(options) {
     playerTransferContext,
     playerActor,
     onRuleChanged,
+    approachStructureTarget,
     approachTransferTarget,
     movePlayerTo,
     moveItemFromActorToStorage,
@@ -153,6 +154,7 @@ export function useAppInteractions(options) {
 
   function openStructureWindow(structureId) {
     selectedWindow.value = { type: structureId };
+    approachStructureTarget(structureId);
   }
 
   function openStorageCompareWindow() {

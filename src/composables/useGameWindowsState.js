@@ -117,6 +117,7 @@ export function useGameWindowsState(options) {
       availableVillagers: unassignedVillagersForStation(stationId),
       tasks: stationTasks(stationId),
       recipes: stationRecipes(stationId),
+      playerRecipes: stationRecipes(stationId),
       craftEntries: stationCraftEntries(stationId),
       highlightAddVillager: hasTutorialTarget(currentTutorialTargets, "station-action", `${stationId}:add-villager`),
       highlightAddCraft: hasTutorialTarget(currentTutorialTargets, "station-action", `${stationId}:add-craft`),

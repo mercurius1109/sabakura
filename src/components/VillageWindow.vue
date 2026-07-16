@@ -9,7 +9,7 @@
       {{ t("ui.addVillager") }}
     </button>
 
-    <div class="mt-4 grid grid-cols-[repeat(auto-fill,minmax(120px,120px))] gap-3">
+    <div class="mt-4 grid grid-cols-[repeat(3,120px)] gap-3">
       <button
         v-for="villager in villagers"
         :key="villager.id"

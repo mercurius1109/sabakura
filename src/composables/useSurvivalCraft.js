@@ -774,6 +774,7 @@ export function useSurvivalCraft() {
   });
 
   const {
+    approachStructureTarget,
     approachTransferTarget,
     dropPlayerItem,
     isPlayerAdjacentToActor,
@@ -791,6 +792,7 @@ export function useSurvivalCraft() {
     placedStructures,
     storagePointWorld,
     buildingById,
+    buildingWorkPoint,
     actorById,
     actorWorkPoint,
     storageWorkPoint,
@@ -906,7 +908,7 @@ export function useSurvivalCraft() {
     [...(actor.taskQueue || [])]
       .map((taskId) => findTaskById(taskId))
       .filter(Boolean)
-      .filter((task) => task.kind !== "eat")
+      .filter((task) => task.kind !== "eat" && task.kind !== "move")
       .forEach((task) => removeTaskFromActiveState(task));
   }
 
@@ -1157,6 +1159,7 @@ export function useSurvivalCraft() {
     setGameSpeed,
     isPlayerAdjacentToStorage,
     isPlayerAdjacentToActor,
+    approachStructureTarget,
     approachTransferTarget,
     movePlayerTo,
     moveItemFromActorToStorage,

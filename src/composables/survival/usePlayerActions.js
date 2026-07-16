@@ -8,6 +8,7 @@ export function createPlayerActions({
   placedStructures,
   storagePointWorld,
   buildingById,
+  buildingWorkPoint,
   actorById,
   actorWorkPoint,
   storageWorkPoint,
@@ -92,6 +93,43 @@ export function createPlayerActions({
       duration: 1,
       actorId,
       targetKind,
+    };
+
+    return scheduleActorTask(playerActor, task);
+  }
+
+  function approachStructureTarget(structureId) {
+    if (!playerActor || !structureId) {
+      return false;
+    }
+    if (!cancelPlayerTaskForManualAction()) {
+      return false;
+    }
+
+    const building = buildingById(structureId);
+    const targetPoint = buildingWorkPoint(structureId, playerActor);
+    if (!building || !targetPoint) {
+      return false;
+    }
+    if (distanceBetween(playerActor, targetPoint) <= 8) {
+      return true;
+    }
+
+    const task = {
+      id: makeId("approach-structure"),
+      kind: "move",
+      label: `Move to ${building.name}`,
+      workerType: "player",
+      villagerId: playerActor.id,
+      station: structureId,
+      source: "manual",
+      phase: "movingToTarget",
+      targetPoint,
+      initialTargetDistance: distanceBetween(playerActor, targetPoint),
+      workStartedAt: null,
+      duration: 1,
+      actorId: null,
+      targetKind: "field",
     };
 
     return scheduleActorTask(playerActor, task);
@@ -295,6 +333,7 @@ export function createPlayerActions({
   }
 
   return {
+    approachStructureTarget,
     approachTransferTarget,
     dropPlayerItem,
     isPlayerAdjacentToActor,

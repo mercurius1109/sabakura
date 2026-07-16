@@ -33,7 +33,6 @@ export function createSurvivalFlow({
 
   function canStartPlayerRecipe(recipe, isPlayerBusy) {
     return Boolean(recipe)
-      && recipe.station === "hand"
       && playerActor.fullness > 0
       && !isPlayerBusy.value
       && isRecipeUnlocked(recipe)

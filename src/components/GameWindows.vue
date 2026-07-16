@@ -111,15 +111,16 @@
               :remaining-seconds="remainingSeconds"
               :on-cancel-task="cancelTask"
               :is-busy="isPlayerBusy"
-              :recipes="playerRecipes"
+              :recipes="selectedStationWindow.playerRecipes"
               :recipe-tooltip="playerCraftTooltip"
               :recipe-button-class="playerRecipeButtonClass"
               :recipe-icon="playerCraftIcon"
               :can-start-recipe="canStartPlayerRecipe"
-              :show-craft-section="false"
+              :show-craft-section="selectedStationWindow.playerRecipes.length > 0"
               :item-actions-for-item="playerItemActions"
               @select-transfer="$emit('handle-player-transfer', $event)"
               @select-item-action="$emit('handle-player-item-action', $event)"
+              @start-recipe="$emit('start-player-craft', $event)"
             />
           </div>
           <StationWindow

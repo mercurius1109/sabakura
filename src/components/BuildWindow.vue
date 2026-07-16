@@ -1,6 +1,6 @@
 <template>
   <div class="max-h-[calc(100vh-10rem)] overflow-y-auto px-4 py-4">
-    <div class="grid grid-cols-[repeat(auto-fill,minmax(120px,120px))] gap-3">
+    <div class="grid grid-cols-[repeat(3,120px)] gap-3">
       <button
         v-for="building in buildCards"
         :key="building.id"
@@ -21,7 +21,7 @@
 
     <div v-if="constructionSites.length > 0" class="mt-6">
       <div class="mb-3 text-sm font-bold text-ink">{{ t("ui.construction") }}</div>
-      <div class="grid grid-cols-[repeat(auto-fill,minmax(120px,120px))] gap-3">
+      <div class="grid grid-cols-[repeat(3,120px)] gap-3">
         <button
           v-for="site in constructionSites"
           :key="`cancel-${site.id}`"

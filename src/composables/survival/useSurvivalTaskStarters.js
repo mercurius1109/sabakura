@@ -513,7 +513,7 @@ export function createSurvivalTaskStarters({
       return false;
     }
 
-    if (workerType === "self" && (!actorCanWork(playerActor) || recipe.station !== "hand" || options.isPlayerBusy?.value)) {
+    if (workerType === "self" && (!actorCanWork(playerActor) || options.isPlayerBusy?.value)) {
       if (!actorCanWork(playerActor)) {
         addLog(t("log.tooHungryToWork", { actor: playerActor.name }));
       }
@@ -526,16 +526,25 @@ export function createSurvivalTaskStarters({
         kind: "craft",
         recipeId,
         workerType,
-        villagerId: null,
+        villagerId: playerActor.id,
         station: recipe.station,
         source,
         phase: "working",
+        targetPoint: null,
+        initialTargetDistance: 0,
         workStartedAt: now.value,
         carriedOutputs: recipe.outputs,
         craftEntryId: options.craftEntryId || null,
         startedAt: now.value,
         duration: recipe.duration,
       };
+      if (recipe.station !== "hand") {
+        const targetPoint = buildingWorkPoint(recipe.station, playerActor);
+        task.targetPoint = targetPoint;
+        task.initialTargetDistance = distanceBetween(playerActor, targetPoint);
+        task.phase = isAtTarget(playerActor, targetPoint) ? "working" : "movingToTarget";
+        task.workStartedAt = task.phase === "working" ? now.value : null;
+      }
       scheduleActorTask(playerActor, task);
       addLog(t("log.playerCraftStarted", { recipe: recipe.name }));
       return true;
