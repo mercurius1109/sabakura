@@ -486,7 +486,7 @@ function fieldTaskText(task) {
   if (!task) {
     return "";
   }
-  if (task.phase === "movingToTarget" || task.phase === "movingToStorage") {
+  if (task.kind === "move") {
     return taskPhaseLabel(task);
   }
   return taskLabel(task);
@@ -496,10 +496,7 @@ function queuedTaskText(task) {
   if (!task) {
     return "";
   }
-  if (task.kind === "gather" || task.kind === "craft" || task.kind === "build" || task.kind === "transfer") {
-    return taskLabel({ ...task, phase: "working" });
-  }
-  return fieldTaskText(task);
+  return taskLabel(task);
 }
 
 function actorForTask(task) {
@@ -528,10 +525,10 @@ function fieldTaskProgress(task) {
   if (!task) {
     return null;
   }
-  if (task.phase === "movingToTarget" || task.phase === "movingToStorage") {
+  if (task.kind === "move") {
     return movingFieldTaskProgress(task);
   }
-  if (task.phase === "working") {
+  if (task.workStartedAt) {
     const started = task.workStartedAt || displayNow.value;
     return Math.max(0, Math.min(100, ((displayNow.value - started) / task.duration) * 100));
   }
@@ -552,6 +549,7 @@ function taskQueueEntries(actorId) {
       }
       const progress = fieldTaskProgress(task);
       return {
+        key: `${task.id}:${index}`,
         text,
         progress: progress > 0 ? progress : null,
       };
@@ -575,7 +573,7 @@ function isActorRenderSettled(actor) {
 }
 
 function isMovingTask(task) {
-  return task?.phase === "movingToTarget" || task?.phase === "movingToStorage";
+  return task?.kind === "move";
 }
 
 watchEffect(() => {
@@ -627,6 +625,7 @@ function cachedTaskQueueEntries(actorId) {
       }
       const progress = fieldTaskProgress(task);
       return {
+        key: `${task.id}:${index}`,
         text,
         progress: progress > 0 ? progress : null,
       };

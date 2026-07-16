@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between gap-2">
       <div class="text-sm font-bold text-ink">{{ t("ui.currentTask") }}</div>
       <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-moss">
-        {{ activeTask ? phaseText(activeTask.phase) : t("ui.idle") }}
+        {{ activeTask ? taskStateText(activeTask) : t("ui.idle") }}
       </span>
     </div>
 
@@ -79,16 +79,10 @@ const queuedTasks = computed(() => {
   return tasks.filter((task) => task?.id !== activeTask.value.id);
 });
 
-function phaseText(phase) {
-  if (phase === "movingToTarget") {
+function taskStateText(task) {
+  if (task?.kind === "move") {
     return t("taskPhase.movingToTarget");
   }
-  if (phase === "working") {
-    return t("taskPhase.working");
-  }
-  if (phase === "movingToStorage") {
-    return t("taskPhase.movingToStorage");
-  }
-  return t("taskPhase.idle");
+  return t("taskPhase.working");
 }
 </script>

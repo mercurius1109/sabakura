@@ -25,6 +25,34 @@ export function createPlayerActions({
   removeItem,
   spawnDroppedItems,
 }) {
+  function createPlayerMoveTask(targetPoint, label, targetKind = "field", actorId = null, station = targetKind) {
+    return {
+      id: makeId("move"),
+      kind: "move",
+      label,
+      workerType: "player",
+      villagerId: playerActor.id,
+      station,
+      source: "manual",
+      targetPoint,
+      initialTargetDistance: distanceBetween(playerActor, targetPoint),
+      duration: 1,
+      actorId,
+      targetKind,
+    };
+  }
+
+  function scheduleMoveThenTask(targetPoint, label, nextTask, targetKind = "field", actorId = null, station = targetKind) {
+    if (distanceBetween(playerActor, targetPoint) <= 0.0001) {
+      return scheduleActorTask(playerActor, nextTask);
+    }
+    const moved = scheduleActorTask(playerActor, createPlayerMoveTask(targetPoint, label, targetKind, actorId, station));
+    if (!moved) {
+      return false;
+    }
+    return scheduleActorTask(playerActor, nextTask);
+  }
+
   const isPlayerAdjacentToStorage = computed(() => {
     if (!placedStructures.storage) {
       return false;
@@ -77,25 +105,7 @@ export function createPlayerActions({
     const label = targetKind === "storage"
       ? `Move to ${storageContainer.name}`
       : `Move to ${targetActor?.name || "actor"}`;
-
-    const task = {
-      id: makeId("approach"),
-      kind: "move",
-      label,
-      workerType: "player",
-      villagerId: playerActor.id,
-      station: targetKind,
-      source: "manual",
-      phase: "movingToTarget",
-      targetPoint,
-      initialTargetDistance: distanceBetween(playerActor, targetPoint),
-      workStartedAt: null,
-      duration: 1,
-      actorId,
-      targetKind,
-    };
-
-    return scheduleActorTask(playerActor, task);
+    return scheduleActorTask(playerActor, createPlayerMoveTask(targetPoint, label, targetKind, actorId));
   }
 
   function approachStructureTarget(structureId) {
@@ -115,24 +125,7 @@ export function createPlayerActions({
       return true;
     }
 
-    const task = {
-      id: makeId("approach-structure"),
-      kind: "move",
-      label: `Move to ${building.name}`,
-      workerType: "player",
-      villagerId: playerActor.id,
-      station: structureId,
-      source: "manual",
-      phase: "movingToTarget",
-      targetPoint,
-      initialTargetDistance: distanceBetween(playerActor, targetPoint),
-      workStartedAt: null,
-      duration: 1,
-      actorId: null,
-      targetKind: "field",
-    };
-
-    return scheduleActorTask(playerActor, task);
+    return scheduleActorTask(playerActor, createPlayerMoveTask(targetPoint, `Move to ${building.name}`, "field", null, structureId));
   }
 
   function movePlayerTo(position) {
@@ -154,24 +147,7 @@ export function createPlayerActions({
       return true;
     }
 
-    const task = {
-      id: makeId("move"),
-      kind: "move",
-      label: `Move to (${targetPoint.x.toFixed(0)}, ${targetPoint.y.toFixed(0)})`,
-      workerType: "player",
-      villagerId: playerActor.id,
-      station: "field",
-      source: "manual",
-      phase: "movingToTarget",
-      targetPoint,
-      initialTargetDistance: distanceBetween(playerActor, targetPoint),
-      workStartedAt: null,
-      duration: 1,
-      actorId: null,
-      targetKind: "field",
-    };
-
-    return scheduleActorTask(playerActor, task);
+    return scheduleActorTask(playerActor, createPlayerMoveTask(targetPoint, `Move to (${targetPoint.x.toFixed(0)}, ${targetPoint.y.toFixed(0)})`));
   }
 
   function queuePlayerTransfer(itemId, direction, actorId = null, targetKind = "storage") {
@@ -221,9 +197,6 @@ export function createPlayerActions({
       villagerId: playerActor.id,
       station: targetKind,
       source: "manual",
-      phase: "movingToTarget",
-      targetPoint,
-      initialTargetDistance: distanceBetween(playerActor, targetPoint),
       workStartedAt: null,
       duration: 300,
       transferDirection: direction,
@@ -231,7 +204,16 @@ export function createPlayerActions({
       targetKind,
     };
 
-    scheduleActorTask(playerActor, task);
+    const scheduled = scheduleMoveThenTask(
+      targetPoint,
+      task.label,
+      task,
+      targetKind,
+      actorId,
+    );
+    if (!scheduled) {
+      return false;
+    }
     if (direction === "toStorage") {
       addLog(`${playerActor.name} is moving ${itemName(itemId)} to storage.`);
     } else if (direction === "fromStorage") {

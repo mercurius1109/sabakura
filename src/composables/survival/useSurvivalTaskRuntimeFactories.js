@@ -34,10 +34,8 @@ export function createSurvivalTaskRuntimeFactories({
       villagerId: actor?.id,
       station: targetKind,
       source: "manual",
-      phase: "movingToTarget",
       targetPoint,
       initialTargetDistance: distanceBetween(actor, targetPoint),
-      workStartedAt: null,
       duration: 1,
       actorId,
       targetKind,
@@ -57,7 +55,6 @@ export function createSurvivalTaskRuntimeFactories({
       villagerId: actor?.id,
       station: targetKind,
       source,
-      phase: "working",
       workStartedAt: null,
       duration: 1,
       transferDirection,
@@ -79,9 +76,6 @@ export function createSurvivalTaskRuntimeFactories({
       source: template.source || "manual",
       ruleId: template.ruleId || null,
       targetNodeId: node.id,
-      phase: "working",
-      targetPoint: null,
-      initialTargetDistance: 0,
       workStartedAt: null,
       duration: action.duration,
       dropToStorage: template.dropToStorage ?? false,
@@ -140,21 +134,6 @@ export function createSurvivalTaskRuntimeFactories({
     return queuedAny;
   }
 
-  function isTransferAdjacent(task, actor, targetActor) {
-    if (task.targetKind === "actor") {
-      if (!targetActor) {
-        return false;
-      }
-      return distanceBetween(actor, targetActor) <= actorInteractionDistance;
-    }
-
-    if (task.targetKind === "storage") {
-      return distanceBetween(actor, currentStorageAnchor()) <= storageInteractionDistance;
-    }
-
-    return true;
-  }
-
   function refreshMovingDestination(task, actor, destination, targetActor) {
     if (task.targetKind === "actor" && targetActor) {
       return actorWorkPoint(targetActor, actor);
@@ -184,7 +163,6 @@ export function createSurvivalTaskRuntimeFactories({
     enqueueStorageTransfers,
     enqueueTask,
     isAtPoint,
-    isTransferAdjacent,
     refreshMovingDestination,
   };
 }

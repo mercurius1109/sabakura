@@ -23,24 +23,18 @@ export function taskPhaseLabel(task) {
   if (!task) {
     return t("taskPhase.idle");
   }
-  if (task.phase === "movingToTarget") {
+  if (task.kind === "move") {
     return t("taskPhase.movingToTarget");
   }
-  if (task.phase === "working") {
-    return t("taskPhase.working");
-  }
-  if (task.phase === "movingToStorage") {
-    return t("taskPhase.movingToStorage");
-  }
-  return t("taskPhase.idle");
+  return t("taskPhase.working");
 }
 
 export function taskLabel(task, { gatherActionById, recipeById, buildingById }) {
   if (!task) {
     return t("ui.noActiveTask");
   }
-  if (task.phase === "movingToTarget" || task.phase === "movingToStorage") {
-    return taskPhaseLabel(task);
+  if (task.kind === "move") {
+    return task.label || taskPhaseLabel(task);
   }
   if (task.kind === "gather") {
     const item = task.itemId ? t(`item.${task.itemId}`) : gatherActionById(task.actionId)?.label || t("common.gather");

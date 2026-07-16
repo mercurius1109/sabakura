@@ -46,17 +46,11 @@ export function createSurvivalTaskRuntime({
   itemDefinitions,
   t,
 }) {
-  function beginTaskWork(task) {
-    task.phase = "working";
-    task.workStartedAt = now.value;
-  }
-
   const {
     createGatherTaskFromTemplate,
     dropOutputsAtActor,
     enqueueMoveThenTask,
     enqueueStorageTransfers,
-    isTransferAdjacent,
     refreshMovingDestination,
   } = createSurvivalTaskRuntimeFactories({
     now,
@@ -133,7 +127,6 @@ export function createSurvivalTaskRuntime({
     moveActorForTask,
     refreshMovingDestination,
     removeTaskFromActiveState,
-    beginTaskWork,
     completeConstructionTask,
     completeCraftTask,
     completeEatTask,
@@ -146,7 +139,6 @@ export function createSurvivalTaskRuntime({
   });
 
   return {
-    beginTaskWork,
     completeConstructionTask,
     completeCraftTask,
     completeEatTask,

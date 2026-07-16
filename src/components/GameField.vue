@@ -70,7 +70,7 @@
       >
         <div
           v-for="(taskEntry, index) in playerTaskEntries"
-          :key="`player-task-${index}`"
+          :key="taskEntry.key || `player-task-${index}`"
           class="whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold leading-4 text-ink shadow-md backdrop-blur"
           :style="taskEntryStyle(taskEntry)"
         >
@@ -98,7 +98,7 @@
       >
         <div
           v-for="(taskEntry, index) in villagerTaskEntries(villager.id)"
-          :key="`${villager.id}-task-${index}`"
+          :key="taskEntry.key || `${villager.id}-task-${index}`"
           class="whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold leading-4 text-ink shadow-md backdrop-blur"
           :style="taskEntryStyle(taskEntry)"
         >

@@ -8,7 +8,6 @@ export function createSurvivalTaskRuntimeLoop({
   moveActorForTask,
   refreshMovingDestination,
   removeTaskFromActiveState,
-  beginTaskWork,
   completeConstructionTask,
   completeCraftTask,
   completeEatTask,
@@ -26,17 +25,12 @@ export function createSurvivalTaskRuntimeLoop({
     }
 
     const targetActor = task.actorId ? actorById(task.actorId) : null;
-    const currentDestination = task.phase === "movingToStorage" ? task.storagePoint : task.targetPoint;
-    const destination = refreshMovingDestination(task, actor, currentDestination, targetActor);
+    const destination = refreshMovingDestination(task, actor, task.targetPoint, targetActor);
     if (!destination) {
       return;
     }
 
-    if (task.phase === "movingToStorage") {
-      task.storagePoint = destination;
-    } else {
-      task.targetPoint = destination;
-    }
+    task.targetPoint = destination;
 
     const arrived = moveActorForTask(actor, destination, deltaMs);
     if (!arrived) {
@@ -44,41 +38,15 @@ export function createSurvivalTaskRuntimeLoop({
       return;
     }
 
-    if (task.phase === "movingToTarget") {
-      if (task.kind === "move") {
-        if (!task.readyToCompleteAt) {
-          task.readyToCompleteAt = now.value + deltaMs;
-          return;
-        }
-        if (now.value < task.readyToCompleteAt) {
-          return;
-        }
-        task.readyToCompleteAt = null;
-        finishTaskWork(task);
-        return;
-      }
-
-      if (task.kind === "transfer") {
-        completeTransferTask(task);
-        return;
-      }
-
-      if (task.kind === "eat") {
-        beginTaskWork(task);
-        return;
-      }
-
-      beginTaskWork(task);
+    if (!task.readyToCompleteAt) {
+      task.readyToCompleteAt = now.value + deltaMs;
       return;
     }
-
-    if (task.phase === "movingToStorage") {
-      if (task.kind === "gather") {
-        completeGatherTask(task);
-      } else if (task.kind === "craft") {
-        completeCraftTask(task);
-      }
+    if (now.value < task.readyToCompleteAt) {
+      return;
     }
+    task.readyToCompleteAt = null;
+    finishTaskWork(task);
   }
 
   function processWorkingTask(task) {
@@ -120,14 +88,12 @@ export function createSurvivalTaskRuntimeLoop({
 
   function movingTaskProgress(task) {
     const actor = actorById(task.villagerId);
-    const destination = task.phase === "movingToStorage" ? task.storagePoint : task.targetPoint;
+    const destination = task.targetPoint;
     if (!actor || !destination) {
       return 0;
     }
 
-    const initialDistance = task.phase === "movingToStorage"
-      ? (task.initialStorageDistance ?? task.initialTargetDistance ?? 0)
-      : (task.initialTargetDistance ?? 0);
+    const initialDistance = task.initialTargetDistance ?? 0;
     if (initialDistance <= 0) {
       return distanceBetween(actor, destination) <= 0.0001 ? 100 : 0;
     }
@@ -137,10 +103,10 @@ export function createSurvivalTaskRuntimeLoop({
   }
 
   function taskProgress(task) {
-    if (task.phase === "movingToTarget" || task.phase === "movingToStorage") {
+    if (task.kind === "move") {
       return movingTaskProgress(task);
     }
-    if (task.phase === "working") {
+    if (task.workStartedAt) {
       const started = task.workStartedAt || now.value;
       return Math.max(0, Math.min(100, ((now.value - started) / task.duration) * 100));
     }
@@ -148,7 +114,7 @@ export function createSurvivalTaskRuntimeLoop({
   }
 
   function remainingSeconds(task) {
-    if (task.phase !== "working") {
+    if (!task.workStartedAt) {
       return 0;
     }
     return Math.max(0, Math.ceil((task.duration - (now.value - task.workStartedAt)) / 1000));
@@ -157,9 +123,9 @@ export function createSurvivalTaskRuntimeLoop({
   function tick(deltaMs) {
     now.value += deltaMs;
     [...gatherQueue, ...craftQueue, ...constructionQueue].forEach((task) => {
-      if (task.phase === "movingToTarget" || task.phase === "movingToStorage") {
+      if (task.kind === "move") {
         processMovingTask(task, deltaMs);
-      } else if (task.phase === "working") {
+      } else {
         processWorkingTask(task);
       }
     });

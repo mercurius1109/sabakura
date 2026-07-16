@@ -258,7 +258,7 @@ export function useSurvivalCraft() {
     if (!actor || !task || !queue) {
       return false;
     }
-    if (task.phase === "working" && !task.workStartedAt) {
+    if (task.kind !== "move" && !task.workStartedAt) {
       task.workStartedAt = now.value;
     }
     task.ownerActorId = actor.id;
@@ -589,6 +589,7 @@ export function useSurvivalCraft() {
     canStartGather,
     prepareActorRequiredItem,
     prepareVillagerRequiredItem,
+    startActorApproachTask,
     startActorFieldTask,
     startActorGatherTask,
     startActorPickupTask,
@@ -872,7 +873,7 @@ export function useSurvivalCraft() {
   }
 
   function movementGoalProgress(task, actor = null) {
-    if (!task || (task.phase !== "movingToTarget" && task.phase !== "movingToStorage")) {
+    if (!task || task.kind !== "move") {
       return 0;
     }
 
@@ -881,11 +882,8 @@ export function useSurvivalCraft() {
       return 0;
     }
 
-    const initialDistance = task.phase === "movingToStorage"
-      ? (task.initialStorageDistance ?? task.initialTargetDistance ?? 0)
-      : (task.initialTargetDistance ?? 0);
-
-    const destination = task.phase === "movingToStorage" ? task.storagePoint : task.targetPoint;
+    const initialDistance = task.initialTargetDistance ?? 0;
+    const destination = task.targetPoint;
     if (!destination) {
       return 0;
     }
@@ -899,7 +897,7 @@ export function useSurvivalCraft() {
   }
 
   function taskProgress(task, actor = null) {
-    if (task?.phase === "movingToTarget" || task?.phase === "movingToStorage") {
+    if (task?.kind === "move") {
       return movementGoalProgress(task, actor);
     }
     return runtimeTaskProgress(task);
@@ -911,9 +909,6 @@ export function useSurvivalCraft() {
       return null;
     }
 
-    const fromStorage = itemSource === "storage";
-    const targetPoint = fromStorage ? storageWorkPoint(actor) : null;
-    const atTarget = !fromStorage || distanceBetween(actor, targetPoint) <= 0.0001;
     return {
       id: makeId("eat"),
       kind: "eat",
@@ -921,12 +916,9 @@ export function useSurvivalCraft() {
       itemSource,
       workerType: actor.id === playerActor.id ? "self" : "villager",
       villagerId: actor.id,
-      station: fromStorage ? "storage" : "hand",
+      station: itemSource === "storage" ? "storage" : "hand",
       source: "eat",
-      phase: atTarget ? "working" : "movingToTarget",
-      targetPoint,
-      initialTargetDistance: targetPoint ? distanceBetween(actor, targetPoint) : 0,
-      workStartedAt: atTarget ? now.value : null,
+      workStartedAt: null,
       duration: eatDurationMs,
     };
   }
@@ -960,7 +952,17 @@ export function useSurvivalCraft() {
     }
 
     const task = createEatTask(actor, itemId, carriedFood ? "inventory" : "storage");
-    return task ? scheduleActorTask(actor, task) : false;
+    if (!task) {
+      return false;
+    }
+    if (carriedFood) {
+      return scheduleActorTask(actor, task);
+    }
+
+    const targetPoint = storageWorkPoint(actor);
+    return distanceBetween(actor, targetPoint) <= 0.0001
+      ? scheduleActorTask(actor, task)
+      : startActorApproachTask(actor, targetPoint, t("log.moveToStorage", { actor: actor.name, item: itemName(itemId) }), task);
   }
 
   function eatPlayerItem(itemId) {

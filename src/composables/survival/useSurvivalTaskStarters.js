@@ -71,9 +71,6 @@ export function createSurvivalTaskStarters({
       source: options.source || "manual",
       ruleId: options.ruleId || null,
       targetNodeId: targetNode.id,
-      phase: "working",
-      targetPoint: null,
-      initialTargetDistance: 0,
       workStartedAt: null,
       duration: action.duration,
       dropToStorage: options.dropToStorage ?? !isPlayerActor(actor),
@@ -94,9 +91,6 @@ export function createSurvivalTaskStarters({
       villagerId: villager.id,
       station: recipe.station,
       source,
-      phase: "working",
-      targetPoint: null,
-      initialTargetDistance: 0,
       workStartedAt: null,
       carriedOutputs: recipe.outputs,
       craftEntryId: options.craftEntryId || null,
@@ -113,9 +107,6 @@ export function createSurvivalTaskStarters({
       workerType,
       villagerId: actor.id,
       station: "construction",
-      phase: "working",
-      targetPoint: null,
-      initialTargetDistance: 0,
       workStartedAt: null,
       startedAt: now.value,
       duration: building.duration,
@@ -139,7 +130,6 @@ export function createSurvivalTaskStarters({
       villagerId: actor.id,
       station: targetKind,
       source,
-      phase: "working",
       workStartedAt: null,
       duration: 1,
       transferDirection: direction,
@@ -161,10 +151,8 @@ export function createSurvivalTaskStarters({
       villagerId: actor.id,
       station: "field",
       source: "manual",
-      phase: "movingToTarget",
       targetPoint,
       initialTargetDistance: distanceBetween(actor, targetPoint),
-      workStartedAt: null,
       duration: 1,
       actorId: null,
       targetKind: "field",
@@ -525,10 +513,7 @@ export function createSurvivalTaskStarters({
         villagerId: playerActor.id,
         station: recipe.station,
         source,
-        phase: "working",
-        targetPoint: null,
-        initialTargetDistance: 0,
-        workStartedAt: now.value,
+        workStartedAt: null,
         carriedOutputs: recipe.outputs,
         craftEntryId: options.craftEntryId || null,
         startedAt: now.value,
@@ -536,10 +521,9 @@ export function createSurvivalTaskStarters({
       };
       if (recipe.station !== "hand") {
         const targetPoint = buildingWorkPoint(recipe.station, playerActor);
-        task.targetPoint = targetPoint;
-        task.initialTargetDistance = distanceBetween(playerActor, targetPoint);
-        task.phase = isAtTarget(playerActor, targetPoint) ? "working" : "movingToTarget";
-        task.workStartedAt = task.phase === "working" ? now.value : null;
+        if (!isAtTarget(playerActor, targetPoint)) {
+          return startActorApproachTask(playerActor, targetPoint, t("log.playerCraftStarted", { recipe: recipe.name }), task);
+        }
       }
       scheduleActorTask(playerActor, task);
       addLog(t("log.playerCraftStarted", { recipe: recipe.name }));
