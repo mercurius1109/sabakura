@@ -42,6 +42,8 @@ export function createSurvivalTaskStarters({
   actorCanWork,
   showActorSpeech,
   scheduleActorTask,
+  stationHasFuel,
+  stationContainerById,
   t,
 }) {
   const TRANSFER_TASK_DURATION_MS = 900;
@@ -118,7 +120,7 @@ export function createSurvivalTaskStarters({
     };
   }
 
-  function createTransferTask(actor, itemId, amount, direction, targetKind, actorId = null, source = "manual") {
+  function createTransferTask(actor, itemId, amount, direction, targetKind, actorId = null, source = "manual", stationId = null) {
     return {
       id: makeId("transfer"),
       kind: "transfer",
@@ -133,20 +135,21 @@ export function createSurvivalTaskStarters({
       amount,
       workerType: isPlayerActor(actor) ? "player" : "villager",
       villagerId: actor.id,
-      station: targetKind,
+      station: stationId || targetKind,
       source,
       workStartedAt: null,
       duration: TRANSFER_TASK_DURATION_MS,
       transferDirection: direction,
       actorId,
       targetKind,
+      stationId,
     };
   }
 
-  function createTransferTasks(actor, itemId, amount, direction, targetKind, actorId = null, source = "manual") {
+  function createTransferTasks(actor, itemId, amount, direction, targetKind, actorId = null, source = "manual", stationId = null) {
     const count = Math.max(0, Math.floor(amount));
     return Array.from({ length: count }, () =>
-      createTransferTask(actor, itemId, 1, direction, targetKind, actorId, source),
+      createTransferTask(actor, itemId, 1, direction, targetKind, actorId, source, stationId),
     );
   }
 
@@ -245,6 +248,34 @@ export function createSurvivalTaskStarters({
     return started;
   }
 
+  function startActorStationDeliveryTask(actor, stationId, itemId, amount = 1, nextTask = null) {
+    if (!actor || actor.taskId !== null || amount <= 0) {
+      return false;
+    }
+
+    const stationContainer = stationContainerById(stationId);
+    if (!stationContainer) {
+      return false;
+    }
+
+    const targetPoint = buildingWorkPoint(stationId, actor);
+    const transferTasks = createTransferTasks(actor, itemId, amount, "toStation", "station", null, "deliver", stationId);
+    if (transferTasks.length === 0) {
+      return false;
+    }
+    const started = isAtTarget(actor, targetPoint)
+      ? scheduleActorTask(actor, transferTasks[0])
+      : startActorApproachTask(actor, targetPoint, t("log.moveToStation", { actor: actor.name, item: itemName(itemId), station: stationName(stationId) }), transferTasks[0]);
+    if (started) {
+      transferTasks.slice(1).forEach((task) => {
+        scheduleActorTask(actor, task);
+      });
+      scheduleFollowUpTask(actor, nextTask);
+      addLog(t("log.moveToStation", { actor: actor.name, item: itemName(itemId), station: stationName(stationId) }));
+    }
+    return started;
+  }
+
   function ensureVillagerHasRequiredItem(villager, itemId, nextTask = null) {
     if (villagerHasItem(villager, itemId)) {
       return true;
@@ -331,6 +362,45 @@ export function createSurvivalTaskStarters({
       createCraftTask(villager, recipe.id, recipe, "villager", source, { craftEntryId }),
     );
     return villager.taskId !== null;
+  }
+
+  function prepareVillagerStationFuel(villager, stationId, nextTask = null) {
+    const stationContainer = stationContainerById(stationId);
+    const fuelItemId = stationContainer?.inventory ? "stick" : null;
+    if (!villager || !stationContainer || !fuelItemId) {
+      return false;
+    }
+
+    if (villagerHasItem(villager, fuelItemId)) {
+      return startActorStationDeliveryTask(villager, stationId, fuelItemId, 1, nextTask)
+        || villager.taskId !== null;
+    }
+
+    if (!placedStructures.storage || availableItemCount(fuelItemId) <= 0) {
+      return false;
+    }
+
+    const stationTransferTask = createTransferTask(
+      villager,
+      fuelItemId,
+      1,
+      "toStation",
+      "station",
+      null,
+      "deliver",
+      stationId,
+    );
+
+    const started = startActorStorageFetchTask(villager, fuelItemId, 1);
+    if (!started) {
+      return false;
+    }
+
+    scheduleActorTask(villager, stationTransferTask);
+    if (nextTask) {
+      scheduleActorTask(villager, nextTask);
+    }
+    return true;
   }
 
   function canStartGather(action) {
@@ -514,10 +584,16 @@ export function createSurvivalTaskStarters({
     if (!recipe || !isRecipeUnlocked(recipe) || !canPayCosts) {
       return false;
     }
+    if (!stationHasFuel(recipe.station) && workerType === "self") {
+      addLog(t("log.stationOutOfFuel", { station: stationName(recipe.station) }));
+      showActorSpeech(playerActor, t("ui.noFuelSpeech"));
+      return false;
+    }
 
     if (workerType === "self" && (!actorCanWork(playerActor) || options.isPlayerBusy?.value)) {
       if (!actorCanWork(playerActor)) {
         addLog(t("log.tooHungryToWork", { actor: playerActor.name }));
+        showActorSpeech(playerActor, t("ui.tooHungrySpeech"));
       }
       return false;
     }
@@ -554,6 +630,20 @@ export function createSurvivalTaskStarters({
         addLog(t("log.noVillagerForStation", { station: stationName(recipe.station) }));
       }
       return false;
+    }
+
+    if (recipe.station === "cookingStation" && !stationHasFuel(recipe.station)) {
+      const fueled = prepareVillagerStationFuel(
+        villager,
+        recipe.station,
+        createCraftTask(villager, recipeId, recipe, workerType, source, options),
+      );
+      if (!fueled) {
+        return false;
+      }
+      if (villager.taskId !== null) {
+        return true;
+      }
     }
 
     const preparedResources = prepareVillagerCraftResources(
@@ -611,6 +701,7 @@ export function createSurvivalTaskStarters({
     if (workerType === "player") {
       if (!actorCanWork(playerActor)) {
         addLog(t("log.tooHungryToWork", { actor: playerActor.name }));
+        showActorSpeech(playerActor, t("ui.tooHungrySpeech"));
         return false;
       }
       if (playerActor.currentTaskId && !findTaskById(playerActor.currentTaskId)) {

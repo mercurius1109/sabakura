@@ -93,6 +93,7 @@ const messages = {
       inventorySummary: "持ち物: {items}",
       pickupItemAction: "{item}を拾う",
       itemMissingSpeech: "{item}がないよ",
+      tooHungrySpeech: "おなかすいたよ",
     },
     taskPhase: {
       idle: "待機中",
@@ -318,6 +319,7 @@ const messages = {
       inventorySummary: "Inventory: {items}",
       pickupItemAction: "Pick up {item}",
       itemMissingSpeech: "No {item}",
+      tooHungrySpeech: "Too hungry",
     },
     taskPhase: {
       idle: "Idle",
@@ -454,7 +456,57 @@ const messages = {
   },
 };
 
+const fuelMessages = {
+  ja: {
+    ui: {
+      start: "開始",
+      stop: "停止",
+      devAutoplay: "開発補助",
+      devStep: "1ステップ",
+      fuel: "燃料",
+      burning: "燃焼中",
+      notBurning: "停止中",
+      addFuel: "木の棒を入れる",
+      takeFuel: "木の棒を取る",
+      moveNextToFacility: "設備のそばまで移動すると出し入れできます。",
+      noFuelSpeech: "燃料がないよ",
+    },
+    status: {
+      noFuel: "燃料不足",
+    },
+    log: {
+      stationFuelStarted: "{station}で{fuel}が燃え始めました。",
+      stationOutOfFuel: "{station}に燃料がありません。",
+      moveToStation: "{actor}が{item}を{station}へ運んでいます。",
+    },
+  },
+  en: {
+    ui: {
+      start: "Start",
+      stop: "Stop",
+      devAutoplay: "Dev Auto",
+      devStep: "Step",
+      fuel: "Fuel",
+      burning: "Burning",
+      notBurning: "Stopped",
+      addFuel: "Add Stick",
+      takeFuel: "Take Stick",
+      moveNextToFacility: "Move next to the facility to transfer items.",
+      noFuelSpeech: "No fuel",
+    },
+    status: {
+      noFuel: "No fuel",
+    },
+    log: {
+      stationFuelStarted: "{fuel} started burning at {station}.",
+      stationOutOfFuel: "{station} has no fuel.",
+      moveToStation: "{actor} is carrying {item} to {station}.",
+    },
+  },
+};
+
 mergeMessages(messages, tutorialMessages);
+mergeMessages(messages, fuelMessages);
 
 export const currentLocale = ref("ja");
 

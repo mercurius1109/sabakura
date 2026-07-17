@@ -41,7 +41,6 @@ export function createSurvivalAutomation({
         if (!recipe || entry.target <= 0 || !isStationAvailable(station.id) || !isRecipeUnlocked(recipe)) {
           return;
         }
-
         const itemId = Object.keys(recipe.outputs)[0];
         while (expectedStock(itemId) < entry.target) {
           const villager = availableVillagerForRecipe(recipe);

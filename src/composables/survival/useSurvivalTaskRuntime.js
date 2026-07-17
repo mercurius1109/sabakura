@@ -7,6 +7,7 @@ export function createSurvivalTaskRuntime({
   playerActor,
   placedStructures,
   storageContainer,
+  stationContainerById,
   storagePoint,
   craftQueue,
   gatherQueue,
@@ -45,6 +46,10 @@ export function createSurvivalTaskRuntime({
   makeId,
   itemDefinitions,
   showActorSpeech,
+  requestInventoryFlyToPlayer,
+  requestFieldTransferFly,
+  taskCanWork,
+  updateStationFuel,
   t,
 }) {
   const {
@@ -85,6 +90,7 @@ export function createSurvivalTaskRuntime({
     playerActor,
     placedStructures,
     storageContainer,
+    stationContainerById,
     constructionSites,
     fieldNodes,
     addLog,
@@ -111,6 +117,8 @@ export function createSurvivalTaskRuntime({
     enqueueStorageTransfers,
     itemDefinitions,
     showActorSpeech,
+    requestInventoryFlyToPlayer,
+    requestFieldTransferFly,
     t,
   });
 
@@ -137,6 +145,8 @@ export function createSurvivalTaskRuntime({
     completeTransferTask,
     finishTaskWork,
     validateTaskStart,
+    taskCanWork,
+    updateStationFuel,
     respawnFieldNodes,
     checkStockRules,
     checkConstructionSites,

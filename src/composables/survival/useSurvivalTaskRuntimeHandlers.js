@@ -5,6 +5,7 @@ export function createSurvivalTaskRuntimeHandlers({
   playerActor,
   placedStructures,
   storageContainer,
+  stationContainerById,
   constructionSites,
   fieldNodes,
   addLog,
@@ -31,6 +32,8 @@ export function createSurvivalTaskRuntimeHandlers({
   enqueueStorageTransfers,
   itemDefinitions,
   showActorSpeech,
+  requestInventoryFlyToPlayer,
+  requestFieldTransferFly,
   t,
 }) {
   function restoreActorFullness(actor, amount) {
@@ -110,6 +113,7 @@ export function createSurvivalTaskRuntimeHandlers({
     if (task.workerType === "self") {
       Object.entries(task.carriedOutputs || {}).forEach(([itemId, amount]) => {
         addItem(playerActor.inventory, itemId, amount);
+        requestInventoryFlyToPlayer(itemId, playerActor, amount);
       });
       addLog(t("log.craftCompletePlayer", { recipe: recipe.name || t("common.craft") }));
     } else {
@@ -153,6 +157,7 @@ export function createSurvivalTaskRuntimeHandlers({
     }
 
     const targetActor = task.actorId ? actorById(task.actorId) : null;
+    const targetStation = task.stationId ? stationContainerById(task.stationId) : null;
     let source = null;
     let target = null;
 
@@ -162,6 +167,14 @@ export function createSurvivalTaskRuntimeHandlers({
         target = targetActor;
       } else if (task.transferDirection === "fromActor") {
         source = targetActor;
+        target = actor;
+      }
+    } else if (task.targetKind === "station" && targetStation) {
+      if (task.transferDirection === "toStation") {
+        source = actor;
+        target = targetStation;
+      } else if (task.transferDirection === "fromStation") {
+        source = targetStation;
         target = actor;
       }
     } else if (task.transferDirection === "toStorage") {
@@ -178,10 +191,50 @@ export function createSurvivalTaskRuntimeHandlers({
 
     if (moved) {
       if (task.targetKind === "actor" && targetActor) {
+        const from = task.transferDirection === "toActor"
+          ? { kind: "actor", actorId: actor.id }
+          : { kind: "actor", actorId: targetActor.id };
+        const to = task.transferDirection === "toActor"
+          ? { kind: "actor", actorId: targetActor.id }
+          : { kind: "actor", actorId: actor.id };
+        requestFieldTransferFly(task.itemId, from, to, task.amount);
+      } else if (task.targetKind === "station" && targetStation) {
+        const from = task.transferDirection === "toStation"
+          ? { kind: "actor", actorId: actor.id }
+          : { kind: "station", stationId: task.stationId };
+        const to = task.transferDirection === "toStation"
+          ? { kind: "station", stationId: task.stationId }
+          : { kind: "actor", actorId: actor.id };
+        requestFieldTransferFly(task.itemId, from, to, task.amount);
+      } else {
+        const from = task.transferDirection === "toStorage"
+          ? { kind: "actor", actorId: actor.id }
+          : { kind: "storage" };
+        const to = task.transferDirection === "toStorage"
+          ? { kind: "storage" }
+          : { kind: "actor", actorId: actor.id };
+        requestFieldTransferFly(task.itemId, from, to, task.amount);
+      }
+
+      if (task.targetKind === "actor" && targetActor) {
         addLog(
           task.transferDirection === "toActor"
             ? `${actor.name} gave ${itemName(task.itemId)} to ${targetActor.name}.`
             : `${actor.name} took ${itemName(task.itemId)} from ${targetActor.name}.`,
+        );
+      } else if (task.targetKind === "station" && targetStation) {
+        addLog(
+          task.transferDirection === "toStation"
+            ? t("log.moveItemToContainer", {
+              actor: actor.name,
+              item: itemName(task.itemId),
+              container: targetStation.name,
+            })
+            : t("log.moveItemFromContainer", {
+              actor: actor.name,
+              item: itemName(task.itemId),
+              container: targetStation.name,
+            }),
         );
       } else {
         addLog(
@@ -305,6 +358,7 @@ export function createSurvivalTaskRuntimeHandlers({
       if (task.keepOutputs) {
         task.carriedOutputs = { [task.itemId]: task.amount };
         addLog(t("log.pickedUpItem", { actor: villagerName(task.villagerId), item: itemName(task.itemId) }));
+        requestInventoryFlyToPlayer(task.itemId, villager, task.amount);
         completeGatherTask(task, { skipDeposit: true });
         return true;
       }

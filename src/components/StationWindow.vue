@@ -1,5 +1,5 @@
 <template>
-  <div class="max-h-[calc(100vh-10rem)] overflow-y-auto px-4 py-4">
+  <div class="max-h-[calc(100vh-10rem)] min-h-0 overflow-y-auto px-4 py-4">
     <StationCard
       :station="station"
       :is-available="isAvailable"
@@ -8,6 +8,7 @@
       :tasks="tasks"
       :recipes="recipes"
       :craft-entries="craftEntries"
+      :inventory-entries="inventoryEntries"
       :current-amount="currentAmount"
       :expected-amount="expectedAmount"
       :craft-entry-status="craftEntryStatus"
@@ -23,6 +24,12 @@
       :format-list="formatList"
       :highlight-add-villager="highlightAddVillager"
       :highlight-add-craft="highlightAddCraft"
+      :is-player-adjacent="isPlayerAdjacent"
+      :fuel-item-id="fuelItemId"
+      :fuel-count="fuelCount"
+      :player-fuel-count="playerFuelCount"
+      :burn-remaining-ms="burnRemainingMs"
+      :burn-duration-ms="burnDurationMs"
       @cancel-task="$emit('cancel-task', $event)"
       @add-villager="forwardAddVillager"
       @remove-villager="forwardRemoveVillager"
@@ -30,6 +37,9 @@
       @remove-craft-entry="forwardRemoveCraftEntry"
       @update-craft-entry-target="forwardUpdateCraftEntryTarget"
       @start-craft-entry="forwardStartCraftEntry"
+      @transfer-fuel-to-station="$emit('transfer-fuel-to-station', $event)"
+      @transfer-fuel-to-player="$emit('transfer-fuel-to-player', $event)"
+      @transfer-item-to-player="forwardTransferItemToPlayer"
     />
   </div>
 </template>
@@ -45,6 +55,7 @@ defineProps({
   tasks: { type: Array, required: true },
   recipes: { type: Array, required: true },
   craftEntries: { type: Array, required: true },
+  inventoryEntries: { type: Array, required: true },
   currentAmount: { type: Function, required: true },
   expectedAmount: { type: Function, required: true },
   craftEntryStatus: { type: Function, required: true },
@@ -60,6 +71,12 @@ defineProps({
   formatList: { type: Function, required: true },
   highlightAddVillager: { type: Boolean, default: false },
   highlightAddCraft: { type: Boolean, default: false },
+  isPlayerAdjacent: { type: Boolean, default: false },
+  fuelItemId: { type: String, default: null },
+  fuelCount: { type: Number, default: 0 },
+  playerFuelCount: { type: Number, default: 0 },
+  burnRemainingMs: { type: Number, default: 0 },
+  burnDurationMs: { type: Number, default: 0 },
 });
 
 const emit = defineEmits([
@@ -70,6 +87,9 @@ const emit = defineEmits([
   "remove-craft-entry",
   "update-craft-entry-target",
   "start-craft-entry",
+  "transfer-fuel-to-station",
+  "transfer-fuel-to-player",
+  "transfer-item-to-player",
 ]);
 
 function forwardAddVillager(villagerId, stationId) {
@@ -94,5 +114,9 @@ function forwardUpdateCraftEntryTarget(stationId, craftEntryId, target) {
 
 function forwardStartCraftEntry(stationId, craftEntryId) {
   emit("start-craft-entry", stationId, craftEntryId);
+}
+
+function forwardTransferItemToPlayer(stationId, itemId) {
+  emit("transfer-item-to-player", stationId, itemId);
 }
 </script>

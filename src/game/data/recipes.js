@@ -49,7 +49,7 @@ export const recipes = [
     station: "cookingStation",
     requiresFacility: "cookingStation",
     duration: 5000,
-    costs: { wildBerry: 3, wood: 1 },
+    costs: { wildBerry: 3 },
     outputs: { berryJam: 1 },
   },
 ];

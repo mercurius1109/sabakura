@@ -11,6 +11,8 @@
           :item-definitions="itemDefinitions"
           :current-player-task-entries="playerTaskQueueEntries"
           :villager-task-entry-map="villagerTaskEntryMap"
+          :inventory-fly-requests="inventoryFlyRequests"
+          :field-transfer-fly-requests="fieldTransferFlyRequests"
           :current-time="displayNow"
           :task-label="taskLabel"
           :task-display-text="fieldTaskText"
@@ -51,6 +53,8 @@
           :player-max-fullness="playerActor.maxFullness"
           :player-fullness-percent="actorFullnessPercent(playerActor)"
           :player-is-starving="actorIsStarving(playerActor)"
+          :show-dev-tools="isDevMode"
+          :dev-autoplay-enabled="devTutorialAutoplayEnabled"
           :world-width="worldWidth"
           :world-height="worldHeight"
           @open-inventory="openPlayerWindow"
@@ -62,6 +66,8 @@
           @dismiss-tutorial="dismissTutorial"
           @cancel-pending="cancelPendingBuildingPlacement"
           @clear-log="clearLog"
+          @toggle-dev-autoplay="devTutorialAutoplayEnabled = !devTutorialAutoplayEnabled"
+          @run-dev-step="executeDevTutorialStep"
         />
 
         <GameWindows
@@ -135,6 +141,7 @@
           @handle-player-item-action="handlePlayerItemAction"
           @start-player-craft="startPlayerCraft"
           @transfer-storage-item-to-player="transferStorageItemToPlayer"
+          @transfer-station-item-to-player="transferStationItemToPlayer"
           @open-add-stock-rule-modal="openAddStockRuleModal"
           @open-stock-rule-modal="openStockRuleModal"
           @remove-stock-rule="removeStockRule"
@@ -159,6 +166,8 @@
           @remove-station-craft-entry="removeStationCraftEntry"
           @update-station-craft-entry-target="updateStationCraftEntryTarget"
           @start-station-craft-entry="startStationCraftEntry"
+          @transfer-station-fuel-to-station="transferStationFuelToStation"
+          @transfer-station-fuel-to-player="transferStationFuelToPlayer"
         />
       </section>
     </main>
@@ -171,6 +180,7 @@ import FieldHud from "./components/FieldHud.vue";
 import GameField from "./components/GameField.vue";
 import GameWindows from "./components/GameWindows.vue";
 import { useAppInteractions } from "./composables/useAppInteractions.js";
+import { useDevTutorialAutoplay } from "./composables/useDevTutorialAutoplay.js";
 import { useAppShellState } from "./composables/useAppShellState.js";
 import { useGameWindowsState } from "./composables/useGameWindowsState.js";
 import { useSurvivalCraft } from "./composables/useSurvivalCraft.js";
@@ -185,12 +195,16 @@ const editingStockRuleTarget = ref(0);
 const showAddStockRuleModal = ref(false);
 const draftStockRuleId = ref(null);
 const draftStockRuleTarget = ref(1);
+const isDevMode = import.meta.env.DEV;
+const devTutorialAutoplayEnabled = ref(false);
 
 const {
   itemDefinitions,
   buildingDefinitions,
   inventory,
   storage,
+  stationContainers,
+  stationFuelState,
   placedStructures,
   constructionSites,
   constructionQueue,
@@ -198,6 +212,8 @@ const {
   gatherQueue,
   gatherActions,
   playerActor,
+  inventoryFlyRequests,
+  fieldTransferFlyRequests,
   visibleFieldNodes,
   pickupFieldNode,
   placeStructure,
@@ -212,6 +228,7 @@ const {
   stockRules,
   expectedStock,
   isStationAvailable,
+  stationHasFuel,
   assignedVillagerList,
   unassignedVillagersForStation,
   stationTasks,
@@ -244,11 +261,14 @@ const {
   setGameSpeed,
   isPlayerAdjacentToStorage,
   isPlayerAdjacentToActor,
+  isPlayerAdjacentToStructure,
   approachStructureTarget,
   approachTransferTarget,
   movePlayerTo,
   moveItemFromActorToStorage,
   moveItemFromStorageToActor,
+  moveItemFromActorToStation,
+  moveItemFromStationToActor,
   moveItemFromActorToActor,
   moveItemFromOtherActorToPlayer,
   dropPlayerItem,
@@ -383,12 +403,17 @@ const {
   stockRuleStatus,
   stationName,
   isStationAvailable,
+  stationHasFuel,
+  stationContainers,
+  stationFuelState,
+  isPlayerAdjacentToStructure,
   formatList,
   findTaskById,
 });
 
 const {
   transferStorageItemToPlayer,
+  transferStationItemToPlayer,
   transferVillagerItemToPlayer,
   handlePlayerTransfer,
   handlePlayerItemAction,
@@ -431,7 +456,9 @@ const {
   approachTransferTarget,
   movePlayerTo,
   moveItemFromActorToStorage,
+  moveItemFromActorToStation,
   moveItemFromStorageToActor,
+  moveItemFromStationToActor,
   moveItemFromActorToActor,
   moveItemFromOtherActorToPlayer,
   dropPlayerItem,
@@ -440,6 +467,29 @@ const {
   canPlaceStructure,
   placeStructure,
   pickupFieldNode,
+});
+
+const { executeCurrentStep: executeDevTutorialStep } = useDevTutorialAutoplay({
+  enabled: devTutorialAutoplayEnabled,
+  currentTutorialStep,
+  isTutorialComplete,
+  playerActor,
+  villagers,
+  visibleFieldNodes,
+  pickupFieldNode,
+  startPlayerCraft,
+  placeStructure,
+  startPlayerConstruction,
+  addVillager,
+  addVillagerToStation,
+  assignedVillagerList,
+  unassignedVillagersForStation,
+  stationCraftEntries,
+  addStationCraftEntry,
+  stockRules,
+  onRuleChanged,
+  buildingById,
+  canPlaceStructure,
 });
 
 function taskForActor(actorId) {
@@ -529,11 +579,17 @@ function fieldTaskProgress(task) {
   if (task.kind === "move") {
     return movingFieldTaskProgress(task);
   }
-  if (task.workStartedAt) {
-    const started = task.workStartedAt || displayNow.value;
-    return Math.max(0, Math.min(100, ((displayNow.value - started) / task.duration) * 100));
+  if (!task.workStartedAt) {
+    return 0;
   }
-  return 0;
+
+  const baseElapsed = Number.isFinite(task.workElapsedMs) ? task.workElapsedMs : 0;
+  const canInterpolate = !(task.kind === "craft" && task.station === "cookingStation");
+  const interpolatedElapsed = canInterpolate
+    ? baseElapsed + Math.max(0, displayNow.value - (task.workStartedAt + baseElapsed))
+    : baseElapsed;
+
+  return Math.max(0, Math.min(100, (interpolatedElapsed / task.duration) * 100));
 }
 
 function taskQueueEntries(actorId) {
@@ -643,6 +699,22 @@ const villagerTaskEntryMap = computed(() => Object.fromEntries(
 const selectedVillagerTaskList = computed(() => (
   selectedVillager.value ? tasksForActor(selectedVillager.value.id) : []
 ));
+
+function transferStationFuelToStation(stationId) {
+  const fuelItemId = stationFuelState?.[stationId]?.fuelItemId;
+  if (!fuelItemId) {
+    return;
+  }
+  moveItemFromActorToStation(playerActor, stationId, fuelItemId, 1);
+}
+
+function transferStationFuelToPlayer(stationId) {
+  const fuelItemId = stationFuelState?.[stationId]?.fuelItemId;
+  if (!fuelItemId) {
+    return;
+  }
+  moveItemFromStationToActor(playerActor, stationId, fuelItemId, 1);
+}
 </script>
 
 

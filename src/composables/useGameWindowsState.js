@@ -41,6 +41,10 @@ export function useGameWindowsState(options) {
     stockRuleStatus,
     stationName,
     isStationAvailable,
+    stationHasFuel,
+    stationContainers,
+    stationFuelState,
+    isPlayerAdjacentToStructure,
     formatList,
     findTaskById,
   } = options;
@@ -113,12 +117,19 @@ export function useGameWindowsState(options) {
     return {
       station,
       isAvailable: isStationAvailable(stationId),
+      hasFuel: stationHasFuel(stationId),
       assignedVillagers: assignedVillagerList(stationId),
       availableVillagers: unassignedVillagersForStation(stationId),
       tasks: stationTasks(stationId),
       recipes: stationRecipes(stationId),
       playerRecipes: stationRecipes(stationId),
       craftEntries: stationCraftEntries(stationId),
+      inventoryEntries: stationEntriesFromStore(stationContainers?.[stationId]?.inventory, itemDefinitions),
+      isPlayerAdjacent: isPlayerAdjacentToStructure(stationId),
+      fuelItemId: stationFuelState?.[stationId]?.fuelItemId || null,
+      fuelCount: stationContainers?.[stationId]?.inventory?.[stationFuelState?.[stationId]?.fuelItemId] || 0,
+      burnRemainingMs: stationFuelState?.[stationId]?.burnRemainingMs || 0,
+      burnDurationMs: stationFuelState?.[stationId]?.burnDurationMs || 0,
       highlightAddVillager: hasTutorialTarget(currentTutorialTargets, "station-action", `${stationId}:add-villager`),
       highlightAddCraft: hasTutorialTarget(currentTutorialTargets, "station-action", `${stationId}:add-craft`),
       currentAmount: (craftEntryId) => {
@@ -135,6 +146,16 @@ export function useGameWindowsState(options) {
   });
 
   const playerTransferContext = computed(() => {
+    if (selectedStationWindow.value) {
+      return {
+        mode: "station",
+        stationId: selectedStationWindow.value.station.id,
+        label: selectedStationWindow.value.station.name,
+        disabled: !selectedStationWindow.value.isPlayerAdjacent,
+        disabledText: t("ui.moveNextToFacility"),
+      };
+    }
+
     if (isStorageCompareWindow.value) {
       return {
         mode: "storage",
@@ -319,6 +340,10 @@ function ownedKindsFromStore(store) {
 }
 
 function actionableEntries(store, itemDefinitions) {
+  return itemCardsFromStore(store, itemDefinitions).filter((item) => item.amount > 0);
+}
+
+function stationEntriesFromStore(store, itemDefinitions) {
   return itemCardsFromStore(store, itemDefinitions).filter((item) => item.amount > 0);
 }
 

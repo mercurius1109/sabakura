@@ -15,6 +15,8 @@ export function createSurvivalTaskRuntimeLoop({
   completeTransferTask,
   finishTaskWork,
   validateTaskStart,
+  taskCanWork,
+  updateStationFuel,
   respawnFieldNodes,
   checkStockRules,
   checkConstructionSites,
@@ -50,7 +52,7 @@ export function createSurvivalTaskRuntimeLoop({
     finishTaskWork(task);
   }
 
-  function processWorkingTask(task) {
+  function processWorkingTask(task, deltaMs) {
     if (!task.startedValidationDone) {
       task.startedValidationDone = true;
       if (!validateTaskStart(task)) {
@@ -58,15 +60,29 @@ export function createSurvivalTaskRuntimeLoop({
       }
     }
 
+    if (!task.workStartedAt) {
+      return;
+    }
+
+    if (!Number.isFinite(task.workElapsedMs)) {
+      task.workElapsedMs = 0;
+    }
+
+    if (!taskCanWork(task)) {
+      return;
+    }
+
+    task.workElapsedMs += deltaMs;
+
     if (task.kind === "eat") {
-      if (!task.workStartedAt || now.value - task.workStartedAt < task.duration) {
+      if (task.workElapsedMs < task.duration) {
         return;
       }
       completeEatTask(task);
       return;
     }
 
-    if (!task.workStartedAt || now.value - task.workStartedAt < task.duration) {
+    if (task.workElapsedMs < task.duration) {
       return;
     }
 
@@ -110,8 +126,8 @@ export function createSurvivalTaskRuntimeLoop({
       return movingTaskProgress(task);
     }
     if (task.workStartedAt) {
-      const started = task.workStartedAt || now.value;
-      return Math.max(0, Math.min(100, ((now.value - started) / task.duration) * 100));
+      const elapsed = Number.isFinite(task.workElapsedMs) ? task.workElapsedMs : 0;
+      return Math.max(0, Math.min(100, (elapsed / task.duration) * 100));
     }
     return 0;
   }
@@ -120,16 +136,18 @@ export function createSurvivalTaskRuntimeLoop({
     if (!task.workStartedAt) {
       return 0;
     }
-    return Math.max(0, Math.ceil((task.duration - (now.value - task.workStartedAt)) / 1000));
+    const elapsed = Number.isFinite(task.workElapsedMs) ? task.workElapsedMs : 0;
+    return Math.max(0, Math.ceil((task.duration - elapsed) / 1000));
   }
 
   function tick(deltaMs) {
     now.value += deltaMs;
+    updateStationFuel(deltaMs);
     [...gatherQueue, ...craftQueue, ...constructionQueue].forEach((task) => {
       if (task.kind === "move") {
         processMovingTask(task, deltaMs);
       } else {
-        processWorkingTask(task);
+        processWorkingTask(task, deltaMs);
       }
     });
 

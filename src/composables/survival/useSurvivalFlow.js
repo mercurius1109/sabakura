@@ -33,7 +33,6 @@ export function createSurvivalFlow({
 
   function canStartPlayerRecipe(recipe, isPlayerBusy) {
     return Boolean(recipe)
-      && playerActor.fullness > 0
       && !isPlayerBusy.value
       && isRecipeUnlocked(recipe)
       && hasActorResources(playerActor, recipe);

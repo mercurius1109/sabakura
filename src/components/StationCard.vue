@@ -12,6 +12,88 @@
 
     <p class="mt-2 text-sm leading-6 text-muted">{{ station.description }}</p>
 
+    <div v-if="fuelItem" class="mt-3 rounded-md border border-line bg-white p-3">
+      <div class="flex items-center justify-between gap-2">
+        <h3 class="text-sm font-bold">{{ t("ui.fuel") }}</h3>
+        <span class="text-xs font-semibold text-muted">
+          {{ isBurning ? t("ui.burning") : t("ui.notBurning") }}
+        </span>
+      </div>
+
+      <div class="mt-3 flex items-center justify-between gap-3 rounded-md border border-line bg-[#fffdf8] px-3 py-3">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-white text-2xl">
+            {{ fuelItem.icon }}
+          </div>
+          <div>
+            <div class="text-sm font-bold text-ink">{{ fuelItem.name }}</div>
+            <div class="text-xs text-muted">{{ t("ui.currentOfTarget", { current: fuelCount, target: playerFuelCount }) }}</div>
+          </div>
+        </div>
+        <div class="text-right text-xs text-muted">
+          <div>{{ t("ui.remainingSeconds", { seconds: burnRemainingSeconds }) }}</div>
+        </div>
+      </div>
+
+      <div class="mt-3 h-2.5 overflow-hidden rounded-full border border-[#c7bdad] bg-[#eee7dd]">
+        <div class="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-[width]" :style="{ width: `${burnProgress}%` }"></div>
+      </div>
+
+      <div class="mt-3 grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          class="rounded-md border border-line bg-white px-3 py-2 text-sm font-bold text-moss transition hover:bg-moss hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="!isAvailable || !isPlayerAdjacent || playerFuelCount <= 0"
+          @click="$emit('transfer-fuel-to-station', station.id)"
+        >
+          {{ t("ui.addFuel") }}
+        </button>
+        <button
+          type="button"
+          class="rounded-md border border-line bg-white px-3 py-2 text-sm font-bold text-ambered transition hover:bg-ambered hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="!isAvailable || !isPlayerAdjacent || fuelCount <= 0"
+          @click="$emit('transfer-fuel-to-player', station.id)"
+        >
+          {{ t("ui.takeFuel") }}
+        </button>
+      </div>
+
+      <div v-if="!isPlayerAdjacent" class="mt-2 text-xs text-muted">
+        {{ t("ui.moveNextToFacility") }}
+      </div>
+    </div>
+
+    <div v-if="inventoryEntries.length > 0 || fuelItem" class="mt-3 rounded-md border border-line bg-white p-3">
+      <div class="flex items-center justify-between gap-2">
+        <h3 class="text-sm font-bold">{{ t("ui.container") }}</h3>
+        <span class="text-xs text-muted">{{ inventoryEntries.length }}</span>
+      </div>
+
+      <div v-if="inventoryEntries.length === 0" class="mt-2 text-sm text-muted">
+        {{ t("ui.noCraftEntries") }}
+      </div>
+
+      <div v-else class="mt-3 grid grid-cols-[repeat(auto-fill,minmax(72px,72px))] gap-3">
+        <button
+          v-for="entry in inventoryEntries"
+          :key="entry.id"
+          type="button"
+          class="relative flex h-[72px] w-[72px] items-center justify-center rounded-xl border border-line bg-[#fffdf8] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+          :title="`${entry.name} x${entry.amount}`"
+          :disabled="!isPlayerAdjacent"
+          @click="$emit('transfer-item-to-player', station.id, entry.id)"
+        >
+          <span class="absolute left-1.5 top-1.5 max-w-[46px] truncate text-[10px] font-bold leading-4 text-ink">
+            {{ entry.name }}
+          </span>
+          <span class="text-3xl leading-none" aria-hidden="true">{{ entry.icon }}</span>
+          <span class="absolute bottom-1 right-1 rounded-full bg-white/90 px-1.5 text-[10px] font-bold leading-5 text-ambered">
+            x{{ entry.amount }}
+          </span>
+        </button>
+      </div>
+    </div>
+
     <div class="mt-3 rounded-md border border-line bg-white p-3">
       <div class="flex items-center justify-between gap-2">
         <h3 class="text-sm font-bold">{{ t("ui.assignVillager") }}</h3>
@@ -300,6 +382,7 @@ const props = defineProps({
   tasks: { type: Array, required: true },
   recipes: { type: Array, required: true },
   craftEntries: { type: Array, required: true },
+  inventoryEntries: { type: Array, required: true },
   currentAmount: { type: Function, required: true },
   expectedAmount: { type: Function, required: true },
   craftEntryStatus: { type: Function, required: true },
@@ -315,6 +398,12 @@ const props = defineProps({
   formatList: { type: Function, required: true },
   highlightAddVillager: { type: Boolean, default: false },
   highlightAddCraft: { type: Boolean, default: false },
+  isPlayerAdjacent: { type: Boolean, default: false },
+  fuelItemId: { type: String, default: null },
+  fuelCount: { type: Number, default: 0 },
+  playerFuelCount: { type: Number, default: 0 },
+  burnRemainingMs: { type: Number, default: 0 },
+  burnDurationMs: { type: Number, default: 0 },
 });
 
 const emit = defineEmits([
@@ -325,6 +414,9 @@ const emit = defineEmits([
   "update-craft-entry-target",
   "start-craft-entry",
   "cancel-task",
+  "transfer-fuel-to-station",
+  "transfer-fuel-to-player",
+  "transfer-item-to-player",
 ]);
 
 const showCraftModal = ref(false);
@@ -344,6 +436,15 @@ const availableRecipes = computed(() => {
   const registeredRecipeIds = new Set(props.craftEntries.map((entry) => entry.recipeId));
   return props.recipes.filter((recipe) => !registeredRecipeIds.has(recipe.id));
 });
+const fuelItem = computed(() => (props.fuelItemId ? props.itemDefinitions[props.fuelItemId] || null : null));
+const burnRemainingSeconds = computed(() => Math.max(0, Math.ceil((props.burnRemainingMs || 0) / 1000)));
+const burnProgress = computed(() => {
+  if (!props.burnDurationMs) {
+    return 0;
+  }
+  return Math.max(0, Math.min(100, ((props.burnRemainingMs || 0) / props.burnDurationMs) * 100));
+});
+const isBurning = computed(() => props.burnRemainingMs > 0);
 
 function openCraftModal() {
   draftRecipeId.value = availableRecipes.value[0]?.id || "";

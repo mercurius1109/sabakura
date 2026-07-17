@@ -95,14 +95,14 @@
           :description="selectedStationWindow.station.description || t('ui.facilityInspect')"
           @close="$emit('close-window')"
         />
-        <div class="grid max-h-[calc(100vh-12rem)] gap-0 overflow-hidden lg:grid-cols-2">
-          <div class="border-b border-line/70 lg:border-b-0 lg:border-r">
+        <div class="grid max-h-[calc(100vh-12rem)] min-h-0 gap-0 overflow-hidden lg:grid-cols-2">
+          <div class="min-h-0 border-b border-line/70 lg:border-b-0 lg:border-r">
             <PlayerActorPanel
               :item-cards="playerItemCards"
               :owned-kinds="playerOwnedKinds"
-              :transfer-caption="t('ui.playerInspect')"
-              :transfer-disabled="false"
-              :transfer-disabled-text="''"
+              :transfer-caption="playerTransferCaption"
+              :transfer-disabled="playerTransferDisabled"
+              :transfer-disabled-text="playerTransferDisabledText"
               :task="currentPlayerTask"
               :tasks="currentPlayerTasks"
               :task-label="taskLabel"
@@ -124,6 +124,7 @@
             />
           </div>
           <StationWindow
+            class="min-h-0"
             :station="selectedStationWindow.station"
             :is-available="selectedStationWindow.isAvailable"
             :assigned-villagers="selectedStationWindow.assignedVillagers"
@@ -131,6 +132,7 @@
             :tasks="selectedStationWindow.tasks"
             :recipes="selectedStationWindow.recipes"
             :craft-entries="selectedStationWindow.craftEntries"
+            :inventory-entries="selectedStationWindow.inventoryEntries"
             :current-amount="selectedStationWindow.currentAmount"
             :expected-amount="selectedStationWindow.expectedAmount"
             :craft-entry-status="selectedStationWindow.craftEntryStatus"
@@ -146,6 +148,12 @@
             :format-list="formatList"
             :highlight-add-villager="selectedStationWindow.highlightAddVillager"
             :highlight-add-craft="selectedStationWindow.highlightAddCraft"
+            :is-player-adjacent="selectedStationWindow.isPlayerAdjacent"
+            :fuel-item-id="selectedStationWindow.fuelItemId"
+            :fuel-count="selectedStationWindow.fuelCount"
+            :player-fuel-count="playerActor.inventory[selectedStationWindow.fuelItemId] || 0"
+            :burn-remaining-ms="selectedStationWindow.burnRemainingMs"
+            :burn-duration-ms="selectedStationWindow.burnDurationMs"
             @cancel-task="$emit('cancel-task', $event)"
             @add-villager="forwardAddVillagerToStation"
             @remove-villager="forwardRemoveVillagerFromStation"
@@ -153,6 +161,9 @@
             @remove-craft-entry="forwardRemoveStationCraftEntry"
             @update-craft-entry-target="forwardUpdateStationCraftEntryTarget"
             @start-craft-entry="forwardStartStationCraftEntry"
+            @transfer-fuel-to-station="$emit('transfer-station-fuel-to-station', $event)"
+            @transfer-fuel-to-player="$emit('transfer-station-fuel-to-player', $event)"
+            @transfer-item-to-player="forwardTransferStationItemToPlayer"
           />
         </div>
       </template>
@@ -383,6 +394,9 @@ const emit = defineEmits([
   "remove-station-craft-entry",
   "update-station-craft-entry-target",
   "start-station-craft-entry",
+  "transfer-station-fuel-to-station",
+  "transfer-station-fuel-to-player",
+  "transfer-station-item-to-player",
 ]);
 
 const { t } = useI18n();
@@ -421,5 +435,9 @@ function forwardAddStorageVillager(villagerId) {
 
 function forwardRemoveStorageVillager(villagerId) {
   emit("remove-storage-villager", villagerId);
+}
+
+function forwardTransferStationItemToPlayer(stationId, itemId) {
+  emit("transfer-station-item-to-player", stationId, itemId);
 }
 </script>

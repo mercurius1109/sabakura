@@ -2,6 +2,7 @@
   <div>
     <div class="absolute left-4 top-4 z-10 flex gap-3">
       <button
+        id="inventory-menu-button"
         type="button"
         class="flex w-20 flex-col items-center justify-center gap-1 rounded-2xl border border-white/55 bg-white/60 px-3 py-2 text-center shadow-panel backdrop-blur transition hover:-translate-y-0.5"
         :class="highlightInventory ? tutorialHighlightClass : ''"
@@ -61,6 +62,25 @@
           @click="$emit('set-speed', speed)"
         >
           x{{ speed }}
+        </button>
+      </div>
+
+      <div v-if="showDevTools" class="flex items-center gap-2 rounded-2xl border border-[#d8c9b7] bg-[#fff6e6]/90 px-3 py-2 shadow-panel backdrop-blur">
+        <span class="text-xs font-bold text-ink">{{ t("ui.devAutoplay") }}</span>
+        <button
+          type="button"
+          class="rounded-full px-2 py-1 text-xs font-bold transition"
+          :class="devAutoplayEnabled ? 'bg-moss text-white' : 'bg-white/80 text-ink hover:bg-white'"
+          @click="$emit('toggle-dev-autoplay')"
+        >
+          {{ devAutoplayEnabled ? t("ui.stop") : t("ui.start") }}
+        </button>
+        <button
+          type="button"
+          class="rounded-full bg-white/80 px-2 py-1 text-xs font-bold text-ink transition hover:bg-white"
+          @click="$emit('run-dev-step')"
+        >
+          {{ t("ui.devStep") }}
         </button>
       </div>
     </div>
@@ -194,6 +214,8 @@ const props = defineProps({
   playerMaxFullness: { type: Number, required: true },
   playerFullnessPercent: { type: Number, required: true },
   playerIsStarving: { type: Boolean, required: true },
+  showDevTools: { type: Boolean, default: false },
+  devAutoplayEnabled: { type: Boolean, default: false },
   worldHeight: { type: Number, required: true },
   worldWidth: { type: Number, required: true },
 });
@@ -208,6 +230,8 @@ defineEmits([
   "dismiss-tutorial",
   "cancel-pending",
   "clear-log",
+  "toggle-dev-autoplay",
+  "run-dev-step",
 ]);
 
 const { t } = useI18n();

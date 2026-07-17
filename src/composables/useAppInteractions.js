@@ -18,7 +18,9 @@ export function useAppInteractions(options) {
     approachTransferTarget,
     movePlayerTo,
     moveItemFromActorToStorage,
+    moveItemFromActorToStation,
     moveItemFromStorageToActor,
+    moveItemFromStationToActor,
     moveItemFromActorToActor,
     moveItemFromOtherActorToPlayer,
     dropPlayerItem,
@@ -33,8 +35,16 @@ export function useAppInteractions(options) {
     moveItemFromActorToStorage(playerActor, itemId, 1);
   }
 
+  function transferPlayerItemToStation(itemId, stationId) {
+    moveItemFromActorToStation(playerActor, stationId, itemId, 1);
+  }
+
   function transferStorageItemToPlayer(itemId) {
     moveItemFromStorageToActor(playerActor, itemId, 1);
+  }
+
+  function transferStationItemToPlayer(itemId, stationId) {
+    moveItemFromStationToActor(playerActor, stationId, itemId, 1);
   }
 
   function transferPlayerItemToVillager(itemId) {
@@ -63,6 +73,11 @@ export function useAppInteractions(options) {
 
     if (playerTransferContext.value.mode === "actor") {
       transferPlayerItemToVillager(itemId);
+      return;
+    }
+
+    if (playerTransferContext.value.mode === "station") {
+      transferPlayerItemToStation(itemId, playerTransferContext.value.stationId);
       return;
     }
 
@@ -177,10 +192,7 @@ export function useAppInteractions(options) {
   }
 
   function handleConstructionSiteClick(structureId) {
-    const started = startPlayerConstruction(structureId);
-    if (!started) {
-      openBuildWindow();
-    }
+    startPlayerConstruction(structureId);
   }
 
   function beginBuildingPlacement(structureId) {
@@ -215,7 +227,9 @@ export function useAppInteractions(options) {
 
   return {
     transferPlayerItemToStorage,
+    transferPlayerItemToStation,
     transferStorageItemToPlayer,
+    transferStationItemToPlayer,
     transferPlayerItemToVillager,
     transferVillagerItemToPlayer,
     dropPlayerInventoryItem,

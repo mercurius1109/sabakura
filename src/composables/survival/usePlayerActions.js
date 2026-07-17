@@ -24,6 +24,8 @@ export function createPlayerActions({
   transferItem,
   removeItem,
   spawnDroppedItems,
+  requestFieldTransferFly,
+  stationContainerById,
 }) {
   const TRANSFER_TASK_DURATION_MS = 900;
 
@@ -71,6 +73,14 @@ export function createPlayerActions({
       return false;
     }
     return distanceBetween(playerActor, actor) <= actorInteractionDistance;
+  }
+
+  function isPlayerAdjacentToStructure(structureId) {
+    const targetPoint = buildingWorkPoint(structureId, playerActor);
+    if (!targetPoint) {
+      return false;
+    }
+    return distanceBetween(playerActor, targetPoint) <= 8;
   }
 
   function playerTransferTargetPoint(targetKind, actorId = null) {
@@ -240,6 +250,7 @@ export function createPlayerActions({
       addLog(`${playerActor.name} does not have ${itemName(itemId)}.`);
       return false;
     }
+    requestFieldTransferFly(itemId, { kind: "actor", actorId: playerActor.id }, { kind: "storage" }, amount);
     addLog(`${playerActor.name} moved ${itemName(itemId)} to ${storageContainer.name}.`);
     return true;
   }
@@ -256,6 +267,7 @@ export function createPlayerActions({
       addLog(`${itemName(itemId)} is not in storage.`);
       return false;
     }
+    requestFieldTransferFly(itemId, { kind: "storage" }, { kind: "actor", actorId: playerActor.id }, amount);
     addLog(`${playerActor.name} took ${itemName(itemId)} from ${storageContainer.name}.`);
     return true;
   }
@@ -272,6 +284,7 @@ export function createPlayerActions({
       addLog(`${playerActor.name} does not have ${itemName(itemId)}.`);
       return false;
     }
+    requestFieldTransferFly(itemId, { kind: "actor", actorId: playerActor.id }, { kind: "actor", actorId: targetActor.id }, amount);
     addLog(`${playerActor.name} gave ${itemName(itemId)} to ${targetActor.name}.`);
     return true;
   }
@@ -288,7 +301,54 @@ export function createPlayerActions({
       addLog(`${sourceActor.name} does not have ${itemName(itemId)}.`);
       return false;
     }
+    requestFieldTransferFly(itemId, { kind: "actor", actorId: sourceActor.id }, { kind: "actor", actorId: playerActor.id }, amount);
     addLog(`${playerActor.name} took ${itemName(itemId)} from ${sourceActor.name}.`);
+    return true;
+  }
+
+  function moveItemFromActorToStation(actor, stationId, itemId, amount = 1) {
+    const stationContainer = stationContainerById(stationId);
+    if (!stationContainer || !actor || actor.id !== playerActor.id || amount !== 1) {
+      return false;
+    }
+    if (!isPlayerAdjacentToStructure(stationId)) {
+      addLog(`${playerActor.name} must stand next to ${stationContainer.name} to move items.`);
+      return false;
+    }
+    if (!transferItem(playerActor, stationContainer, itemId, amount)) {
+      addLog(`${playerActor.name} does not have ${itemName(itemId)}.`);
+      return false;
+    }
+    requestFieldTransferFly(
+      itemId,
+      { kind: "actor", actorId: playerActor.id },
+      { kind: "station", stationId },
+      amount,
+    );
+    addLog(`${playerActor.name} moved ${itemName(itemId)} to ${stationContainer.name}.`);
+    return true;
+  }
+
+  function moveItemFromStationToActor(actor, stationId, itemId, amount = 1) {
+    const stationContainer = stationContainerById(stationId);
+    if (!stationContainer || !actor || actor.id !== playerActor.id || amount !== 1) {
+      return false;
+    }
+    if (!isPlayerAdjacentToStructure(stationId)) {
+      addLog(`${playerActor.name} must stand next to ${stationContainer.name} to move items.`);
+      return false;
+    }
+    if (!transferItem(stationContainer, playerActor, itemId, amount)) {
+      addLog(`${itemName(itemId)} is not in ${stationContainer.name}.`);
+      return false;
+    }
+    requestFieldTransferFly(
+      itemId,
+      { kind: "station", stationId },
+      { kind: "actor", actorId: playerActor.id },
+      amount,
+    );
+    addLog(`${playerActor.name} took ${itemName(itemId)} from ${stationContainer.name}.`);
     return true;
   }
 
@@ -322,10 +382,13 @@ export function createPlayerActions({
     dropPlayerItem,
     isPlayerAdjacentToActor,
     isPlayerAdjacentToStorage,
+    isPlayerAdjacentToStructure,
     moveItemFromActorToActor,
     moveItemFromActorToStorage,
+    moveItemFromActorToStation,
     moveItemFromOtherActorToPlayer,
     moveItemFromStorageToActor,
+    moveItemFromStationToActor,
     movePlayerTo,
     queuePlayerTransfer,
   };
