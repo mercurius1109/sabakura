@@ -4,80 +4,80 @@
       <button
         id="inventory-menu-button"
         type="button"
-        class="flex w-20 flex-col items-center justify-center gap-1 rounded-2xl border border-white/55 bg-white/60 px-3 py-2 text-center shadow-panel backdrop-blur transition hover:-translate-y-0.5"
+        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/16 px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/24"
         :class="highlightInventory ? tutorialHighlightClass : ''"
         @click="$emit('open-inventory')"
       >
-        <span aria-hidden="true" class="text-2xl leading-none">&#x1F392;</span>
-        <span class="text-xs font-bold text-ink">{{ t("ui.menuInventory") }}</span>
+        <span aria-hidden="true" class="text-2xl leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">&#x1F392;</span>
+        <span class="text-xs font-bold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">{{ t("ui.menuInventory") }}</span>
       </button>
 
       <button
         type="button"
-        class="flex w-20 flex-col items-center justify-center gap-1 rounded-2xl border border-white/55 bg-white/60 px-3 py-2 text-center shadow-panel backdrop-blur transition hover:-translate-y-0.5"
+        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/16 px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/24"
         :class="highlightVillage ? tutorialHighlightClass : ''"
         @click="$emit('open-village')"
       >
-        <span aria-hidden="true" class="text-2xl leading-none">&#x1F465;</span>
-        <span class="text-xs font-bold text-ink">{{ t("ui.menuVillagers") }}</span>
+        <span aria-hidden="true" class="text-2xl leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">&#x1F465;</span>
+        <span class="text-xs font-bold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">{{ t("ui.menuVillagers") }}</span>
       </button>
 
       <button
         type="button"
-        class="flex w-20 flex-col items-center justify-center gap-1 rounded-2xl border border-white/55 bg-white/60 px-3 py-2 text-center shadow-panel backdrop-blur transition hover:-translate-y-0.5"
+        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/16 px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/24"
         :class="highlightCraft ? tutorialHighlightClass : ''"
         @click="$emit('open-craft')"
       >
-        <span aria-hidden="true" class="text-2xl leading-none">&#x1F528;</span>
-        <span class="text-xs font-bold text-ink">{{ t("ui.menuCraft") }}</span>
+        <span aria-hidden="true" class="text-2xl leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">&#x1F528;</span>
+        <span class="text-xs font-bold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">{{ t("ui.menuCraft") }}</span>
       </button>
 
       <button
         type="button"
-        class="flex w-20 flex-col items-center justify-center gap-1 rounded-2xl border border-white/55 bg-white/60 px-3 py-2 text-center shadow-panel backdrop-blur transition hover:-translate-y-0.5"
+        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/16 px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/24"
         :class="highlightBuild ? tutorialHighlightClass : ''"
         @click="$emit('open-build')"
       >
-        <span aria-hidden="true" class="text-2xl leading-none">&#x1F3D7;</span>
-        <span class="text-xs font-bold text-ink">{{ t("ui.menuBuild") }}</span>
+        <span aria-hidden="true" class="text-2xl leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">&#x1F3D7;</span>
+        <span class="text-xs font-bold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">{{ t("ui.menuBuild") }}</span>
       </button>
 
       <button
         type="button"
-        class="flex w-20 flex-col items-center justify-center gap-1 rounded-2xl border border-white/55 bg-white/60 px-3 py-2 text-center shadow-panel backdrop-blur transition hover:-translate-y-0.5"
+        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/16 px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/24"
         @click="$emit('toggle-log')"
       >
-        <span aria-hidden="true" class="text-2xl leading-none">&#x2630;</span>
-        <span class="text-xs font-bold text-ink">{{ t("ui.menuLog") }}</span>
+        <span aria-hidden="true" class="text-2xl leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">&#x2630;</span>
+        <span class="text-xs font-bold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">{{ t("ui.menuLog") }}</span>
       </button>
 
-      <div class="flex items-center gap-2 rounded-2xl border border-white/55 bg-white/60 px-3 py-2 shadow-panel backdrop-blur">
-        <span class="text-xs font-bold text-ink">{{ t("ui.speed") }}</span>
+      <div class="flex items-center gap-2 rounded-xl bg-black/16 px-3 py-2 shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md">
+        <span class="text-xs font-bold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">{{ t("ui.speed") }}</span>
         <button
           v-for="speed in gameSpeedOptions"
           :key="speed"
           type="button"
           class="rounded-full px-2 py-1 text-xs font-bold transition"
-          :class="gameSpeed === speed ? 'bg-moss text-white' : 'bg-white/80 text-ink hover:bg-white'"
+          :class="gameSpeed === speed ? 'bg-moss text-white' : 'bg-black/35 text-white hover:bg-black/50'"
           @click="$emit('set-speed', speed)"
         >
           x{{ speed }}
         </button>
       </div>
 
-      <div v-if="showDevTools" class="flex items-center gap-2 rounded-2xl border border-[#d8c9b7] bg-[#fff6e6]/90 px-3 py-2 shadow-panel backdrop-blur">
-        <span class="text-xs font-bold text-ink">{{ t("ui.devAutoplay") }}</span>
+      <div v-if="showDevTools" class="flex items-center gap-2 rounded-xl bg-black/16 px-3 py-2 shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md">
+        <span class="text-xs font-bold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">{{ t("ui.devAutoplay") }}</span>
         <button
           type="button"
           class="rounded-full px-2 py-1 text-xs font-bold transition"
-          :class="devAutoplayEnabled ? 'bg-moss text-white' : 'bg-white/80 text-ink hover:bg-white'"
+          :class="devAutoplayEnabled ? 'bg-moss text-white' : 'bg-black/35 text-white hover:bg-black/50'"
           @click="$emit('toggle-dev-autoplay')"
         >
           {{ devAutoplayEnabled ? t("ui.stop") : t("ui.start") }}
         </button>
         <button
           type="button"
-          class="rounded-full bg-white/80 px-2 py-1 text-xs font-bold text-ink transition hover:bg-white"
+          class="rounded-full bg-black/35 px-2 py-1 text-xs font-bold text-white transition hover:bg-black/50"
           @click="$emit('run-dev-step')"
         >
           {{ t("ui.devStep") }}
@@ -96,9 +96,9 @@
     </div>
 
     <div class="absolute right-4 top-4 z-10 flex flex-col items-end gap-3">
-      <div class="w-[220px] rounded-[24px] border border-white/50 bg-white/72 p-3 shadow-panel backdrop-blur">
+      <div class="w-[220px] rounded-xl bg-white/72 p-3 shadow-panel backdrop-blur">
         <div class="text-xs font-bold tracking-[0.18em] text-ink/70">{{ t("ui.minimap") }}</div>
-        <div class="relative mt-2 aspect-square overflow-hidden rounded-2xl border border-white/60 bg-[linear-gradient(180deg,#c8db9d_0%,#98bd6c_100%)]">
+        <div class="relative mt-2 aspect-square overflow-hidden rounded-lg bg-[linear-gradient(180deg,#c8db9d_0%,#98bd6c_100%)]">
           <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_24%,rgba(255,255,255,0.35),transparent_24%),radial-gradient(circle_at_70%_74%,rgba(255,255,255,0.18),transparent_18%)]"></div>
           <div class="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/25"></div>
           <div class="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/25"></div>
@@ -138,11 +138,11 @@
     </div>
 
     <div v-if="pendingBuildingPlacement" class="absolute left-1/2 top-4 z-10 -translate-x-1/2">
-      <div class="flex items-center gap-3 rounded-full border border-white/60 bg-white/78 px-4 py-2 text-sm font-bold text-ink shadow-panel backdrop-blur">
+      <div class="flex items-center gap-3 rounded-xl bg-white/78 px-4 py-2 text-sm font-bold text-ink shadow-panel backdrop-blur">
         <span>{{ pendingBuildingPlacement.name }}</span>
         <button
           type="button"
-          class="rounded-full border border-line bg-white px-3 py-1 text-xs font-bold text-muted transition hover:text-ink"
+          class="rounded-lg bg-white/90 px-3 py-1 text-xs font-bold text-muted transition hover:text-ink"
           @click="$emit('cancel-pending')"
         >
           {{ t("ui.cancel") }}
@@ -150,7 +150,7 @@
       </div>
     </div>
 
-    <div class="absolute bottom-4 left-4 z-10 w-[240px] max-w-[calc(100vw-2rem)] rounded-[24px] border border-white/50 bg-white/78 p-4 shadow-panel backdrop-blur">
+    <div class="absolute bottom-4 left-4 z-10 w-[240px] max-w-[calc(100vw-2rem)] rounded-xl bg-white/78 p-4 shadow-panel backdrop-blur">
       <div class="flex items-center justify-between gap-2">
         <div class="text-sm font-bold text-ink">{{ t("ui.fullness") }}</div>
         <div
@@ -169,7 +169,7 @@
       </div>
     </div>
 
-    <div v-if="isLogWindowVisible" class="absolute bottom-4 right-4 z-10 w-[340px] max-w-[calc(100vw-2rem)] rounded-[26px] border border-white/40 bg-black/28 p-4 text-white shadow-panel backdrop-blur">
+    <div v-if="isLogWindowVisible" class="absolute bottom-4 right-4 z-10 w-[340px] max-w-[calc(100vw-2rem)] rounded-xl bg-black/28 p-4 text-white shadow-panel backdrop-blur">
       <div class="flex items-center justify-between gap-2">
         <div class="text-sm font-bold tracking-[0.18em] text-white/80">{{ t("ui.logTitle") }}</div>
         <button type="button" class="text-xs font-bold text-white/80 transition hover:text-white" @click="$emit('clear-log')">

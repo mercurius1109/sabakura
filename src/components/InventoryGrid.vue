@@ -30,7 +30,9 @@
             : ''"
         @click="handleSelect(slot.itemId)"
       >
-        <span class="text-xl leading-none" aria-hidden="true">{{ slot.icon }}</span>
+        <div class="h-6 w-6" aria-hidden="true">
+          <GameIcon :icon="slot.icon" :alt="slot.name" />
+        </div>
       </button>
     </div>
 
@@ -43,6 +45,7 @@
 <script setup>
 import { computed } from "vue";
 import { useI18n } from "../i18n/index.js";
+import GameIcon from "./GameIcon.vue";
 
 const { t } = useI18n();
 

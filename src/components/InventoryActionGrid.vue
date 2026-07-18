@@ -18,7 +18,9 @@
           : 'relative flex h-10 w-10 items-center justify-center rounded-md border border-[#d6ccb8] bg-[#f3ecdf] transition hover:-translate-y-0.5'"
         @click="handleSelect(entry.id)"
       >
-        <span class="text-xl leading-none" aria-hidden="true">{{ entry.icon }}</span>
+        <div class="h-6 w-6" aria-hidden="true">
+          <GameIcon :icon="entry.icon" :alt="entry.name" />
+        </div>
         <span
           v-if="entry.amount > 1"
           class="absolute bottom-0.5 right-0.5 rounded-full bg-white/90 px-1 text-[10px] font-bold leading-4 text-ambered shadow-sm"
@@ -36,6 +38,8 @@
 </template>
 
 <script setup>
+import GameIcon from "./GameIcon.vue";
+
 const props = defineProps({
   caption: { type: String, required: true },
   emptyText: { type: String, required: true },

@@ -57,16 +57,20 @@ const fullnessDecayPerSecond = 0.2;
 const autoEatThreshold = 35;
 const eatDurationMs = 1800;
 const actorSpeechDurationMs = 2200;
-const cookingFuelItemId = "stick";
-const cookingFuelBurnDurationMs = 12000;
 
-export function useSurvivalCraft() {
+export function useSurvivalCraft(options = {}) {
+  const {
+    preventPlayerFullnessDecay = null,
+  } = options;
   const itemDefinitions = Object.fromEntries(
     Object.entries(rawItemDefinitions).map(([id, meta]) => [
       id,
       { ...meta, name: t(meta.nameKey) },
     ]),
   );
+  const fuelItemIds = Object.entries(itemDefinitions)
+    .filter(([, meta]) => meta.fuel?.burnDurationMs > 0)
+    .map(([id]) => id);
   const recipes = rawRecipes.map((recipe) => ({ ...recipe, name: t(recipe.nameKey) }));
   const stations = rawStations.map((station) => ({
     ...station,
@@ -120,8 +124,8 @@ export function useSurvivalCraft() {
   const stationFuelState = reactive({
     cookingStation: reactive({
       burnRemainingMs: 0,
-      burnDurationMs: cookingFuelBurnDurationMs,
-      fuelItemId: cookingFuelItemId,
+      burnDurationMs: 0,
+      fuelItemId: null,
     }),
   });
   const storage = storageContainer.inventory;
@@ -140,13 +144,17 @@ export function useSurvivalCraft() {
   const structurePositions = reactive({});
   const constructionSites = reactive([]);
   const fieldNodes = reactive(createInitialFieldNodes());
-  const villagers = reactive([
-    createActor({
-      id: "villager-haru",
-      name: villagerNamePool[0],
-      ...percentPointToWorld({ x: 24, y: 18 }),
-    }),
-  ]);
+  const villagers = reactive(
+    Array.from({ length: 9 }, (_, index) =>
+      createActor({
+        id: `villager-${index + 1}`,
+        name: villagerNamePool[index] || `Villager ${index + 1}`,
+        ...percentPointToWorld({
+          x: 24 + (index % 3) * 6,
+          y: 18 + Math.floor(index / 3) * 6,
+        }),
+      })),
+  );
   const tasksById = reactive({});
   const craftQueue = reactive([]);
   const gatherQueue = reactive([]);
@@ -262,12 +270,11 @@ export function useSurvivalCraft() {
   }
 
   function stationFuelCount(stationId) {
-    const fuelInfo = stationFuelInfo(stationId);
     const inventory = stationInventory(stationId);
-    if (!fuelInfo || !inventory) {
+    if (!inventory) {
       return 0;
     }
-    return inventory[fuelInfo.fuelItemId] || 0;
+    return fuelItemIds.reduce((total, itemId) => total + (inventory[itemId] || 0), 0);
   }
 
   function stationHasFuel(stationId) {
@@ -288,13 +295,17 @@ export function useSurvivalCraft() {
     if (!fuelInfo || !container || fuelInfo.burnRemainingMs > 0) {
       return false;
     }
-    if (!removeItem(container, fuelInfo.fuelItemId, 1)) {
+
+    const fuelItemId = fuelItemIds.find((itemId) => (container.inventory?.[itemId] || 0) > 0);
+    if (!fuelItemId || !removeItem(container, fuelItemId, 1)) {
       return false;
     }
+    fuelInfo.fuelItemId = fuelItemId;
+    fuelInfo.burnDurationMs = itemDefinitions[fuelItemId]?.fuel?.burnDurationMs || 0;
     fuelInfo.burnRemainingMs = fuelInfo.burnDurationMs;
     addLog(t("log.stationFuelStarted", {
       station: stationName(stationId),
-      fuel: itemName(fuelInfo.fuelItemId),
+      fuel: itemName(fuelItemId),
     }));
     return true;
   }
@@ -321,6 +332,42 @@ export function useSurvivalCraft() {
       return stationIsBurning("cookingStation");
     }
     return true;
+  }
+
+  function handleBlockedTask(task) {
+    if (
+      !task
+      || task.kind !== "craft"
+      || task.station !== "cookingStation"
+      || task.workerType !== "villager"
+      || task.refuelRequested
+      || stationHasFuel(task.station)
+    ) {
+      return false;
+    }
+
+    const villager = actorById(task.villagerId);
+    if (!villager) {
+      return false;
+    }
+
+    const canRefuelNow = fuelItemIds.some((itemId) => villagerHasItem(villager, itemId))
+      || (placedStructures.storage && fuelItemIds.some((itemId) => availableItemCount(itemId) > 0));
+    if (!canRefuelNow) {
+      return false;
+    }
+
+    task.refuelRequested = true;
+    removeTaskFromActiveState(task);
+
+    const queued = prepareVillagerStationFuel(villager, task.station, task);
+    if (queued) {
+      return true;
+    }
+
+    task.refuelRequested = false;
+    scheduleActorTask(villager, task);
+    return false;
   }
 
   function buildingById(buildingId) {
@@ -730,12 +777,14 @@ export function useSurvivalCraft() {
     assignedStationsSummary,
     checkStockRules: requestCheckStockRules,
     checkConstructionSites: requestCheckConstructionSites,
+    fuelItemIds,
     stationHasFuel,
     t,
   });
 
   const {
     canStartGather,
+    prepareVillagerStationFuel,
     prepareActorRequiredItem,
     prepareVillagerRequiredItem,
     startActorApproachTask,
@@ -793,6 +842,7 @@ export function useSurvivalCraft() {
     actorCanWork,
     showActorSpeech,
     scheduleActorTask,
+    fuelItemIds,
     stationHasFuel,
     stationContainerById,
     t,
@@ -930,6 +980,7 @@ export function useSurvivalCraft() {
     requestInventoryFlyToPlayer,
     requestFieldTransferFly,
     taskCanWork,
+    handleBlockedTask,
     updateStationFuel,
     t,
   });
@@ -1147,6 +1198,9 @@ export function useSurvivalCraft() {
 
   function updateActorFullness(actor, deltaMs) {
     if (!actor) {
+      return;
+    }
+    if (actor.id === playerActor.id && preventPlayerFullnessDecay?.value) {
       return;
     }
     actor.fullness = Math.max(0, actor.fullness - (fullnessDecayPerSecond * deltaMs) / 1000);

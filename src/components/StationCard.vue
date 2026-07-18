@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative rounded-md border border-line bg-[#fffdf8] p-3 transition-opacity"
+    class="relative rounded-2xl border border-line bg-white/80 p-4 transition-opacity"
     :class="isAvailable ? 'opacity-100' : 'opacity-55'"
   >
     <div class="flex items-center justify-between gap-2 font-bold">
@@ -12,7 +12,7 @@
 
     <p class="mt-2 text-sm leading-6 text-muted">{{ station.description }}</p>
 
-    <div v-if="fuelItem" class="mt-3 rounded-md border border-line bg-white p-3">
+    <div v-if="showFuelPanel" class="mt-4 rounded-2xl border border-line bg-white/90 p-4">
       <div class="flex items-center justify-between gap-2">
         <h3 class="text-sm font-bold">{{ t("ui.fuel") }}</h3>
         <span class="text-xs font-semibold text-muted">
@@ -20,14 +20,16 @@
         </span>
       </div>
 
-      <div class="mt-3 flex items-center justify-between gap-3 rounded-md border border-line bg-[#fffdf8] px-3 py-3">
+      <div class="mt-3 flex items-center justify-between gap-3 rounded-xl border border-line bg-[#fffdf8] px-3 py-3">
         <div class="flex items-center gap-3">
-          <div class="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-white text-2xl">
-            {{ fuelItem.icon }}
+          <div class="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-white">
+            <div class="h-7 w-7">
+              <GameIcon :icon="currentFuelItem?.icon || ''" :alt="currentFuelItem?.name || t('ui.fuel')" fallback="🔥" />
+            </div>
           </div>
           <div>
-            <div class="text-sm font-bold text-ink">{{ fuelItem.name }}</div>
-            <div class="text-xs text-muted">{{ t("ui.currentOfTarget", { current: fuelCount, target: playerFuelCount }) }}</div>
+            <div class="text-sm font-bold text-ink">{{ currentFuelItem?.name || t("ui.fuel") }}</div>
+            <div class="text-xs text-muted">{{ t("ui.currentOfTarget", { current: fuelCount, target: playerFuelTotal }) }}</div>
           </div>
         </div>
         <div class="text-right text-xs text-muted">
@@ -39,23 +41,23 @@
         <div class="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-[width]" :style="{ width: `${burnProgress}%` }"></div>
       </div>
 
-      <div class="mt-3 grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          class="rounded-md border border-line bg-white px-3 py-2 text-sm font-bold text-moss transition hover:bg-moss hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-          :disabled="!isAvailable || !isPlayerAdjacent || playerFuelCount <= 0"
-          @click="$emit('transfer-fuel-to-station', station.id)"
-        >
-          {{ t("ui.addFuel") }}
-        </button>
-        <button
-          type="button"
-          class="rounded-md border border-line bg-white px-3 py-2 text-sm font-bold text-ambered transition hover:bg-ambered hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-          :disabled="!isAvailable || !isPlayerAdjacent || fuelCount <= 0"
-          @click="$emit('transfer-fuel-to-player', station.id)"
-        >
-          {{ t("ui.takeFuel") }}
-        </button>
+      <div class="mt-4 grid gap-4 lg:grid-cols-2">
+        <InventoryActionGrid
+          :caption="t('ui.addFuel')"
+          :empty-text="t('common.carryingNone')"
+          :entries="playerFuelEntries"
+          :disabled="!isPlayerAdjacent"
+          :disabled-text="t('ui.moveNextToFacility')"
+          @select="transferFuelToStation"
+        />
+        <InventoryActionGrid
+          :caption="t('ui.takeFuel')"
+          :empty-text="t('common.carryingNone')"
+          :entries="stationFuelEntries"
+          :disabled="!isPlayerAdjacent"
+          :disabled-text="t('ui.moveNextToFacility')"
+          @select="transferFuelToPlayer"
+        />
       </div>
 
       <div v-if="!isPlayerAdjacent" class="mt-2 text-xs text-muted">
@@ -63,38 +65,21 @@
       </div>
     </div>
 
-    <div v-if="inventoryEntries.length > 0 || fuelItem" class="mt-3 rounded-md border border-line bg-white p-3">
-      <div class="flex items-center justify-between gap-2">
-        <h3 class="text-sm font-bold">{{ t("ui.container") }}</h3>
-        <span class="text-xs text-muted">{{ inventoryEntries.length }}</span>
-      </div>
-
-      <div v-if="inventoryEntries.length === 0" class="mt-2 text-sm text-muted">
-        {{ t("ui.noCraftEntries") }}
-      </div>
-
-      <div v-else class="mt-3 grid grid-cols-[repeat(auto-fill,minmax(72px,72px))] gap-3">
-        <button
-          v-for="entry in inventoryEntries"
-          :key="entry.id"
-          type="button"
-          class="relative flex h-[72px] w-[72px] items-center justify-center rounded-xl border border-line bg-[#fffdf8] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
-          :title="`${entry.name} x${entry.amount}`"
-          :disabled="!isPlayerAdjacent"
-          @click="$emit('transfer-item-to-player', station.id, entry.id)"
-        >
-          <span class="absolute left-1.5 top-1.5 max-w-[46px] truncate text-[10px] font-bold leading-4 text-ink">
-            {{ entry.name }}
-          </span>
-          <span class="text-3xl leading-none" aria-hidden="true">{{ entry.icon }}</span>
-          <span class="absolute bottom-1 right-1 rounded-full bg-white/90 px-1.5 text-[10px] font-bold leading-5 text-ambered">
-            x{{ entry.amount }}
-          </span>
-        </button>
+    <div v-if="inventoryEntries.length > 0 || showFuelPanel" class="mt-4 rounded-2xl border border-line bg-white/90 p-4">
+      <InventoryActionGrid
+        :caption="t('ui.container')"
+        :empty-text="t('common.carryingNone')"
+        :entries="inventoryEntries"
+        :disabled="false"
+        :disabled-text="''"
+        @select="transferItemToPlayer"
+      />
+      <div v-if="!isPlayerAdjacent && inventoryEntries.length > 0" class="mt-3 text-sm text-muted">
+        {{ t("ui.moveNextToFacility") }}
       </div>
     </div>
 
-    <div class="mt-3 rounded-md border border-line bg-white p-3">
+    <div class="mt-4 rounded-2xl border border-line bg-white/90 p-4">
       <div class="flex items-center justify-between gap-2">
         <h3 class="text-sm font-bold">{{ t("ui.assignVillager") }}</h3>
         <button
@@ -138,7 +123,7 @@
       </div>
     </div>
 
-    <div v-if="recipes.length > 0 || craftEntries.length > 0" class="mt-3 rounded-md border border-line bg-white p-3">
+    <div v-if="recipes.length > 0 || craftEntries.length > 0" class="mt-4 rounded-2xl border border-line bg-white/90 p-4">
       <div class="flex items-center justify-between gap-2">
         <h3 class="text-sm font-bold">{{ t("ui.craftEntries") }}</h3>
         <button
@@ -183,13 +168,15 @@
           <span class="absolute bottom-1 right-1 rounded-full bg-white/90 px-1.5 text-[10px] font-bold leading-5 text-ambered">
             {{ currentAmount(entry.id) }}/{{ entry.target }}
           </span>
-          <span class="text-3xl leading-none" aria-hidden="true">{{ craftEntryIcon(entry) }}</span>
+          <div class="h-12 w-12" aria-hidden="true">
+            <GameIcon :icon="craftEntryIcon(entry)" :alt="recipeById(entry.recipeId).name" />
+          </div>
           <span class="sr-only">{{ recipeById(entry.recipeId).name }}</span>
         </button>
       </div>
     </div>
 
-    <div class="mt-3 rounded-md border border-line bg-white p-3">
+    <div class="mt-4 rounded-2xl border border-line bg-white/90 p-4">
       <div class="flex items-center justify-between gap-2">
         <h3 class="text-sm font-bold">{{ t("ui.runningTasks") }}</h3>
         <span class="text-xs text-muted">{{ t("ui.taskCount", { count: tasks.length }) }}</span>
@@ -225,7 +212,7 @@
       </div>
     </div>
 
-    <div v-if="showCraftModal" class="absolute inset-0 z-20 flex items-center justify-center bg-black/35 p-4">
+    <div v-if="showCraftModal" class="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
       <div class="w-full max-w-md rounded-xl border border-line bg-white p-4 shadow-panel">
         <div class="flex items-center justify-between gap-2">
           <h3 class="text-lg font-bold">{{ t("ui.addCraftEntry") }}</h3>
@@ -248,7 +235,9 @@
               : 'border-line hover:-translate-y-0.5'"
             @click="draftRecipeId = recipe.id"
           >
-            <span class="text-3xl leading-none" aria-hidden="true">{{ recipeOutputIcon(recipe) }}</span>
+            <div class="h-10 w-10" aria-hidden="true">
+              <GameIcon :icon="recipeOutputIcon(recipe)" :alt="recipe.name" />
+            </div>
             <span class="sr-only">{{ recipe.name }}</span>
           </button>
         </div>
@@ -272,7 +261,7 @@
 
         <button
           type="button"
-          class="mt-4 w-full rounded-md bg-leaf px-4 py-2.5 font-bold text-white transition hover:bg-moss"
+          class="mt-4 w-full rounded-md bg-leaf px-4 py-2.5 font-bold text-white transition hover:bg-moss disabled:cursor-not-allowed disabled:opacity-50"
           :disabled="!canSubmitCraft"
           @click="submitCraftEntry"
         >
@@ -281,7 +270,7 @@
       </div>
     </div>
 
-    <div v-if="showEditCraftModal && editingCraftEntry" class="absolute inset-0 z-20 flex items-center justify-center bg-black/35 p-4">
+    <div v-if="showEditCraftModal && editingCraftEntry" class="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
       <div class="w-full max-w-md rounded-xl border border-line bg-white p-4 shadow-panel">
         <div class="flex items-center justify-between gap-2">
           <h3 class="text-lg font-bold">{{ recipeById(editingCraftEntry.recipeId).name }}</h3>
@@ -337,7 +326,7 @@
       </div>
     </div>
 
-    <div v-if="showVillagerModal" class="absolute inset-0 z-20 flex items-center justify-center bg-black/35 p-4">
+    <div v-if="showVillagerModal" class="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
       <div class="w-full max-w-md rounded-xl border border-line bg-white p-4 shadow-panel">
         <div class="flex items-center justify-between gap-2">
           <h3 class="text-lg font-bold">{{ t("ui.assignVillager") }}</h3>
@@ -371,6 +360,8 @@
 <script setup>
 import { computed, ref } from "vue";
 import { useI18n } from "../i18n/index.js";
+import GameIcon from "./GameIcon.vue";
+import InventoryActionGrid from "./InventoryActionGrid.vue";
 
 const { t } = useI18n();
 
@@ -399,9 +390,10 @@ const props = defineProps({
   highlightAddVillager: { type: Boolean, default: false },
   highlightAddCraft: { type: Boolean, default: false },
   isPlayerAdjacent: { type: Boolean, default: false },
-  fuelItemId: { type: String, default: null },
+  currentFuelItemId: { type: String, default: null },
   fuelCount: { type: Number, default: 0 },
-  playerFuelCount: { type: Number, default: 0 },
+  playerFuelEntries: { type: Array, default: () => [] },
+  stationFuelEntries: { type: Array, default: () => [] },
   burnRemainingMs: { type: Number, default: 0 },
   burnDurationMs: { type: Number, default: 0 },
 });
@@ -422,7 +414,7 @@ const emit = defineEmits([
 const showCraftModal = ref(false);
 const showEditCraftModal = ref(false);
 const showVillagerModal = ref(false);
-const villagerIcon = "\uD83E\uDDD1";
+const villagerIcon = "🧑";
 const draftRecipeId = ref("");
 const draftTarget = ref(1);
 const editingCraftEntryId = ref(null);
@@ -436,7 +428,11 @@ const availableRecipes = computed(() => {
   const registeredRecipeIds = new Set(props.craftEntries.map((entry) => entry.recipeId));
   return props.recipes.filter((recipe) => !registeredRecipeIds.has(recipe.id));
 });
-const fuelItem = computed(() => (props.fuelItemId ? props.itemDefinitions[props.fuelItemId] || null : null));
+const currentFuelItem = computed(() => (
+  props.currentFuelItemId ? props.itemDefinitions[props.currentFuelItemId] || null : null
+));
+const showFuelPanel = computed(() => props.station.id === "cookingStation");
+const playerFuelTotal = computed(() => props.playerFuelEntries.reduce((total, entry) => total + entry.amount, 0));
 const burnRemainingSeconds = computed(() => Math.max(0, Math.ceil((props.burnRemainingMs || 0) / 1000)));
 const burnProgress = computed(() => {
   if (!props.burnDurationMs) {
@@ -486,6 +482,18 @@ function addVillager(villagerId) {
 
 function removeVillager(villagerId) {
   emit("remove-villager", villagerId, props.station.id);
+}
+
+function transferItemToPlayer(itemId) {
+  emit("transfer-item-to-player", props.station.id, itemId);
+}
+
+function transferFuelToStation(itemId) {
+  emit("transfer-fuel-to-station", props.station.id, itemId);
+}
+
+function transferFuelToPlayer(itemId) {
+  emit("transfer-fuel-to-player", props.station.id, itemId);
 }
 
 function submitEditCraftEntry() {

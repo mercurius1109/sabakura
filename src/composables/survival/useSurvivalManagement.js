@@ -33,6 +33,7 @@ export function createSurvivalManagementHelpers({
   assignedStationsSummary,
   checkStockRules,
   checkConstructionSites,
+  fuelItemIds,
   stationHasFuel,
   t,
 }) {
@@ -67,7 +68,8 @@ export function createSurvivalManagementHelpers({
   }
 
   function stationTasks(stationId) {
-    return [...craftQueue, ...gatherQueue].filter((task) => task.station === stationId);
+    return [...craftQueue, ...gatherQueue].filter((task) =>
+      task.station === stationId && task.kind !== "move");
   }
 
   function isStationAvailable(stationId) {
@@ -199,6 +201,10 @@ export function createSurvivalManagementHelpers({
       return true;
     }
     return stationHasFuel(recipe.station);
+  }
+
+  function hasAnyFuelInStorage() {
+    return fuelItemIds.some((itemId) => availableItemCount(itemId) > 0);
   }
 
   function availableVillagerForConstruction() {
@@ -401,7 +407,7 @@ export function createSurvivalManagementHelpers({
       return t("status.running");
     }
     if (!stationHasFuelForRecipe(recipe)) {
-      return availableItemCount("stick") > 0
+      return hasAnyFuelInStorage()
         ? t("status.actionPending")
         : t("status.noFuel");
     }
@@ -450,7 +456,7 @@ export function createSurvivalManagementHelpers({
     return Boolean(recipe)
       && isStationAvailable(stationId)
       && isRecipeUnlocked(recipe)
-      && (stationHasFuelForRecipe(recipe) || availableItemCount("stick") > 0)
+      && (stationHasFuelForRecipe(recipe) || hasAnyFuelInStorage())
       && Boolean(availableVillagerForRecipe(recipe));
   }
 

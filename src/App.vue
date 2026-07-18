@@ -141,7 +141,7 @@
           @handle-player-item-action="handlePlayerItemAction"
           @start-player-craft="startPlayerCraft"
           @transfer-storage-item-to-player="transferStorageItemToPlayer"
-          @transfer-station-item-to-player="transferStationItemToPlayer"
+          @transfer-station-item-to-player="handleStationItemToPlayer"
           @open-add-stock-rule-modal="openAddStockRuleModal"
           @open-stock-rule-modal="openStockRuleModal"
           @remove-stock-rule="removeStockRule"
@@ -282,7 +282,9 @@ const {
   stations,
   worldWidth,
   worldHeight,
-} = useSurvivalCraft();
+} = useSurvivalCraft({
+  preventPlayerFullnessDecay: devTutorialAutoplayEnabled,
+});
 
 const {
   currentStep: currentTutorialStep,
@@ -700,20 +702,25 @@ const selectedVillagerTaskList = computed(() => (
   selectedVillager.value ? tasksForActor(selectedVillager.value.id) : []
 ));
 
-function transferStationFuelToStation(stationId) {
-  const fuelItemId = stationFuelState?.[stationId]?.fuelItemId;
-  if (!fuelItemId) {
+function transferStationFuelToStation(stationId, itemId) {
+  if (!itemId) {
     return;
   }
-  moveItemFromActorToStation(playerActor, stationId, fuelItemId, 1);
+  moveItemFromActorToStation(playerActor, stationId, itemId, 1);
 }
 
-function transferStationFuelToPlayer(stationId) {
-  const fuelItemId = stationFuelState?.[stationId]?.fuelItemId;
-  if (!fuelItemId) {
+function transferStationFuelToPlayer(stationId, itemId) {
+  if (!itemId) {
     return;
   }
-  moveItemFromStationToActor(playerActor, stationId, fuelItemId, 1);
+  moveItemFromStationToActor(playerActor, stationId, itemId, 1);
+}
+
+function handleStationItemToPlayer(stationId, itemId) {
+  if (!stationId || !itemId) {
+    return;
+  }
+  moveItemFromStationToActor(playerActor, stationId, itemId, 1);
 }
 </script>
 

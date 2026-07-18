@@ -76,11 +76,11 @@ export function createPlayerActions({
   }
 
   function isPlayerAdjacentToStructure(structureId) {
-    const targetPoint = buildingWorkPoint(structureId, playerActor);
-    if (!targetPoint) {
+    const building = buildingById(structureId);
+    if (!building) {
       return false;
     }
-    return distanceBetween(playerActor, targetPoint) <= 8;
+    return distanceBetween(playerActor, building) <= storageInteractionDistance;
   }
 
   function playerTransferTargetPoint(targetKind, actorId = null) {
@@ -242,34 +242,14 @@ export function createPlayerActions({
     if (!placedStructures.storage || !actor || actor.id !== playerActor.id || amount !== 1) {
       return false;
     }
-    if (!isPlayerAdjacentToStorage.value) {
-      addLog(`${playerActor.name} must stand next to storage to move items.`);
-      return false;
-    }
-    if (!transferItem(playerActor, storageContainer, itemId, amount)) {
-      addLog(`${playerActor.name} does not have ${itemName(itemId)}.`);
-      return false;
-    }
-    requestFieldTransferFly(itemId, { kind: "actor", actorId: playerActor.id }, { kind: "storage" }, amount);
-    addLog(`${playerActor.name} moved ${itemName(itemId)} to ${storageContainer.name}.`);
-    return true;
+    return queuePlayerTransfer(itemId, "toStorage");
   }
 
   function moveItemFromStorageToActor(actor, itemId, amount = 1) {
     if (!placedStructures.storage || !actor || actor.id !== playerActor.id || amount !== 1) {
       return false;
     }
-    if (!isPlayerAdjacentToStorage.value) {
-      addLog(`${playerActor.name} must stand next to storage to move items.`);
-      return false;
-    }
-    if (!transferItem(storageContainer, playerActor, itemId, amount)) {
-      addLog(`${itemName(itemId)} is not in storage.`);
-      return false;
-    }
-    requestFieldTransferFly(itemId, { kind: "storage" }, { kind: "actor", actorId: playerActor.id }, amount);
-    addLog(`${playerActor.name} took ${itemName(itemId)} from ${storageContainer.name}.`);
-    return true;
+    return queuePlayerTransfer(itemId, "fromStorage");
   }
 
   function moveItemFromActorToActor(sourceActor, targetActor, itemId, amount = 1) {

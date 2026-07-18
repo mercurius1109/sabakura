@@ -92,7 +92,9 @@
               <path d="M3.22 3.22a.75.75 0 0 1 1.06 0L8 6.94l3.72-3.72a.75.75 0 1 1 1.06 1.06L9.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06L8 9.06l-3.72 3.72a.75.75 0 1 1-1.06-1.06L6.94 8 3.22 4.28a.75.75 0 0 1 0-1.06Z" />
             </svg>
           </span>
-          <span class="text-3xl leading-none" aria-hidden="true">{{ itemDefinitions[rule.itemId].icon }}</span>
+          <div class="h-12 w-12" aria-hidden="true">
+            <GameIcon :icon="itemDefinitions[rule.itemId].icon" :alt="itemDefinitions[rule.itemId].name" />
+          </div>
           <span class="absolute bottom-1 right-1 rounded-full bg-white/90 px-1.5 text-[10px] font-bold leading-5 text-ambered">
             {{ t("ui.currentOfTarget", { current: inventory[rule.itemId], target: rule.target }) }}
           </span>
@@ -126,7 +128,9 @@
             <span class="absolute left-1.5 top-1.5 max-w-[46px] truncate text-[10px] font-bold leading-4 text-ink">
               {{ itemDefinitions[rule.itemId].name }}
             </span>
-            <span class="text-3xl leading-none" aria-hidden="true">{{ itemDefinitions[rule.itemId].icon }}</span>
+            <div class="h-10 w-10" aria-hidden="true">
+              <GameIcon :icon="itemDefinitions[rule.itemId].icon" :alt="itemDefinitions[rule.itemId].name" />
+            </div>
           </button>
         </div>
 
@@ -251,6 +255,7 @@
 <script setup>
 import { ref } from "vue";
 import InventoryActionGrid from "./InventoryActionGrid.vue";
+import GameIcon from "./GameIcon.vue";
 import { useI18n } from "../i18n/index.js";
 
 const props = defineProps({

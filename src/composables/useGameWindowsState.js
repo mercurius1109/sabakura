@@ -51,6 +51,9 @@ export function useGameWindowsState(options) {
 
   const tutorialHighlightClass = "tutorial-highlight tutorial-highlight-ui";
   const resolvedInventory = computed(() => unref(inventory) || {});
+  const fuelItemIds = Object.entries(itemDefinitions)
+    .filter(([, meta]) => meta.fuel?.burnDurationMs > 0)
+    .map(([id]) => id);
 
   const isCompareWindow = computed(() =>
     selectedWindow.value?.type === "storage-compare" || selectedWindow.value?.type === "villager-compare",
@@ -124,10 +127,13 @@ export function useGameWindowsState(options) {
       recipes: stationRecipes(stationId),
       playerRecipes: stationRecipes(stationId),
       craftEntries: stationCraftEntries(stationId),
-      inventoryEntries: stationEntriesFromStore(stationContainers?.[stationId]?.inventory, itemDefinitions),
+      inventoryEntries: stationEntriesFromStore(stationContainers?.[stationId]?.inventory, itemDefinitions, fuelItemIds),
       isPlayerAdjacent: isPlayerAdjacentToStructure(stationId),
-      fuelItemId: stationFuelState?.[stationId]?.fuelItemId || null,
-      fuelCount: stationContainers?.[stationId]?.inventory?.[stationFuelState?.[stationId]?.fuelItemId] || 0,
+      currentFuelItemId: stationFuelState?.[stationId]?.fuelItemId || null,
+      fuelCount: fuelEntriesFromStore(stationContainers?.[stationId]?.inventory, itemDefinitions, fuelItemIds)
+        .reduce((total, entry) => total + entry.amount, 0),
+      playerFuelEntries: fuelEntriesFromStore(playerActor.inventory, itemDefinitions, fuelItemIds),
+      stationFuelEntries: fuelEntriesFromStore(stationContainers?.[stationId]?.inventory, itemDefinitions, fuelItemIds),
       burnRemainingMs: stationFuelState?.[stationId]?.burnRemainingMs || 0,
       burnDurationMs: stationFuelState?.[stationId]?.burnDurationMs || 0,
       highlightAddVillager: hasTutorialTarget(currentTutorialTargets, "station-action", `${stationId}:add-villager`),
@@ -343,8 +349,14 @@ function actionableEntries(store, itemDefinitions) {
   return itemCardsFromStore(store, itemDefinitions).filter((item) => item.amount > 0);
 }
 
-function stationEntriesFromStore(store, itemDefinitions) {
-  return itemCardsFromStore(store, itemDefinitions).filter((item) => item.amount > 0);
+function fuelEntriesFromStore(store, itemDefinitions, fuelItemIds) {
+  return stationEntriesFromStore(store, itemDefinitions)
+    .filter((item) => fuelItemIds.includes(item.id));
+}
+
+function stationEntriesFromStore(store, itemDefinitions, excludedItemIds = []) {
+  return itemCardsFromStore(store, itemDefinitions)
+    .filter((item) => item.amount > 0 && !excludedItemIds.includes(item.id));
 }
 
 function taskForActor(actor, playerActorId, gatherQueue, craftQueue, constructionQueue, findTaskById) {

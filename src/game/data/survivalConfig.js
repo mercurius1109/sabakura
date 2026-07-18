@@ -1,3 +1,7 @@
+import rockIcon from "../../assets/items/rock.png";
+import treeIcon from "../../assets/field/tree.png";
+import wildBerryBushIcon from "../../assets/field/wild-berry-bush.png";
+
 export const villagerNamePool = ["ハル", "ミナ", "レン", "ユイ", "ソラ", "ナツ", "カイ", "リン", "ヒナ", "リク", "アオ", "イブキ"];
 
 export const storagePoint = { x: 79, y: 51 };
@@ -12,10 +16,10 @@ export const gatherActions = [
 ];
 
 export const buildingDefinitions = [
-  { id: "workbench", nameKey: "building.workbench", icon: "🛠", costs: { wood: 4 }, duration: 6000, x: 61, y: 44 },
-  { id: "storage", nameKey: "building.storage", icon: "📦", costs: { wood: 6, stone: 2 }, duration: 7000, x: 79, y: 51 },
-  { id: "lumberjackHut", nameKey: "building.lumberjackHut", icon: "🪓", costs: { wood: 8, stone: 4 }, duration: 8000, x: 39, y: 58 },
-  { id: "cookingStation", nameKey: "building.cookingStation", icon: "🍳", costs: { wood: 6, stone: 3 }, duration: 7000, x: 67, y: 61 },
+  { id: "workbench", nameKey: "building.workbench", icon: "\u{1FA91}", costs: { wood: 4 }, duration: 6000, x: 61, y: 44 },
+  { id: "storage", nameKey: "building.storage", icon: "\u{1F4E6}", costs: { wood: 6, stone: 2 }, duration: 7000, x: 79, y: 51 },
+  { id: "lumberjackHut", nameKey: "building.lumberjackHut", icon: "\u{1FA93}", costs: { wood: 8, stone: 4 }, duration: 8000, x: 39, y: 58 },
+  { id: "cookingStation", nameKey: "building.cookingStation", icon: "\u{1F373}", costs: { wood: 6, stone: 3 }, duration: 7000, x: 67, y: 61 },
 ];
 
 export const defaultTargets = {
@@ -34,6 +38,7 @@ export const fieldTreeConfigs = [
     prefix: "tree",
     type: "tree",
     itemId: "log",
+    icon: treeIcon,
     titleKey: "field.tree",
     actionLabelKey: "action.gatherLog",
     requiresItem: "stoneAxe",
@@ -44,6 +49,7 @@ export const fieldTreeConfigs = [
     prefix: "rock",
     type: "rock",
     itemId: "stone",
+    icon: rockIcon,
     titleKey: "field.rock",
     actionLabelKey: "action.gatherRock",
     requiresItem: "stonePickaxe",
@@ -70,5 +76,5 @@ export const genericDropOffsets = [
 export const fieldResourceConfigs = [
   { prefix: "branch", type: "pickup", itemId: "wood", titleKey: "field.branch", actionLabelKey: "action.gatherWood", count: 10, respawnMs: 9000 },
   { prefix: "stone", type: "pickup", itemId: "stone", titleKey: "field.stone", actionLabelKey: "action.gatherStone", count: 8, respawnMs: 11000 },
-  { prefix: "berry", type: "pickup", itemId: "wildBerry", titleKey: "field.berryBush", actionLabelKey: "action.gatherWildBerry", count: 7, respawnMs: 12000 },
+  { prefix: "berry", type: "pickup", itemId: "wildBerry", icon: wildBerryBushIcon, titleKey: "field.berryBush", actionLabelKey: "action.gatherWildBerry", count: 7, respawnMs: 12000 },
 ];

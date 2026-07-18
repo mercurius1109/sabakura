@@ -149,9 +149,10 @@
             :highlight-add-villager="selectedStationWindow.highlightAddVillager"
             :highlight-add-craft="selectedStationWindow.highlightAddCraft"
             :is-player-adjacent="selectedStationWindow.isPlayerAdjacent"
-            :fuel-item-id="selectedStationWindow.fuelItemId"
+            :current-fuel-item-id="selectedStationWindow.currentFuelItemId"
             :fuel-count="selectedStationWindow.fuelCount"
-            :player-fuel-count="playerActor.inventory[selectedStationWindow.fuelItemId] || 0"
+            :player-fuel-entries="selectedStationWindow.playerFuelEntries"
+            :station-fuel-entries="selectedStationWindow.stationFuelEntries"
             :burn-remaining-ms="selectedStationWindow.burnRemainingMs"
             :burn-duration-ms="selectedStationWindow.burnDurationMs"
             @cancel-task="$emit('cancel-task', $event)"
@@ -161,8 +162,8 @@
             @remove-craft-entry="forwardRemoveStationCraftEntry"
             @update-craft-entry-target="forwardUpdateStationCraftEntryTarget"
             @start-craft-entry="forwardStartStationCraftEntry"
-            @transfer-fuel-to-station="$emit('transfer-station-fuel-to-station', $event)"
-            @transfer-fuel-to-player="$emit('transfer-station-fuel-to-player', $event)"
+            @transfer-fuel-to-station="forwardTransferStationFuelToStation"
+            @transfer-fuel-to-player="forwardTransferStationFuelToPlayer"
             @transfer-item-to-player="forwardTransferStationItemToPlayer"
           />
         </div>
@@ -439,5 +440,13 @@ function forwardRemoveStorageVillager(villagerId) {
 
 function forwardTransferStationItemToPlayer(stationId, itemId) {
   emit("transfer-station-item-to-player", stationId, itemId);
+}
+
+function forwardTransferStationFuelToStation(stationId, itemId) {
+  emit("transfer-station-fuel-to-station", stationId, itemId);
+}
+
+function forwardTransferStationFuelToPlayer(stationId, itemId) {
+  emit("transfer-station-fuel-to-player", stationId, itemId);
 }
 </script>

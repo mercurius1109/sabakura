@@ -42,6 +42,7 @@ export function createSurvivalTaskStarters({
   actorCanWork,
   showActorSpeech,
   scheduleActorTask,
+  fuelItemIds,
   stationHasFuel,
   stationContainerById,
   t,
@@ -103,6 +104,37 @@ export function createSurvivalTaskStarters({
       craftEntryId: options.craftEntryId || null,
       startedAt: now.value,
       duration: recipe.duration,
+    };
+  }
+
+  function createCraftFollowUpTask(villager, recipeId, recipe, workerType, source, options = {}) {
+    const craftTask = createCraftTask(villager, recipeId, recipe, workerType, source, options);
+    if (!villager || recipe.station === "hand") {
+      return craftTask;
+    }
+
+    const targetPoint = buildingWorkPoint(recipe.station, villager);
+    if (isAtTarget(villager, targetPoint)) {
+      return craftTask;
+    }
+
+    return {
+      id: makeId("approach"),
+      kind: "move",
+      label: t("log.villagerCraftStarted", {
+        actor: villager.name,
+        recipe: recipe.name,
+        suffix: autoSuffix(source),
+      }),
+      workerType: isPlayerActor(villager) ? "player" : "villager",
+      villagerId: villager.id,
+      station: recipe.station,
+      source,
+      targetPoint,
+      initialTargetDistance: distanceBetween(villager, targetPoint),
+      duration: 1,
+      actorId: null,
+      targetKind: "field",
     };
   }
 
@@ -359,14 +391,16 @@ export function createSurvivalTaskStarters({
       villager,
       itemId,
       missingAmount,
-      createCraftTask(villager, recipe.id, recipe, "villager", source, { craftEntryId }),
+      createCraftFollowUpTask(villager, recipe.id, recipe, "villager", source, { craftEntryId }),
     );
     return villager.taskId !== null;
   }
 
   function prepareVillagerStationFuel(villager, stationId, nextTask = null) {
     const stationContainer = stationContainerById(stationId);
-    const fuelItemId = stationContainer?.inventory ? "stick" : null;
+    const fuelItemId = fuelItemIds.find((itemId) => villagerHasItem(villager, itemId))
+      || fuelItemIds.find((itemId) => availableItemCount(itemId) > 0)
+      || null;
     if (!villager || !stationContainer || !fuelItemId) {
       return false;
     }
@@ -391,11 +425,36 @@ export function createSurvivalTaskStarters({
       stationId,
     );
 
+    const stationTargetPoint = buildingWorkPoint(stationId, villager);
+    const moveToStationTask = isAtTarget(villager, stationTargetPoint)
+      ? null
+      : {
+        id: makeId("approach"),
+        kind: "move",
+        label: t("log.moveToStation", {
+          actor: villager.name,
+          item: itemName(fuelItemId),
+          station: stationName(stationId),
+        }),
+        workerType: isPlayerActor(villager) ? "player" : "villager",
+        villagerId: villager.id,
+        station: stationId,
+        source: "deliver",
+        targetPoint: stationTargetPoint,
+        initialTargetDistance: distanceBetween(villager, stationTargetPoint),
+        duration: 1,
+        actorId: null,
+        targetKind: "field",
+      };
+
     const started = startActorStorageFetchTask(villager, fuelItemId, 1);
     if (!started) {
       return false;
     }
 
+    if (moveToStationTask) {
+      scheduleActorTask(villager, moveToStationTask);
+    }
     scheduleActorTask(villager, stationTransferTask);
     if (nextTask) {
       scheduleActorTask(villager, nextTask);
@@ -632,6 +691,19 @@ export function createSurvivalTaskStarters({
       return false;
     }
 
+    const preparedResources = prepareVillagerCraftResources(
+      villager,
+      recipe,
+      source,
+      options.craftEntryId || null,
+    );
+    if (!preparedResources) {
+      return false;
+    }
+    if (villager.taskId !== null) {
+      return true;
+    }
+
     if (recipe.station === "cookingStation" && !stationHasFuel(recipe.station)) {
       const fueled = prepareVillagerStationFuel(
         villager,
@@ -646,18 +718,6 @@ export function createSurvivalTaskStarters({
       }
     }
 
-    const preparedResources = prepareVillagerCraftResources(
-      villager,
-      recipe,
-      source,
-      options.craftEntryId || null,
-    );
-    if (!preparedResources) {
-      return false;
-    }
-    if (villager.taskId !== null) {
-      return true;
-    }
     const task = createCraftTask(villager, recipeId, recipe, workerType, source, options);
     const targetPoint = buildingWorkPoint(recipe.station, villager);
     const started = isAtTarget(villager, targetPoint)
@@ -771,6 +831,7 @@ export function createSurvivalTaskStarters({
 
   return {
     canStartGather,
+    prepareVillagerStationFuel,
     prepareActorRequiredItem,
     prepareVillagerRequiredItem,
     startActorFieldTask,

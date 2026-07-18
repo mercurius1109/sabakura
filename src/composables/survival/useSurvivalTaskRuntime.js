@@ -49,6 +49,7 @@ export function createSurvivalTaskRuntime({
   requestInventoryFlyToPlayer,
   requestFieldTransferFly,
   taskCanWork,
+  handleBlockedTask,
   updateStationFuel,
   t,
 }) {
@@ -146,6 +147,7 @@ export function createSurvivalTaskRuntime({
     finishTaskWork,
     validateTaskStart,
     taskCanWork,
+    handleBlockedTask,
     updateStationFuel,
     respawnFieldNodes,
     checkStockRules,

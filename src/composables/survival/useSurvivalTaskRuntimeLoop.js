@@ -16,6 +16,7 @@ export function createSurvivalTaskRuntimeLoop({
   finishTaskWork,
   validateTaskStart,
   taskCanWork,
+  handleBlockedTask,
   updateStationFuel,
   respawnFieldNodes,
   checkStockRules,
@@ -68,7 +69,13 @@ export function createSurvivalTaskRuntimeLoop({
       task.workElapsedMs = 0;
     }
 
-    if (!taskCanWork(task)) {
+    const canWork = taskCanWork(task);
+    if (canWork && task.refuelRequested) {
+      task.refuelRequested = false;
+    }
+
+    if (!canWork) {
+      handleBlockedTask?.(task);
       return;
     }
 

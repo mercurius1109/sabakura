@@ -25,9 +25,10 @@
       :highlight-add-villager="highlightAddVillager"
       :highlight-add-craft="highlightAddCraft"
       :is-player-adjacent="isPlayerAdjacent"
-      :fuel-item-id="fuelItemId"
+      :current-fuel-item-id="currentFuelItemId"
       :fuel-count="fuelCount"
-      :player-fuel-count="playerFuelCount"
+      :player-fuel-entries="playerFuelEntries"
+      :station-fuel-entries="stationFuelEntries"
       :burn-remaining-ms="burnRemainingMs"
       :burn-duration-ms="burnDurationMs"
       @cancel-task="$emit('cancel-task', $event)"
@@ -37,8 +38,8 @@
       @remove-craft-entry="forwardRemoveCraftEntry"
       @update-craft-entry-target="forwardUpdateCraftEntryTarget"
       @start-craft-entry="forwardStartCraftEntry"
-      @transfer-fuel-to-station="$emit('transfer-fuel-to-station', $event)"
-      @transfer-fuel-to-player="$emit('transfer-fuel-to-player', $event)"
+      @transfer-fuel-to-station="forwardTransferFuelToStation"
+      @transfer-fuel-to-player="forwardTransferFuelToPlayer"
       @transfer-item-to-player="forwardTransferItemToPlayer"
     />
   </div>
@@ -72,9 +73,10 @@ defineProps({
   highlightAddVillager: { type: Boolean, default: false },
   highlightAddCraft: { type: Boolean, default: false },
   isPlayerAdjacent: { type: Boolean, default: false },
-  fuelItemId: { type: String, default: null },
+  currentFuelItemId: { type: String, default: null },
   fuelCount: { type: Number, default: 0 },
-  playerFuelCount: { type: Number, default: 0 },
+  playerFuelEntries: { type: Array, required: true },
+  stationFuelEntries: { type: Array, required: true },
   burnRemainingMs: { type: Number, default: 0 },
   burnDurationMs: { type: Number, default: 0 },
 });
@@ -118,5 +120,13 @@ function forwardStartCraftEntry(stationId, craftEntryId) {
 
 function forwardTransferItemToPlayer(stationId, itemId) {
   emit("transfer-item-to-player", stationId, itemId);
+}
+
+function forwardTransferFuelToStation(stationId, itemId) {
+  emit("transfer-fuel-to-station", stationId, itemId);
+}
+
+function forwardTransferFuelToPlayer(stationId, itemId) {
+  emit("transfer-fuel-to-player", stationId, itemId);
 }
 </script>

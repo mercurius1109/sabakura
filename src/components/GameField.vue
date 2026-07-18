@@ -1,14 +1,28 @@
 <template>
   <section ref="fieldRef" class="relative h-full min-h-[720px] overflow-hidden bg-[#dce8c8]" @click="emitFieldClick">
-    <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.5),transparent_20%),radial-gradient(circle_at_80%_30%,rgba(255,255,255,0.28),transparent_18%),linear-gradient(180deg,#bcd48e_0%,#9dc06f_52%,#83a95b_100%)]"></div>
-    <div class="absolute inset-x-0 bottom-0 h-[32%] bg-[linear-gradient(180deg,rgba(112,154,70,0)_0%,rgba(103,145,63,0.18)_30%,rgba(93,123,56,0.78)_100%)]"></div>
-
-    <div class="absolute left-[7%] top-[14%] h-20 w-20 rounded-full bg-white/20 blur-xl"></div>
-    <div class="absolute right-[11%] top-[12%] h-24 w-24 rounded-full bg-white/15 blur-2xl"></div>
+    <div class="absolute inset-0" :style="grassBaseStyle"></div>
+    <div class="absolute inset-0 opacity-55 mix-blend-multiply" :style="grassOverlayStyle"></div>
 
     <div class="absolute inset-0">
+      <div
+        v-for="node in treeResourceNodes"
+        :key="node.id"
+      >
+        <div class="pointer-events-none" :style="treeVisualStyle(node)">
+          <GameIcon :icon="nodeIcon(node)" :alt="nodeTitle(node)" />
+        </div>
+        <button
+          type="button"
+          class="absolute rounded-full transition hover:scale-105"
+          :class="isTutorialTarget('field-resource', node.id) ? resourceHighlightClass : ''"
+          :style="[fieldPositionStyle(node.x, node.y), treeHitStyle()]"
+          :title="nodeTitle(node)"
+          @click.stop="$emit('select-resource', node.id)"
+        />
+      </div>
+
       <button
-        v-for="node in resourceNodes"
+        v-for="node in nonTreeResourceNodes"
         :key="node.id"
         type="button"
         class="flex items-center justify-center rounded-full transition hover:scale-105"
@@ -17,7 +31,9 @@
         :title="nodeTitle(node)"
         @click.stop="$emit('select-resource', node.id)"
       >
-        <div :class="resourceIconClass(node)">{{ nodeIcon(node) }}</div>
+        <div :class="resourceIconClass(node)">
+          <GameIcon :icon="nodeIcon(node)" :alt="nodeTitle(node)" />
+        </div>
       </button>
 
       <button
@@ -95,7 +111,9 @@
         :style="inventoryFlyAnimationStyle(animation)"
       >
         <div class="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/92 shadow-lg backdrop-blur">
-          <span class="text-2xl leading-none">{{ animation.icon }}</span>
+          <div class="h-6 w-6">
+            <GameIcon :icon="animation.icon" alt="" />
+          </div>
         </div>
       </div>
 
@@ -106,7 +124,9 @@
         :style="fieldTransferFlyAnimationStyle(animation)"
       >
         <div class="flex h-9 w-9 items-center justify-center rounded-full border border-white/70 bg-white/92 shadow-lg backdrop-blur">
-          <span class="text-xl leading-none">{{ animation.icon }}</span>
+          <div class="h-5 w-5">
+            <GameIcon :icon="animation.icon" alt="" />
+          </div>
         </div>
       </div>
 
@@ -166,6 +186,9 @@
 
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import GameIcon from "./GameIcon.vue";
+import grassTile1 from "../assets/tiles/grass-1.png";
+import grassTile2 from "../assets/tiles/grass-2.png";
 import { clampWorldPoint } from "../game/core/world.js";
 
 const props = defineProps({
@@ -197,10 +220,9 @@ const emit = defineEmits([
   "select-villager",
 ]);
 
-const treeIcon = "\uD83C\uDF32";
 const playerIcon = "\uD83D\uDE42";
 const villagerIcon = "\uD83E\uDDD1";
-const resourceHighlightClass = "tutorial-highlight tutorial-highlight-round";
+const resourceHighlightClass = "tutorial-highlight-resource";
 const cardHighlightClass = "tutorial-highlight tutorial-highlight-card";
 const fieldRef = ref(null);
 const viewportWidth = ref(1280);
@@ -224,6 +246,22 @@ const camera = computed(() => {
 
 const playerTaskEntries = computed(() => Array.isArray(props.currentPlayerTaskEntries) ? props.currentPlayerTaskEntries : []);
 const villagerTaskEntryMap = computed(() => props.villagerTaskEntryMap || {});
+const treeResourceNodes = computed(() => props.resourceNodes.filter((node) => isTreeNode(node)));
+const nonTreeResourceNodes = computed(() => props.resourceNodes.filter((node) => !isTreeNode(node)));
+const grassBaseStyle = computed(() => ({
+  backgroundImage: `url(${grassTile1})`,
+  backgroundRepeat: "repeat",
+  backgroundSize: "64px 64px",
+  backgroundPosition: `${-camera.value.x}px ${-camera.value.y}px`,
+  imageRendering: "auto",
+}));
+const grassOverlayStyle = computed(() => ({
+  backgroundImage: `url(${grassTile2})`,
+  backgroundRepeat: "repeat",
+  backgroundSize: "64px 64px",
+  backgroundPosition: `${32 - camera.value.x}px ${20 - camera.value.y}px`,
+  imageRendering: "auto",
+}));
 
 function villagerTaskEntries(villagerId) {
   const entries = villagerTaskEntryMap.value?.[villagerId];
@@ -251,6 +289,23 @@ function fieldPositionStyle(x, y, zIndex = null) {
     top: `${y - camera.value.y}px`,
     transform: "translate(-50%, -50%)",
     ...(zIndex === null ? {} : { zIndex }),
+  };
+}
+
+function treeVisualStyle(node) {
+  return {
+    ...fieldPositionStyle(node.x, node.y - 72),
+    width: "10rem",
+    height: "10rem",
+    zIndex: 1,
+  };
+}
+
+function treeHitStyle() {
+  return {
+    width: "2.75rem",
+    height: "2.75rem",
+    zIndex: 2,
   };
 }
 
@@ -464,11 +519,7 @@ function startFieldTransferFlyAnimation(request) {
 }
 
 function nodeIcon(node) {
-  if (node.type === "tree") {
-    return treeIcon;
-  }
-
-  return props.itemDefinitions[node.itemId]?.icon || "?";
+  return node.icon || props.itemDefinitions[node.itemId]?.icon || "?";
 }
 
 function nodeTitle(node) {
