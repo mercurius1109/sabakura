@@ -128,7 +128,7 @@
             <span class="absolute left-1.5 top-1.5 max-w-[46px] truncate text-[10px] font-bold leading-4 text-white/[0.9]">
               {{ itemDefinitions[rule.itemId].name }}
             </span>
-            <div class="h-10 w-10" aria-hidden="true">
+            <div class="h-[72px] w-[72px]" aria-hidden="true">
               <GameIcon :icon="itemDefinitions[rule.itemId].icon" :alt="itemDefinitions[rule.itemId].name" />
             </div>
           </button>

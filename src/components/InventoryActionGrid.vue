@@ -6,7 +6,7 @@
       {{ emptyText }}
     </div>
 
-    <div v-else class="grid grid-cols-[repeat(auto-fill,minmax(40px,40px))] gap-2">
+    <div v-else class="grid grid-cols-[repeat(auto-fill,minmax(72px,72px))] gap-3">
       <button
         v-for="entry in entries"
         :key="entry.id"
@@ -14,11 +14,11 @@
         :title="`${entry.name} x${entry.amount}`"
         :disabled="disabled"
         :class="disabled
-          ? 'relative flex h-10 w-10 cursor-not-allowed items-center justify-center rounded-md border border-[#d6ccb8] bg-[#f3ecdf] opacity-50'
-          : 'relative flex h-10 w-10 items-center justify-center rounded-md border border-[#d6ccb8] bg-[#f3ecdf] transition hover:-translate-y-0.5'"
+          ? 'relative flex h-[72px] w-[72px] cursor-not-allowed items-center justify-center rounded-lg border border-[#d6ccb8] bg-[#f3ecdf] opacity-50'
+          : 'relative flex h-[72px] w-[72px] items-center justify-center rounded-lg border border-[#d6ccb8] bg-[#f3ecdf] transition hover:-translate-y-0.5'"
         @click="handleSelect(entry.id)"
       >
-        <div class="h-6 w-6" aria-hidden="true">
+        <div class="h-[72px] w-[72px]" aria-hidden="true">
           <GameIcon :icon="entry.icon" :alt="entry.name" />
         </div>
         <span

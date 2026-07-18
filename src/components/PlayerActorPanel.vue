@@ -48,12 +48,12 @@
           :key="recipe.id"
           :title="recipeTooltip(recipe)"
           type="button"
-          class="flex h-10 w-10 items-center justify-center rounded-lg border shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition"
+          class="flex h-[72px] w-[72px] items-center justify-center rounded-lg border shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition"
           :class="[recipeButtonClass(recipe), canDevOverride(recipe) ? 'border-[#b2c79a] bg-white/90 opacity-100 hover:-translate-y-0.5' : '']"
           :aria-disabled="!canActivateRecipe(recipe)"
           @click="handleStartRecipe(recipe, $event)"
         >
-          <div class="h-6 w-6" aria-hidden="true">
+          <div class="h-[72px] w-[72px]" aria-hidden="true">
             <GameIcon :icon="recipeIcon(recipe)" :alt="recipe.name" />
           </div>
           <span class="sr-only">{{ recipe.name }}</span>

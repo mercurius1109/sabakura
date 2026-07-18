@@ -235,7 +235,7 @@
               : 'border-line hover:-translate-y-0.5'"
             @click="draftRecipeId = recipe.id"
           >
-            <div class="h-10 w-10" aria-hidden="true">
+            <div class="h-[72px] w-[72px]" aria-hidden="true">
               <GameIcon :icon="recipeOutputIcon(recipe)" :alt="recipe.name" />
             </div>
             <span class="sr-only">{{ recipe.name }}</span>
