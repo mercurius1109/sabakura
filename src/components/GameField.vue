@@ -97,7 +97,7 @@
         <div
           v-for="(taskEntry, index) in playerTaskEntries"
           :key="taskEntry.key || `player-task-${index}`"
-          class="whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold leading-4 text-ink shadow-md backdrop-blur"
+          class="whitespace-nowrap rounded-lg px-3 py-1 text-xs font-bold leading-4 text-white shadow-[0_6px_14px_rgba(0,0,0,0.18)] backdrop-blur-md"
           :style="taskEntryStyle(taskEntry)"
         >
           {{ taskEntry.text }}
@@ -163,7 +163,7 @@
         <div
           v-for="(taskEntry, index) in villagerTaskEntries(villager.id)"
           :key="taskEntry.key || `${villager.id}-task-${index}`"
-          class="whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold leading-4 text-ink shadow-md backdrop-blur"
+          class="whitespace-nowrap rounded-lg px-3 py-1 text-xs font-bold leading-4 text-white shadow-[0_6px_14px_rgba(0,0,0,0.18)] backdrop-blur-md"
           :style="taskEntryStyle(taskEntry)"
         >
           {{ taskEntry.text }}
@@ -272,13 +272,13 @@ function taskEntryStyle(taskEntry) {
   const progress = Number(taskEntry?.progress);
   if (!Number.isFinite(progress) || progress <= 0) {
     return {
-      backgroundColor: "rgba(255,255,255,0.78)",
+      backgroundColor: "rgba(18, 28, 20, 0.34)",
     };
   }
 
   const clamped = Math.max(0, Math.min(100, progress));
   return {
-    backgroundImage: `linear-gradient(90deg, rgba(148, 196, 91, 0.75) 0%, rgba(148, 196, 91, 0.75) ${clamped}%, rgba(255,255,255,0.78) ${clamped}%, rgba(255,255,255,0.78) 100%)`,
+    backgroundImage: `linear-gradient(90deg, rgba(145, 201, 104, 0.46) 0%, rgba(145, 201, 104, 0.46) ${clamped}%, rgba(18, 28, 20, 0.34) ${clamped}%, rgba(18, 28, 20, 0.34) 100%)`,
   };
 }
 

@@ -1,11 +1,12 @@
 import woodBranchIcon from "../../assets/items/wood-branch.png";
 import stoneIcon from "../../assets/items/stone.png";
+import wildBerryIcon from "../../assets/items/wild-berry.png";
 
 export const itemDefinitions = {
   wood: { nameKey: "item.wood", icon: woodBranchIcon, kind: "resource", fuel: { burnDurationMs: 60000 } },
   stone: { nameKey: "item.stone", icon: stoneIcon, kind: "resource" },
   log: { nameKey: "item.log", icon: "\uD83E\uDEB5", kind: "resource" },
-  wildBerry: { nameKey: "item.wildBerry", icon: "\uD83C\uDF53", kind: "food", nutrition: 18 },
+  wildBerry: { nameKey: "item.wildBerry", icon: wildBerryIcon, kind: "food", nutrition: 18 },
   workbench: { nameKey: "item.workbench", icon: "\uD83E\uDE91", kind: "structure" },
   lumberjackHut: { nameKey: "item.lumberjackHut", icon: "\uD83C\uDFD5", kind: "structure" },
   cookingStation: { nameKey: "item.cookingStation", icon: "\uD83C\uDF73", kind: "structure" },
