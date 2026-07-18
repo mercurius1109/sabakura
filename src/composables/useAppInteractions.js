@@ -2,6 +2,7 @@ export function useAppInteractions(options) {
   const {
     selectedWindow,
     pendingBuildingPlacementId,
+    pendingBuildOverridePlacement,
     editingStockRuleId,
     editingStockRuleTarget,
     showAddStockRuleModal,
@@ -195,16 +196,23 @@ export function useAppInteractions(options) {
     startPlayerConstruction(structureId);
   }
 
-  function beginBuildingPlacement(structureId) {
-    if (!canPlaceStructure(structureId)) {
+  function beginBuildingPlacement(payload) {
+    const structureId = typeof payload === "string" ? payload : payload?.structureId;
+    const ignoreRequirements = Boolean(typeof payload === "object" && payload?.ignoreRequirements);
+    if (!structureId) {
+      return;
+    }
+    if (!ignoreRequirements && !canPlaceStructure(structureId)) {
       return;
     }
     pendingBuildingPlacementId.value = structureId;
+    pendingBuildOverridePlacement.value = ignoreRequirements;
     closeWindow();
   }
 
   function cancelPendingBuildingPlacement() {
     pendingBuildingPlacementId.value = null;
+    pendingBuildOverridePlacement.value = false;
   }
 
   function handleFieldClick(position) {
@@ -213,12 +221,17 @@ export function useAppInteractions(options) {
       return;
     }
 
-    const placed = placeStructure(pendingBuildingPlacementId.value, position);
+    const placed = placeStructure(
+      pendingBuildingPlacementId.value,
+      position,
+      pendingBuildOverridePlacement.value ? { ignoreRequirements: true } : undefined,
+    );
     if (!placed) {
       return;
     }
 
     pendingBuildingPlacementId.value = null;
+    pendingBuildOverridePlacement.value = false;
   }
 
   function pickupResourceNode(nodeId) {

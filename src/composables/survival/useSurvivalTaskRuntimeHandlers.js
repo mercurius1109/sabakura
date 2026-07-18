@@ -104,7 +104,8 @@ export function createSurvivalTaskRuntimeHandlers({
   function completeCraftTask(task, options = {}) {
     const recipe = recipeById(task.recipeId);
     const crafter = task.workerType === "self" ? playerActor : actorById(task.villagerId);
-    if (!recipe || !crafter || !consumeActorResources(crafter, recipe)) {
+    const canConsumeResources = task.ignoreRequirements || (crafter && recipe && consumeActorResources(crafter, recipe));
+    if (!recipe || !crafter || !canConsumeResources) {
       addLog(t("log.craftFailedMissingResources", { recipe: recipe?.name || t("common.craft") }));
       removeTaskFromActiveState(task);
       return;

@@ -1,6 +1,7 @@
 import rockIcon from "../../assets/items/rock.png";
 import treeIcon from "../../assets/field/tree.png";
 import wildBerryBushIcon from "../../assets/field/wild-berry-bush.png";
+import wildBerryBushPickedIcon from "../../assets/field/wild-berry-bush-picked.png";
 
 export const villagerNamePool = ["ハル", "ミナ", "レン", "ユイ", "ソラ", "ナツ", "カイ", "リン", "ヒナ", "リク", "アオ", "イブキ"];
 
@@ -76,5 +77,16 @@ export const genericDropOffsets = [
 export const fieldResourceConfigs = [
   { prefix: "branch", type: "pickup", itemId: "wood", titleKey: "field.branch", actionLabelKey: "action.gatherWood", count: 10, respawnMs: 9000 },
   { prefix: "stone", type: "pickup", itemId: "stone", titleKey: "field.stone", actionLabelKey: "action.gatherStone", count: 8, respawnMs: 11000 },
-  { prefix: "berry", type: "pickup", itemId: "wildBerry", icon: wildBerryBushIcon, titleKey: "field.berryBush", actionLabelKey: "action.gatherWildBerry", count: 7, respawnMs: 12000 },
+  {
+    prefix: "berry",
+    type: "pickup",
+    itemId: "wildBerry",
+    icon: wildBerryBushIcon,
+    depletedIcon: wildBerryBushPickedIcon,
+    titleKey: "field.berryBush",
+    actionLabelKey: "action.gatherWildBerry",
+    count: 7,
+    respawnMs: 12000,
+    respawnInPlace: true,
+  },
 ];

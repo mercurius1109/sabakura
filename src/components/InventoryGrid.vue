@@ -2,13 +2,13 @@
   <section>
     <div class="mb-3 flex items-center justify-between gap-3">
       <div class="min-w-0">
-        <h2 class="text-sm font-bold tracking-[0.08em] text-ink">{{ caption || t("ui.inventory") }}</h2>
-        <div v-if="subtitle" class="mt-1 text-xs font-bold text-muted">{{ subtitle }}</div>
+        <h2 class="text-sm font-bold tracking-[0.08em] text-white/[0.92]">{{ caption || t("ui.inventory") }}</h2>
+        <div v-if="subtitle" class="mt-1 text-xs font-bold text-white/[0.62]">{{ subtitle }}</div>
       </div>
-      <span class="text-xs font-bold text-muted">{{ ownedKinds }}</span>
+      <span class="text-xs font-bold text-white/[0.62]">{{ ownedKinds }}</span>
     </div>
 
-    <div v-if="slots.length === 0" class="text-sm text-muted">
+    <div v-if="slots.length === 0" class="text-sm text-white/[0.66]">
       {{ emptyText || t("common.carryingNone") }}
     </div>
 
@@ -36,7 +36,7 @@
       </button>
     </div>
 
-    <div v-if="disabled && slots.length > 0 && disabledText" class="mt-3 text-sm text-muted">
+    <div v-if="disabled && slots.length > 0 && disabledText" class="mt-3 text-sm text-white/[0.66]">
       {{ disabledText }}
     </div>
   </section>

@@ -9,6 +9,7 @@ $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $pidFile = Join-Path $projectRoot ".vite-dev.pid"
 $logFile = Join-Path $projectRoot "dev-server.log"
+$errorLogFile = Join-Path $projectRoot "dev-server.err.log"
 $hostAddress = "127.0.0.1"
 $port = 5173
 
@@ -91,6 +92,10 @@ function Show-Status {
   if (Test-Path $logFile) {
     Write-Output ("Log: {0}" -f $logFile)
   }
+
+  if (Test-Path $errorLogFile) {
+    Write-Output ("Error Log: {0}" -f $errorLogFile)
+  }
 }
 
 switch ($Action) {
@@ -106,6 +111,9 @@ switch ($Action) {
     if (Test-Path $logFile) {
       Remove-Item $logFile -ErrorAction SilentlyContinue
     }
+    if (Test-Path $errorLogFile) {
+      Remove-Item $errorLogFile -ErrorAction SilentlyContinue
+    }
 
     $process = Start-Process `
       -FilePath $runner.FilePath `
@@ -113,7 +121,7 @@ switch ($Action) {
       -WorkingDirectory $projectRoot `
       -WindowStyle Hidden `
       -RedirectStandardOutput $logFile `
-      -RedirectStandardError $logFile `
+      -RedirectStandardError $errorLogFile `
       -PassThru
 
     Set-Content -Path $pidFile -Value $process.Id
@@ -127,6 +135,7 @@ switch ($Action) {
     Write-Output ("Started Vite dev server with {0}. PID: {1}" -f $runner.Name, $tracked.Id)
     Write-Output ("URL: http://{0}:{1}/" -f $hostAddress, $port)
     Write-Output ("Log: {0}" -f $logFile)
+    Write-Output ("Error Log: {0}" -f $errorLogFile)
   }
   "stop" {
     $process = Get-TrackedProcess

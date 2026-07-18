@@ -3,7 +3,7 @@
     <main class="h-full">
       <section class="relative h-full">
         <GameField
-          :resource-nodes="visibleFieldNodes()"
+          :resource-nodes="displayFieldNodes()"
           :player="playerActor"
           :villagers="villagers"
           :construction-sites="constructionSitesForField"
@@ -66,6 +66,7 @@
           @dismiss-tutorial="dismissTutorial"
           @cancel-pending="cancelPendingBuildingPlacement"
           @clear-log="clearLog"
+          @click-fullness="handleDevFullnessClick"
           @toggle-dev-autoplay="devTutorialAutoplayEnabled = !devTutorialAutoplayEnabled"
           @run-dev-step="executeDevTutorialStep"
         />
@@ -95,6 +96,7 @@
           :player-recipe-button-class="playerRecipeButtonClass"
           :player-craft-icon="playerCraftIcon"
           :can-start-player-recipe="canStartPlayerRecipe"
+          :is-craft-override-active="isBuildOverrideActive"
           :storage-title="storageTitle"
           :storage-transfer-entries="storageTransferEntries"
           :storage-assigned-villagers="storageAssignedVillagers"
@@ -126,6 +128,8 @@
           :player-build-tooltip="playerBuildTooltip"
           :player-build-button-class="playerBuildButtonClass"
           :can-place-structure="canPlaceStructure"
+          :is-build-override-active="isBuildOverrideActive"
+          :is-dev-mode="isDevMode"
           :villagers="villagers"
           :selected-villager-stations-label="selectedVillagerStationsLabel"
           :construction-sites-for-field="constructionSitesForField"
@@ -175,7 +179,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref, watchEffect } from "vue";
+import { computed, onMounted, onUnmounted, reactive, ref, watchEffect } from "vue";
 import FieldHud from "./components/FieldHud.vue";
 import GameField from "./components/GameField.vue";
 import GameWindows from "./components/GameWindows.vue";
@@ -197,6 +201,8 @@ const draftStockRuleId = ref(null);
 const draftStockRuleTarget = ref(1);
 const isDevMode = import.meta.env.DEV;
 const devTutorialAutoplayEnabled = ref(false);
+const isBuildOverrideActive = ref(false);
+const pendingBuildOverridePlacement = ref(false);
 
 const {
   itemDefinitions,
@@ -214,6 +220,7 @@ const {
   playerActor,
   inventoryFlyRequests,
   fieldTransferFlyRequests,
+  displayFieldNodes,
   visibleFieldNodes,
   pickupFieldNode,
   placeStructure,
@@ -244,7 +251,7 @@ const {
   removeVillagerFromStation,
   addVillager,
   onRuleChanged,
-  startPlayerCraft,
+  startPlayerCraft: startPlayerCraftTask,
   startPlayerConstruction,
   startStationCraftEntry,
   recipeById,
@@ -273,8 +280,10 @@ const {
   moveItemFromOtherActorToPlayer,
   dropPlayerItem,
   eatPlayerItem,
+  restorePlayerFullness,
   cancelTask,
   clearLog,
+  addLog,
   formatList,
   stockRuleStatus,
   actorFullnessPercent,
@@ -285,6 +294,86 @@ const {
 } = useSurvivalCraft({
   preventPlayerFullnessDecay: devTutorialAutoplayEnabled,
 });
+
+function formatDevError(error) {
+  if (!error) {
+    return "Unknown error";
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  if (error instanceof Error) {
+    return error.stack || `${error.name}: ${error.message}`;
+  }
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+}
+
+function handleWindowError(event) {
+  const details = event?.error || event?.message || event;
+  addLog(`[DEV] JS error: ${formatDevError(details)}`);
+}
+
+function handleUnhandledRejection(event) {
+  addLog(`[DEV] Promise rejection: ${formatDevError(event?.reason)}`);
+}
+
+function handleDevModifierKey(event) {
+  if (!isDevMode || event.key !== "Alt") {
+    return;
+  }
+  isBuildOverrideActive.value = event.type === "keydown";
+}
+
+onMounted(() => {
+  if (!isDevMode) {
+    return;
+  }
+  window.addEventListener("error", handleWindowError);
+  window.addEventListener("unhandledrejection", handleUnhandledRejection);
+  window.addEventListener("keydown", handleDevModifierKey);
+  window.addEventListener("keyup", handleDevModifierKey);
+  window.addEventListener("blur", clearDevBuildOverride);
+});
+
+onUnmounted(() => {
+  if (!isDevMode) {
+    return;
+  }
+  window.removeEventListener("error", handleWindowError);
+  window.removeEventListener("unhandledrejection", handleUnhandledRejection);
+  window.removeEventListener("keydown", handleDevModifierKey);
+  window.removeEventListener("keyup", handleDevModifierKey);
+  window.removeEventListener("blur", clearDevBuildOverride);
+});
+
+function clearDevBuildOverride() {
+  isBuildOverrideActive.value = false;
+}
+
+function handleDevFullnessClick(event) {
+  if (!isDevMode || !event?.altKey) {
+    return;
+  }
+  restorePlayerFullness();
+}
+
+function canPlaceStructureForUi(structureId) {
+  return isBuildOverrideActive.value || canPlaceStructure(structureId);
+}
+
+function startPlayerCraft(payload) {
+  if (typeof payload === "string") {
+    return startPlayerCraftTask(payload);
+  }
+  if (!payload?.recipeId) {
+    return false;
+  }
+  return startPlayerCraftTask(payload.recipeId, { ignoreRequirements: Boolean(payload.ignoreRequirements) });
+}
 
 const {
   currentStep: currentTutorialStep,
@@ -388,7 +477,7 @@ const {
   gatherQueue,
   playerRecipes,
   canStartPlayerRecipe,
-  canPlaceStructure,
+  canPlaceStructure: canPlaceStructureForUi,
   buildingStatus,
   isPlayerAdjacentToStorage,
   isPlayerAdjacentToActor,
@@ -442,6 +531,7 @@ const {
 } = useAppInteractions({
   selectedWindow,
   pendingBuildingPlacementId,
+  pendingBuildOverridePlacement,
   editingStockRuleId,
   editingStockRuleTarget,
   showAddStockRuleModal,
@@ -652,7 +742,7 @@ watchEffect(() => {
 
     if (
       cachedLeadTask
-      && cachedLeadTask.id !== nextLeadTask?.id
+      && !nextLeadTask
       && isMovingTask(cachedLeadTask)
       && !isActorRenderSettled(actor)
     ) {

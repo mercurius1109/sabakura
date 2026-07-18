@@ -9,7 +9,7 @@
       </div>
       <div
         class="rounded-lg px-3 py-1 text-xs font-bold"
-        :class="isComplete ? 'bg-[#d8f0b6] text-[#244315]' : 'bg-white/18 text-white/92'"
+        :class="isComplete ? 'bg-[#d8f0b6] text-[#244315]' : 'bg-white/[0.18] text-white/[0.92]'"
       >
         {{ isComplete ? t("tutorial.panel.complete") : t("tutorial.panel.inProgress") }}
       </div>
@@ -17,13 +17,13 @@
 
     <div v-if="currentStep" class="mt-4">
       <h2 class="text-xl font-bold text-white">{{ currentStep.title }}</h2>
-      <p class="mt-2 text-sm leading-6 text-white/88">{{ currentStep.description }}</p>
+      <p class="mt-2 text-sm leading-6 text-white/[0.88]">{{ currentStep.description }}</p>
       <p v-if="currentStep.highlightTargets?.length" class="mt-3 text-sm leading-6 text-[#e7f7c8]">
         {{ t("tutorial.panel.highlightHint") }}
       </p>
 
-      <div v-if="remainingRequirements.length > 0" class="mt-4 rounded-lg bg-black/12 p-3">
-        <div class="text-xs font-bold tracking-[0.12em] text-white/72">{{ t("tutorial.panel.requirements") }}</div>
+      <div v-if="remainingRequirements.length > 0" class="mt-4 rounded-lg bg-black/[0.12] p-3">
+        <div class="text-xs font-bold tracking-[0.12em] text-white/[0.72]">{{ t("tutorial.panel.requirements") }}</div>
         <div class="mt-3 grid gap-2">
           <div
             v-for="requirement in remainingRequirements"
@@ -31,7 +31,7 @@
             class="flex items-center justify-between gap-3 text-sm"
           >
             <span class="font-bold text-white">{{ requirement.label }}</span>
-            <span class="text-white/82">
+            <span class="text-white/[0.82]">
               {{ requirement.current }} / {{ requirement.needed }}
               <span class="font-bold text-[#ffd08a]">(+{{ requirement.remaining }})</span>
             </span>
@@ -40,9 +40,9 @@
       </div>
     </div>
 
-    <div v-else class="mt-4 rounded-lg bg-black/12 p-4">
+    <div v-else class="mt-4 rounded-lg bg-black/[0.12] p-4">
       <div class="text-lg font-bold text-white">{{ t("tutorial.panel.completeTitle") }}</div>
-      <p class="mt-2 text-sm leading-6 text-white/88">
+      <p class="mt-2 text-sm leading-6 text-white/[0.88]">
         {{ t("tutorial.panel.completeDescription") }}
       </p>
       <button

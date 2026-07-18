@@ -9,17 +9,17 @@
       @select="$emit('transfer-to-player', $event)"
     />
 
-    <div class="mt-4 rounded-2xl border border-line bg-white/80 p-4">
+    <div class="mt-4 rounded-xl bg-white/[0.28] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] backdrop-blur-md">
       <div class="flex items-center justify-between gap-2">
-        <div class="text-sm font-bold text-ink">{{ t("ui.fullness") }}</div>
+        <div class="text-sm font-bold text-white/[0.92]">{{ t("ui.fullness") }}</div>
         <div
           class="rounded-full px-2 py-1 text-[10px] font-bold leading-none"
           :class="isStarving ? 'bg-[#ffe3d3] text-[#b4491e]' : 'bg-emerald-100 text-moss'"
         >
-          {{ isStarving ? t("ui.starving") : `${currentFullness}/${maxFullness}` }}
+          {{ isStarving ? t("ui.starving") : `${fullnessPercent}%` }}
         </div>
       </div>
-      <div class="mt-3 h-3 overflow-hidden rounded-full border border-[#c7bdad] bg-[#eee7dd]">
+      <div class="mt-3 h-3 overflow-hidden rounded-full bg-[#e6dece]/85">
         <div
           class="h-full rounded-full transition-[width]"
           :class="isStarving ? 'bg-[#d96c3f]' : 'bg-gradient-to-r from-[#e7b64d] via-[#9bc667] to-[#2d6a4f]'"
@@ -28,14 +28,14 @@
       </div>
     </div>
 
-    <div class="mt-4 rounded-2xl border border-line bg-white/80 p-4">
-      <div class="text-sm font-bold text-ink">{{ t("ui.assignedStations") }}</div>
-      <div v-if="stations.length === 0" class="mt-3 text-sm text-muted">{{ t("ui.noAssignedStations") }}</div>
+    <div class="mt-4 rounded-xl bg-white/[0.28] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] backdrop-blur-md">
+      <div class="text-sm font-bold text-white/[0.92]">{{ t("ui.assignedStations") }}</div>
+      <div v-if="stations.length === 0" class="mt-3 text-sm text-white/[0.66]">{{ t("ui.noAssignedStations") }}</div>
       <div v-else class="mt-3 grid gap-2">
         <div
           v-for="station in stations"
           :key="station.id"
-          class="rounded-xl border border-line bg-[#faf8f3] px-3 py-3 text-sm font-bold text-ink"
+          class="rounded-lg bg-white/[0.3] px-3 py-3 text-sm font-bold text-white/[0.88] backdrop-blur-sm"
         >
           {{ station.name }}
         </div>

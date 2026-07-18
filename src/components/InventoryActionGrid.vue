@@ -1,8 +1,8 @@
 <template>
   <section>
-    <div class="mb-3 text-sm font-bold tracking-[0.08em] text-ink">{{ caption }}</div>
+    <div class="mb-3 text-sm font-bold tracking-[0.08em] text-white/[0.92]">{{ caption }}</div>
 
-    <div v-if="entries.length === 0" class="text-sm text-muted">
+    <div v-if="entries.length === 0" class="text-sm text-white/[0.66]">
       {{ emptyText }}
     </div>
 
@@ -23,7 +23,7 @@
         </div>
         <span
           v-if="entry.amount > 1"
-          class="absolute bottom-0.5 right-0.5 rounded-full bg-white/90 px-1 text-[10px] font-bold leading-4 text-ambered shadow-sm"
+          class="absolute bottom-0.5 right-0.5 rounded-full bg-white/[0.9] px-1 text-[10px] font-bold leading-4 text-ambered shadow-sm"
         >
           {{ entry.amount }}
         </span>
@@ -31,7 +31,7 @@
       </button>
     </div>
 
-    <div v-if="disabled && entries.length > 0 && disabledText" class="mt-3 text-sm text-muted">
+    <div v-if="disabled && entries.length > 0 && disabledText" class="mt-3 text-sm text-white/[0.66]">
       {{ disabledText }}
     </div>
   </section>

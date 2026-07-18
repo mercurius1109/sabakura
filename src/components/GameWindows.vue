@@ -1,7 +1,7 @@
 <template>
   <div v-if="selectedWindow" class="pointer-events-none absolute inset-0 z-20">
     <div
-      class="pointer-events-auto absolute left-1/2 top-24 max-h-[calc(100vh-7rem)] w-[min(64rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-[28px] border border-white/55 bg-[#f7f0e4]/95 shadow-panel backdrop-blur"
+      class="pointer-events-auto absolute left-1/2 top-24 max-h-[calc(100vh-7rem)] w-[min(64rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-2xl bg-[#f2ead9]/58 shadow-[0_26px_60px_rgba(20,24,12,0.26)] backdrop-blur-xl"
       :class="selectedWindow.type === 'player' || selectedWindow.type === 'village' || selectedWindow.type === 'build'
         || selectedWindow.type === 'craft'
         ? 'max-w-[26rem]'
@@ -28,6 +28,8 @@
           :recipe-button-class="playerRecipeButtonClass"
           :recipe-icon="playerCraftIcon"
           :can-start-recipe="canStartPlayerRecipe"
+          :is-craft-override-active="isCraftOverrideActive"
+          :dev-craft-override-enabled="isDevMode"
           :show-craft-section="false"
           :item-actions-for-item="playerItemActions"
           @select-transfer="$emit('handle-player-transfer', $event)"
@@ -56,6 +58,8 @@
           :recipe-button-class="playerRecipeButtonClass"
           :recipe-icon="playerCraftIcon"
           :can-start-recipe="canStartPlayerRecipe"
+          :is-craft-override-active="isCraftOverrideActive"
+          :dev-craft-override-enabled="isDevMode"
           :item-actions-for-item="playerItemActions"
           @select-transfer="$emit('handle-player-transfer', $event)"
           @select-item-action="$emit('handle-player-item-action', $event)"
@@ -81,6 +85,8 @@
           :build-cards="playerBuildCards"
           :build-button-class="buildMenuButtonClass"
           :can-place-structure="canPlaceStructure"
+          :is-build-override-active="isBuildOverrideActive"
+          :dev-build-override-enabled="isDevMode"
           :format-list="formatList"
           :building-status="buildingStatus"
           :construction-sites="constructionSitesForField"
@@ -96,7 +102,7 @@
           @close="$emit('close-window')"
         />
         <div class="grid max-h-[calc(100vh-12rem)] min-h-0 gap-0 overflow-hidden lg:grid-cols-2">
-          <div class="min-h-0 border-b border-line/70 lg:border-b-0 lg:border-r">
+          <div class="min-h-0 border-b border-white/[0.04] lg:border-b-0 lg:border-r">
             <PlayerActorPanel
               :item-cards="playerItemCards"
               :owned-kinds="playerOwnedKinds"
@@ -116,6 +122,8 @@
               :recipe-button-class="playerRecipeButtonClass"
               :recipe-icon="playerCraftIcon"
               :can-start-recipe="canStartPlayerRecipe"
+              :is-craft-override-active="isCraftOverrideActive"
+              :dev-craft-override-enabled="isDevMode"
               :show-craft-section="selectedStationWindow.playerRecipes.length > 0"
               :item-actions-for-item="playerItemActions"
               @select-transfer="$emit('handle-player-transfer', $event)"
@@ -172,7 +180,7 @@
       <template v-else-if="isStorageCompareWindow">
         <WindowHeader :title="storageTitle" :description="storageDescription" @close="$emit('close-window')" />
         <div class="grid max-h-[calc(100vh-12rem)] gap-0 overflow-hidden lg:grid-cols-2">
-          <div class="border-b border-line/70 lg:border-b-0 lg:border-r">
+          <div class="border-b border-white/[0.04] lg:border-b-0 lg:border-r">
             <PlayerActorPanel
               :item-cards="playerItemCards"
               :owned-kinds="playerOwnedKinds"
@@ -192,6 +200,8 @@
               :recipe-button-class="playerRecipeButtonClass"
               :recipe-icon="playerCraftIcon"
               :can-start-recipe="canStartPlayerRecipe"
+              :is-craft-override-active="isCraftOverrideActive"
+              :dev-craft-override-enabled="isDevMode"
               :show-craft-section="false"
               :item-actions-for-item="playerItemActions"
               @select-transfer="$emit('handle-player-transfer', $event)"
@@ -240,7 +250,7 @@
       <template v-else-if="isVillagerCompareWindow && selectedVillager">
         <WindowHeader :title="selectedVillager.name" :description="t('ui.villagerInspect')" @close="$emit('close-window')" />
         <div class="grid max-h-[calc(100vh-12rem)] gap-0 overflow-hidden lg:grid-cols-2">
-          <div class="border-b border-line/70 lg:border-b-0 lg:border-r">
+          <div class="border-b border-white/[0.04] lg:border-b-0 lg:border-r">
             <PlayerActorPanel
               :item-cards="playerItemCards"
               :owned-kinds="playerOwnedKinds"
@@ -260,6 +270,8 @@
               :recipe-button-class="playerRecipeButtonClass"
               :recipe-icon="playerCraftIcon"
               :can-start-recipe="canStartPlayerRecipe"
+              :is-craft-override-active="isCraftOverrideActive"
+              :dev-craft-override-enabled="isDevMode"
               :show-craft-section="false"
               :item-actions-for-item="playerItemActions"
               @select-transfer="$emit('handle-player-transfer', $event)"
@@ -282,12 +294,14 @@
           />
         </div>
       </template>
+
     </div>
   </div>
 </template>
 
 <script setup>
 import { computed } from "vue";
+import { provideWindowModalStack, useWindowModalStack } from "../composables/useWindowModalStack.js";
 import BuildWindow from "./BuildWindow.vue";
 import PlayerActorPanel from "./PlayerActorPanel.vue";
 import StationWindow from "./StationWindow.vue";
@@ -322,6 +336,7 @@ const props = defineProps({
   playerRecipeButtonClass: { type: Function, required: true },
   playerCraftIcon: { type: Function, required: true },
   canStartPlayerRecipe: { type: Function, required: true },
+  isCraftOverrideActive: { type: Boolean, required: true },
   storageTitle: { type: String, required: true },
   storageTransferEntries: { type: Array, required: true },
   storageAssignedVillagers: { type: Array, required: true },
@@ -353,6 +368,8 @@ const props = defineProps({
   playerBuildTooltip: { type: Function, required: true },
   playerBuildButtonClass: { type: Function, required: true },
   canPlaceStructure: { type: Function, required: true },
+  isBuildOverrideActive: { type: Boolean, required: true },
+  isDevMode: { type: Boolean, required: true },
   villagers: { type: Array, required: true },
   selectedVillagerStationsLabel: { type: Function, required: true },
   constructionSitesForField: { type: Array, required: true },
@@ -401,6 +418,7 @@ const emit = defineEmits([
 ]);
 
 const { t } = useI18n();
+provideWindowModalStack(useWindowModalStack());
 
 const storageDescription = computed(() =>
   props.storageTitle === t("ui.storage") ? t("ui.storageInspect") : t("ui.groundItemsInspect"),

@@ -4,7 +4,7 @@
       <button
         id="inventory-menu-button"
         type="button"
-        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/16 px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/24"
+        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/[0.16] px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/[0.24]"
         :class="highlightInventory ? tutorialHighlightClass : ''"
         @click="$emit('open-inventory')"
       >
@@ -14,7 +14,7 @@
 
       <button
         type="button"
-        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/16 px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/24"
+        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/[0.16] px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/[0.24]"
         :class="highlightVillage ? tutorialHighlightClass : ''"
         @click="$emit('open-village')"
       >
@@ -24,7 +24,7 @@
 
       <button
         type="button"
-        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/16 px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/24"
+        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/[0.16] px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/[0.24]"
         :class="highlightCraft ? tutorialHighlightClass : ''"
         @click="$emit('open-craft')"
       >
@@ -34,7 +34,7 @@
 
       <button
         type="button"
-        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/16 px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/24"
+        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/[0.16] px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/[0.24]"
         :class="highlightBuild ? tutorialHighlightClass : ''"
         @click="$emit('open-build')"
       >
@@ -44,40 +44,40 @@
 
       <button
         type="button"
-        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/16 px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/24"
+        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/[0.16] px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/[0.24]"
         @click="$emit('toggle-log')"
       >
         <span aria-hidden="true" class="text-2xl leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">&#x2630;</span>
         <span class="text-xs font-bold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">{{ t("ui.menuLog") }}</span>
       </button>
 
-      <div class="flex items-center gap-2 rounded-xl bg-black/16 px-3 py-2 shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md">
+      <div class="flex items-center gap-2 rounded-xl bg-black/[0.16] px-3 py-2 shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md">
         <span class="text-xs font-bold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">{{ t("ui.speed") }}</span>
         <button
           v-for="speed in gameSpeedOptions"
           :key="speed"
           type="button"
           class="rounded-full px-2 py-1 text-xs font-bold transition"
-          :class="gameSpeed === speed ? 'bg-moss text-white' : 'bg-black/35 text-white hover:bg-black/50'"
+          :class="gameSpeed === speed ? 'bg-moss text-white' : 'bg-black/[0.35] text-white hover:bg-black/[0.5]'"
           @click="$emit('set-speed', speed)"
         >
           x{{ speed }}
         </button>
       </div>
 
-      <div v-if="showDevTools" class="flex items-center gap-2 rounded-xl bg-black/16 px-3 py-2 shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md">
+      <div v-if="showDevTools" class="flex items-center gap-2 rounded-xl bg-black/[0.16] px-3 py-2 shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md">
         <span class="text-xs font-bold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">{{ t("ui.devAutoplay") }}</span>
         <button
           type="button"
           class="rounded-full px-2 py-1 text-xs font-bold transition"
-          :class="devAutoplayEnabled ? 'bg-moss text-white' : 'bg-black/35 text-white hover:bg-black/50'"
+          :class="devAutoplayEnabled ? 'bg-moss text-white' : 'bg-black/[0.35] text-white hover:bg-black/[0.5]'"
           @click="$emit('toggle-dev-autoplay')"
         >
           {{ devAutoplayEnabled ? t("ui.stop") : t("ui.start") }}
         </button>
         <button
           type="button"
-          class="rounded-full bg-black/35 px-2 py-1 text-xs font-bold text-white transition hover:bg-black/50"
+          class="rounded-full bg-black/[0.35] px-2 py-1 text-xs font-bold text-white transition hover:bg-black/[0.5]"
           @click="$emit('run-dev-step')"
         >
           {{ t("ui.devStep") }}
@@ -96,12 +96,10 @@
     </div>
 
     <div class="absolute right-4 top-4 z-10 flex flex-col items-end gap-3">
-      <div class="w-[220px] rounded-xl bg-white/72 p-3 shadow-panel backdrop-blur">
-        <div class="text-xs font-bold tracking-[0.18em] text-ink/70">{{ t("ui.minimap") }}</div>
-        <div class="relative mt-2 aspect-square overflow-hidden rounded-lg bg-[linear-gradient(180deg,#c8db9d_0%,#98bd6c_100%)]">
-          <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_24%,rgba(255,255,255,0.35),transparent_24%),radial-gradient(circle_at_70%_74%,rgba(255,255,255,0.18),transparent_18%)]"></div>
-          <div class="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/25"></div>
-          <div class="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/25"></div>
+      <div class="relative aspect-square w-[220px] overflow-hidden rounded-lg bg-black/[0.1] shadow-[0_12px_28px_rgba(0,0,0,0.16)] backdrop-blur-md">
+        <div class="absolute inset-0">
+          <div class="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/[0.25]"></div>
+          <div class="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/[0.25]"></div>
 
           <div
             v-for="site in minimapConstructionSites"
@@ -122,7 +120,7 @@
           <div
             v-for="villager in minimapVillagers"
             :key="`villager-${villager.id}`"
-            class="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/80 bg-[#f4d67d]"
+            class="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.8] bg-[#f4d67d]"
             :style="minimapMarkerStyle(villager.x, villager.y)"
             :title="villager.name"
           ></div>
@@ -138,11 +136,11 @@
     </div>
 
     <div v-if="pendingBuildingPlacement" class="absolute left-1/2 top-4 z-10 -translate-x-1/2">
-      <div class="flex items-center gap-3 rounded-xl bg-white/78 px-4 py-2 text-sm font-bold text-ink shadow-panel backdrop-blur">
+      <div class="flex items-center gap-3 rounded-xl bg-white/[0.78] px-4 py-2 text-sm font-bold text-ink shadow-panel backdrop-blur">
         <span>{{ pendingBuildingPlacement.name }}</span>
         <button
           type="button"
-          class="rounded-lg bg-white/90 px-3 py-1 text-xs font-bold text-muted transition hover:text-ink"
+          class="rounded-lg bg-white/[0.9] px-3 py-1 text-xs font-bold text-muted transition hover:text-ink"
           @click="$emit('cancel-pending')"
         >
           {{ t("ui.cancel") }}
@@ -150,35 +148,42 @@
       </div>
     </div>
 
-    <div class="absolute bottom-4 left-4 z-10 w-[240px] max-w-[calc(100vw-2rem)] rounded-xl bg-white/78 p-4 shadow-panel backdrop-blur">
-      <div class="flex items-center justify-between gap-2">
-        <div class="text-sm font-bold text-ink">{{ t("ui.fullness") }}</div>
+    <button
+      type="button"
+      class="absolute bottom-4 left-4 z-10 w-[260px] max-w-[calc(100vw-2rem)] rounded-xl bg-black/[0.16] p-4 text-left shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md"
+      @click="$emit('click-fullness', $event)"
+    >
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <div class="text-[11px] font-bold tracking-[0.16em] text-white/[0.62] drop-shadow-[0_2px_6px_rgba(0,0,0,0.75)]">{{ t("ui.fullness") }}</div>
+          <div class="mt-1 text-2xl font-bold leading-none text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">{{ playerFullnessPercent }}%</div>
+        </div>
         <div
-          class="rounded-full px-2 py-1 text-[10px] font-bold leading-none"
-          :class="playerIsStarving ? 'bg-[#ffe3d3] text-[#b4491e]' : 'bg-emerald-100 text-moss'"
+          class="rounded-lg px-2.5 py-1 text-[11px] font-bold leading-none backdrop-blur-sm"
+          :class="playerIsStarving ? 'bg-[#d96c3f]/[0.26] text-[#ffd8c8]' : 'bg-[#2d6a4f]/[0.3] text-[#dcf7e9]'"
         >
-          {{ playerIsStarving ? t("ui.starving") : `${playerFullness}/${playerMaxFullness}` }}
+          {{ playerIsStarving ? t("ui.starving") : t("ui.normal") }}
         </div>
       </div>
-      <div class="mt-3 h-3 overflow-hidden rounded-full border border-[#c7bdad] bg-[#eee7dd]">
+      <div class="mt-3 h-3.5 overflow-hidden rounded-lg bg-black/[0.26]">
         <div
           class="h-full rounded-full transition-[width]"
           :class="playerIsStarving ? 'bg-[#d96c3f]' : 'bg-gradient-to-r from-[#e7b64d] via-[#9bc667] to-[#2d6a4f]'"
           :style="{ width: `${playerFullnessPercent}%` }"
         ></div>
       </div>
-    </div>
+    </button>
 
-    <div v-if="isLogWindowVisible" class="absolute bottom-4 right-4 z-10 w-[340px] max-w-[calc(100vw-2rem)] rounded-xl bg-black/28 p-4 text-white shadow-panel backdrop-blur">
+    <div v-if="isLogWindowVisible" class="absolute bottom-4 right-4 z-10 w-[340px] max-w-[calc(100vw-2rem)] rounded-xl bg-black/[0.28] p-4 text-white shadow-panel backdrop-blur">
       <div class="flex items-center justify-between gap-2">
-        <div class="text-sm font-bold tracking-[0.18em] text-white/80">{{ t("ui.logTitle") }}</div>
-        <button type="button" class="text-xs font-bold text-white/80 transition hover:text-white" @click="$emit('clear-log')">
+        <div class="text-sm font-bold tracking-[0.18em] text-white/[0.8]">{{ t("ui.logTitle") }}</div>
+        <button type="button" class="text-xs font-bold text-white/[0.8] transition hover:text-white" @click="$emit('clear-log')">
           {{ t("ui.clear") }}
         </button>
       </div>
       <div class="mt-3 max-h-[280px] overflow-auto pr-1">
-        <div v-if="log.length === 0" class="text-sm text-white/70">{{ t("ui.noLogs") }}</div>
-        <div v-for="entry in log" :key="entry.id" class="py-1 text-sm leading-6 text-white/90">
+        <div v-if="log.length === 0" class="text-sm text-white/[0.7]">{{ t("ui.noLogs") }}</div>
+        <div v-for="entry in log" :key="entry.id" class="py-1 text-sm leading-6 text-white/[0.9]">
           {{ entry.text }}
         </div>
       </div>
@@ -230,6 +235,7 @@ defineEmits([
   "dismiss-tutorial",
   "cancel-pending",
   "clear-log",
+  "click-fullness",
   "toggle-dev-autoplay",
   "run-dev-step",
 ]);

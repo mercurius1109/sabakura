@@ -637,13 +637,19 @@ export function createSurvivalTaskStarters({
     const recipe = recipeById(recipeId);
     const source = options.source || "manual";
     const workerType = options.workerType || "self";
-    const canPayCosts = workerType === "self"
-      ? hasActorResources(playerActor, recipe || { costs: {} })
-      : true;
-    if (!recipe || !isRecipeUnlocked(recipe) || !canPayCosts) {
+    const ignoreRequirements = options.ignoreRequirements === true;
+    const canPayCosts = ignoreRequirements
+      ? true
+      : workerType === "self"
+        ? hasActorResources(playerActor, recipe || { costs: {} })
+        : true;
+    if (!ignoreRequirements && (!recipe || !isRecipeUnlocked(recipe) || !canPayCosts)) {
       return false;
     }
-    if (!stationHasFuel(recipe.station) && workerType === "self") {
+    if (!recipe || !isRecipeUnlocked(recipe)) {
+      return false;
+    }
+    if (!ignoreRequirements && !stationHasFuel(recipe.station) && workerType === "self") {
       addLog(t("log.stationOutOfFuel", { station: stationName(recipe.station) }));
       showActorSpeech(playerActor, t("ui.noFuelSpeech"));
       return false;
@@ -671,6 +677,7 @@ export function createSurvivalTaskStarters({
         craftEntryId: options.craftEntryId || null,
         startedAt: now.value,
         duration: recipe.duration,
+        ignoreRequirements,
       };
       if (recipe.station !== "hand") {
         const targetPoint = buildingWorkPoint(recipe.station, playerActor);
@@ -738,8 +745,8 @@ export function createSurvivalTaskStarters({
     return true;
   }
 
-  function startPlayerCraft(recipeId, isPlayerBusy) {
-    return startCraft(recipeId, { workerType: "self", isPlayerBusy });
+  function startPlayerCraft(recipeId, isPlayerBusy, options = {}) {
+    return startCraft(recipeId, { ...options, workerType: "self", isPlayerBusy });
   }
 
   function startStationCraftEntry(stationId, craftEntryId) {

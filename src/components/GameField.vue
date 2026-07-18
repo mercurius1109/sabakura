@@ -48,7 +48,7 @@
         <div class="relative flex h-24 w-24 flex-col items-center justify-center rounded-2xl border border-[#73573c] bg-[#b89a73]/90 px-3 py-3 shadow-xl">
           <div class="text-center text-4xl leading-none">{{ site.icon || "?" }}</div>
           <div class="mt-1 text-center text-xs font-bold leading-4 text-white">{{ site.name }}</div>
-          <div class="absolute bottom-2 left-3 right-3 h-2 overflow-hidden rounded-full bg-black/20">
+          <div class="absolute bottom-2 left-3 right-3 h-2 overflow-hidden rounded-full bg-black/[0.2]">
             <div class="h-full rounded-full bg-[#f8e38f] transition-[width] duration-200" :style="{ width: `${site.progress || 0}%` }"></div>
           </div>
         </div>
@@ -84,9 +84,9 @@
         :style="speechBubblePositionStyle(player?.renderX ?? player?.x ?? 0, (player?.renderY ?? player?.y ?? 0) - 62, 11)"
         class="pointer-events-none z-10"
       >
-        <div class="relative rounded-2xl border border-[#d8c9b7] bg-white/95 px-3 py-2 text-xs font-bold leading-4 text-ink shadow-lg">
+        <div class="relative rounded-2xl border border-[#d8c9b7] bg-white/[0.95] px-3 py-2 text-xs font-bold leading-4 text-ink shadow-lg">
           {{ actorSpeechText(player) }}
-          <div class="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-[#d8c9b7] bg-white/95"></div>
+          <div class="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-[#d8c9b7] bg-white/[0.95]"></div>
         </div>
       </div>
       <div
@@ -110,7 +110,7 @@
         class="pointer-events-none absolute z-30"
         :style="inventoryFlyAnimationStyle(animation)"
       >
-        <div class="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/92 shadow-lg backdrop-blur">
+        <div class="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.7] bg-white/[0.92] shadow-lg backdrop-blur">
           <div class="h-6 w-6">
             <GameIcon :icon="animation.icon" alt="" />
           </div>
@@ -123,7 +123,7 @@
         class="pointer-events-none absolute z-30"
         :style="fieldTransferFlyAnimationStyle(animation)"
       >
-        <div class="flex h-9 w-9 items-center justify-center rounded-full border border-white/70 bg-white/92 shadow-lg backdrop-blur">
+        <div class="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.7] bg-white/[0.92] shadow-lg backdrop-blur">
           <div class="h-5 w-5">
             <GameIcon :icon="animation.icon" alt="" />
           </div>
@@ -148,9 +148,9 @@
         :style="speechBubblePositionStyle(villager?.renderX ?? villager?.x ?? 0, (villager?.renderY ?? villager?.y ?? 0) - 56, 2)"
         class="pointer-events-none"
       >
-        <div class="relative rounded-2xl border border-[#d8c9b7] bg-white/95 px-3 py-2 text-xs font-bold leading-4 text-ink shadow-lg">
+        <div class="relative rounded-2xl border border-[#d8c9b7] bg-white/[0.95] px-3 py-2 text-xs font-bold leading-4 text-ink shadow-lg">
           {{ actorSpeechText(villager) }}
-          <div class="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-[#d8c9b7] bg-white/95"></div>
+          <div class="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-[#d8c9b7] bg-white/[0.95]"></div>
         </div>
       </div>
       <div
@@ -173,10 +173,10 @@
       <button
         v-if="pendingPlacement"
         type="button"
-        class="absolute inset-0 z-20 cursor-crosshair bg-white/5"
+        class="absolute inset-0 z-20 cursor-crosshair bg-white/[0.05]"
         @click.stop="emitFieldClick"
       >
-        <div class="pointer-events-none absolute left-1/2 top-6 -translate-x-1/2 rounded-full border border-white/70 bg-white/80 px-4 py-2 text-sm font-bold text-ink shadow-lg backdrop-blur">
+        <div class="pointer-events-none absolute left-1/2 top-6 -translate-x-1/2 rounded-full border border-white/[0.7] bg-white/[0.8] px-4 py-2 text-sm font-bold text-ink shadow-lg backdrop-blur">
           {{ pendingPlacement.name }}
         </div>
       </button>
@@ -519,6 +519,9 @@ function startFieldTransferFlyAnimation(request) {
 }
 
 function nodeIcon(node) {
+  if (isNodeDepleted(node) && node.depletedIcon) {
+    return node.depletedIcon;
+  }
   return node.icon || props.itemDefinitions[node.itemId]?.icon || "?";
 }
 
@@ -532,6 +535,10 @@ function isTreeNode(node) {
 
 function isRockNode(node) {
   return node?.type === "rock";
+}
+
+function isNodeDepleted(node) {
+  return Boolean(node?.hiddenUntil && props.currentTime < node.hiddenUntil);
 }
 
 function resourceButtonStyle(node) {

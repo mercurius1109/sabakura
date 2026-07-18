@@ -1,5 +1,5 @@
 <template>
-  <div class="max-h-[calc(100vh-10rem)] min-h-0 overflow-y-auto px-4 py-4">
+  <div class="relative isolate max-h-[calc(100vh-10rem)] min-h-0 overflow-y-auto px-4 py-4">
     <StationCard
       :station="station"
       :is-available="isAvailable"

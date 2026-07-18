@@ -27,12 +27,14 @@ export function createInitialFieldNodes(resourceConfigs, treeNodes) {
         type: config.type,
         itemId: config.itemId,
         icon: config.icon,
+        depletedIcon: config.depletedIcon || null,
         title: config.title,
         actionLabel: config.actionLabel,
         requiresItem: config.requiresItem,
         x: position.x,
         y: position.y,
         respawnMs: config.respawnMs,
+        respawnInPlace: Boolean(config.respawnInPlace),
         hiddenUntil: null,
       };
     }),
@@ -46,12 +48,14 @@ export function createInitialFieldNodes(resourceConfigs, treeNodes) {
         type: config.type,
         itemId: config.itemId,
         icon: config.icon,
+        depletedIcon: config.depletedIcon || null,
         title: config.title,
         actionLabel: config.actionLabel,
         requiresItem: config.requiresItem,
         x: position.x,
         y: position.y,
         respawnMs: config.respawnMs,
+        respawnInPlace: Boolean(config.respawnInPlace),
         hiddenUntil: null,
       };
     }),
@@ -74,6 +78,10 @@ export function isFieldNodeVisible(node, now) {
 
 export function visibleFieldNodes(fieldNodes, now) {
   return fieldNodes.filter((node) => isFieldNodeVisible(node, now));
+}
+
+export function displayFieldNodes(fieldNodes, now) {
+  return fieldNodes.filter((node) => isFieldNodeVisible(node, now) || Boolean(node.depletedIcon));
 }
 
 export function clampFieldPosition(point) {

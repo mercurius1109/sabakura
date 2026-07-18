@@ -109,14 +109,18 @@ export function createConstructionSystem({
     return t("status.actionPending");
   }
 
-  function placeStructure(structureId, position = null) {
+  function placeStructure(structureId, position = null, options = {}) {
+    const { ignoreRequirements = false } = options;
     const building = buildingById(structureId);
-    if (!building || !canPlaceStructure(structureId)) {
+    if (!building) {
+      return false;
+    }
+    if (!ignoreRequirements && !canPlaceStructure(structureId)) {
       return false;
     }
     const x = clampPlacementPosition(position?.x, building.x, "x");
     const y = clampPlacementPosition(position?.y, building.y, "y");
-    if (!consumeActorResources(playerActor, building)) {
+    if (!ignoreRequirements && !consumeActorResources(playerActor, building)) {
       return false;
     }
     structurePositions[structureId] = { x, y };

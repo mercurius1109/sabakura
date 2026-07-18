@@ -582,6 +582,7 @@ export function useSurvivalCraft(options = {}) {
     actorInteractionDistance,
     buildingWorkPoint,
     distanceBetween,
+    displayFieldNodes,
     fieldNodeById,
     fieldNodeIndexById,
     findGatherTargetNode,
@@ -848,11 +849,11 @@ export function useSurvivalCraft(options = {}) {
     t,
   });
 
-  function startPlayerCraft(recipeId) {
+  function startPlayerCraft(recipeId, options = {}) {
     if (!cancelPlayerTaskForManualAction()) {
       return false;
     }
-    return startPlayerCraftTask(recipeId, isPlayerBusy);
+    return startPlayerCraftTask(recipeId, isPlayerBusy, options);
   }
 
   function startPlayerFieldTask(nodeId) {
@@ -1196,6 +1197,11 @@ export function useSurvivalCraft(options = {}) {
     return task ? scheduleActorTask(playerActor, task) : false;
   }
 
+  function restorePlayerFullness() {
+    playerActor.fullness = playerActor.maxFullness || 100;
+    return true;
+  }
+
   function updateActorFullness(actor, deltaMs) {
     if (!actor) {
       return;
@@ -1361,6 +1367,7 @@ export function useSurvivalCraft(options = {}) {
     playerActor,
     inventoryFlyRequests,
     fieldTransferFlyRequests,
+    displayFieldNodes,
     visibleFieldNodes,
     pickupFieldNode,
     placeStructure,
@@ -1437,8 +1444,10 @@ export function useSurvivalCraft(options = {}) {
     moveItemFromOtherActorToPlayer,
     dropPlayerItem,
     eatPlayerItem,
+    restorePlayerFullness,
     cancelTask,
     clearLog,
+    addLog,
     formatList,
     stockRuleStatus,
     actorFullnessPercent,

@@ -1,5 +1,6 @@
 import { moveActorTowards } from "../../game/core/actors.js";
 import {
+  displayFieldNodes as collectDisplayFieldNodes,
   fieldNodeById as findFieldNodeById,
   fieldNodeIndexById as findFieldNodeIndexById,
   spawnDroppedItems as createDroppedItems,
@@ -46,6 +47,10 @@ export function createSurvivalFieldHelpers({
 
   function isFieldNodeVisible(node) {
     return !node.hiddenUntil || now.value >= node.hiddenUntil;
+  }
+
+  function displayFieldNodes() {
+    return collectDisplayFieldNodes(fieldNodes, now.value);
   }
 
   function visibleFieldNodes() {
@@ -238,6 +243,7 @@ export function createSurvivalFieldHelpers({
     findGatherTargetNode,
     gatherActionForNode,
     isFieldNodeVisible,
+    displayFieldNodes,
     moveActorForTask,
     nearestAdjacentPoint,
     nodeWorkPoint,

@@ -60,7 +60,7 @@ export function createSurvivalAutomation({
   function respawnFieldNodes() {
     fieldNodes.forEach((node) => {
       if (node.hiddenUntil && now.value >= node.hiddenUntil) {
-        if (!node.transient && node.type === "pickup") {
+        if (!node.transient && node.type === "pickup" && !node.respawnInPlace) {
           const position = randomFieldPosition();
           node.x = position.x;
           node.y = position.y;

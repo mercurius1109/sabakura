@@ -1,5 +1,5 @@
 <template>
-  <div class="max-h-[calc(100vh-10rem)] overflow-y-auto px-4 py-4">
+  <div class="relative isolate max-h-[calc(100vh-10rem)] overflow-y-auto px-4 py-4">
     <InventoryActionGrid
       :caption="t('ui.container')"
       :empty-text="t('common.carryingNone')"
@@ -9,19 +9,19 @@
       @select="$emit('transfer-to-player', $event)"
     />
 
-    <div class="mt-4 rounded-2xl border border-line bg-white/80 p-4">
+    <div class="mt-4 rounded-xl bg-white/[0.28] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] backdrop-blur-md">
       <div class="flex items-center justify-between gap-2">
-        <div class="text-sm font-bold text-ink">{{ t("ui.assignVillager") }}</div>
+        <div class="text-sm font-bold text-white/[0.92]">{{ t("ui.assignVillager") }}</div>
         <button
           type="button"
-          class="rounded-md border border-line bg-white px-3 py-1.5 text-sm font-bold text-moss transition hover:bg-moss hover:text-white"
-          @click="showVillagerModal = true"
+          class="rounded-lg bg-white/[0.42] px-3 py-1.5 text-sm font-bold text-moss backdrop-blur-sm transition hover:bg-moss hover:text-white"
+          @click="openVillagerModal"
         >
           {{ t("ui.add") }}
         </button>
       </div>
 
-      <div v-if="assignedVillagers.length === 0" class="mt-3 text-sm text-muted">
+      <div v-if="assignedVillagers.length === 0" class="mt-3 text-sm text-white/[0.66]">
         {{ t("ui.noAssignedStations") }}
       </div>
 
@@ -30,7 +30,7 @@
           v-for="villager in assignedVillagers"
           :key="villager.id"
           type="button"
-          class="group relative flex h-[88px] w-[88px] flex-col justify-between rounded-xl border border-line bg-[#fffdf8] px-2 py-2 text-left transition hover:-translate-y-0.5"
+          class="group relative flex h-[88px] w-[88px] flex-col justify-between rounded-lg bg-white/[0.34] px-2 py-2 text-left backdrop-blur-sm transition hover:-translate-y-0.5"
         >
           <span
             role="button"
@@ -44,26 +44,26 @@
               <path d="M3.22 3.22a.75.75 0 0 1 1.06 0L8 6.94l3.72-3.72a.75.75 0 1 1 1.06 1.06L9.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06L8 9.06l-3.72 3.72a.75.75 0 1 1-1.06-1.06L6.94 8 3.22 4.28a.75.75 0 0 1 0-1.06Z" />
             </svg>
           </span>
-          <div class="pr-5 text-xs font-bold leading-4 text-ink">{{ villager.name }}</div>
-          <div class="flex items-center justify-center text-3xl leading-none text-ink/80" aria-hidden="true">{{ villagerIcon }}</div>
-          <div class="self-end text-[10px] font-bold leading-4 text-muted">{{ t("ui.storage") }}</div>
+          <div class="pr-5 text-xs font-bold leading-4 text-white/[0.92]">{{ villager.name }}</div>
+          <div class="flex items-center justify-center text-3xl leading-none text-white/[0.8]" aria-hidden="true">{{ villagerIcon }}</div>
+          <div class="self-end text-[10px] font-bold leading-4 text-white/[0.62]">{{ t("ui.storage") }}</div>
         </button>
       </div>
     </div>
 
-    <div class="mt-4 rounded-2xl border border-line bg-white/80 p-4">
+    <div class="mt-4 rounded-xl bg-white/[0.28] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] backdrop-blur-md">
       <div class="flex items-center justify-between gap-2">
-        <div class="text-sm font-bold text-ink">{{ t("ui.storageTargets") }}</div>
+        <div class="text-sm font-bold text-white/[0.92]">{{ t("ui.storageTargets") }}</div>
         <button
           type="button"
-          class="rounded-md border border-line bg-white px-3 py-1.5 text-sm font-bold text-moss transition hover:bg-moss hover:text-white"
+          class="rounded-lg bg-white/[0.42] px-3 py-1.5 text-sm font-bold text-moss backdrop-blur-sm transition hover:bg-moss hover:text-white"
           @click="$emit('open-add-rule')"
         >
           {{ t("ui.add") }}
         </button>
       </div>
 
-      <div v-if="registeredStockRules.length === 0" class="mt-3 text-sm text-muted">
+      <div v-if="registeredStockRules.length === 0" class="mt-3 text-sm text-white/[0.66]">
         {{ t("ui.noStorageTargets") }}
       </div>
 
@@ -73,11 +73,11 @@
           :key="rule.id"
           type="button"
           :title="stockRuleTooltip(rule)"
-          class="group relative flex h-[88px] w-[88px] items-center justify-center rounded-xl border border-line bg-[#fffdf8] transition hover:-translate-y-0.5"
+          class="group relative flex h-[88px] w-[88px] items-center justify-center rounded-lg bg-white/[0.34] backdrop-blur-sm transition hover:-translate-y-0.5"
           :class="isTutorialTarget(rule.itemId) ? tutorialHighlightClass : ''"
           @click="$emit('open-edit-rule', rule)"
         >
-          <span class="absolute left-1.5 top-1.5 max-w-[52px] truncate text-[10px] font-bold leading-4 text-ink">
+          <span class="absolute left-1.5 top-1.5 max-w-[52px] truncate text-[10px] font-bold leading-4 text-white/[0.9]">
             {{ itemDefinitions[rule.itemId].name }}
           </span>
           <span
@@ -95,21 +95,21 @@
           <div class="h-12 w-12" aria-hidden="true">
             <GameIcon :icon="itemDefinitions[rule.itemId].icon" :alt="itemDefinitions[rule.itemId].name" />
           </div>
-          <span class="absolute bottom-1 right-1 rounded-full bg-white/90 px-1.5 text-[10px] font-bold leading-5 text-ambered">
+          <span class="absolute bottom-1 right-1 rounded-full bg-white/[0.82] px-1.5 text-[10px] font-bold leading-5 text-ambered backdrop-blur-sm">
             {{ t("ui.currentOfTarget", { current: inventory[rule.itemId], target: rule.target }) }}
           </span>
         </button>
       </div>
     </div>
 
-    <div v-if="showAddStockRuleModal" class="absolute inset-0 z-30 flex items-center justify-center bg-black/35 p-4">
-      <div class="w-full max-w-md rounded-xl border border-line bg-white p-4 shadow-panel">
+    <WindowModalHost :modal="activeModal" :visible="isStorageModalVisible">
+      <template v-if="activeModal?.type === 'add-stock-rule'">
         <div class="flex items-center justify-between gap-2">
           <h3 class="text-lg font-bold">{{ t("ui.addStorageTarget") }}</h3>
-          <button type="button" class="text-sm font-bold text-muted" @click="$emit('close-add-rule')">{{ t("ui.close") }}</button>
+          <button type="button" class="text-sm font-bold text-white/[0.7]" @click="$emit('close-add-rule')">{{ t("ui.close") }}</button>
         </div>
 
-        <div v-if="availableStockRules.length === 0" class="mt-4 text-sm text-muted">
+        <div v-if="availableStockRules.length === 0" class="mt-4 text-sm text-white/[0.66]">
           {{ t("ui.allItemsRegistered") }}
         </div>
 
@@ -119,13 +119,13 @@
             :key="rule.id"
             type="button"
             :title="itemDefinitions[rule.itemId].name"
-            class="relative flex h-[72px] w-[72px] items-center justify-center rounded-xl border bg-[#fffdf8] transition"
+            class="relative flex h-[72px] w-[72px] items-center justify-center rounded-lg bg-white/[0.34] backdrop-blur-sm transition"
             :class="draftStockRuleId === rule.id
               ? 'border-moss shadow-[0_0_0_2px_rgba(45,106,79,0.25)]'
               : 'border-line hover:-translate-y-0.5'"
             @click="$emit('select-add-rule', rule.id)"
           >
-            <span class="absolute left-1.5 top-1.5 max-w-[46px] truncate text-[10px] font-bold leading-4 text-ink">
+            <span class="absolute left-1.5 top-1.5 max-w-[46px] truncate text-[10px] font-bold leading-4 text-white/[0.9]">
               {{ itemDefinitions[rule.itemId].name }}
             </span>
             <div class="h-10 w-10" aria-hidden="true">
@@ -134,11 +134,11 @@
           </button>
         </div>
 
-        <label class="mt-4 grid gap-1 text-sm font-bold text-muted">
+        <label class="mt-4 grid gap-1 text-sm font-bold text-white/[0.7]">
           {{ t("ui.target") }}
           <input
             :value="draftStockRuleTarget"
-            class="rounded-md border border-line bg-white px-3 py-2 text-base text-ink"
+            class="rounded-lg bg-white/[0.55] px-3 py-2 text-base text-ink"
             type="number"
             min="1"
             @input="$emit('update-add-target', Number($event.target.value))"
@@ -150,7 +150,7 @@
             v-for="amount in [-100, -10, -1, 1, 10, 100]"
             :key="`add-target-${amount}`"
             type="button"
-            class="rounded-md border border-line bg-white px-3 py-1.5 text-sm font-bold text-moss transition hover:bg-moss hover:text-white"
+            class="rounded-lg bg-white/[0.42] px-3 py-1.5 text-sm font-bold text-moss backdrop-blur-sm transition hover:bg-moss hover:text-white"
             @click="$emit('update-add-target', adjustTargetValue(draftStockRuleTarget, amount, 1))"
           >
             {{ amount > 0 ? `+${amount}` : amount }}
@@ -165,25 +165,23 @@
         >
           {{ t("ui.confirm") }}
         </button>
-      </div>
-    </div>
+      </template>
 
-    <div v-if="showEditStockRuleModal && editingStockRule" class="absolute inset-0 z-30 flex items-center justify-center bg-black/35 p-4">
-      <div class="w-full max-w-md rounded-xl border border-line bg-white p-4 shadow-panel">
+      <template v-else-if="activeModal?.type === 'edit-stock-rule' && editingStockRule">
         <div class="flex items-center justify-between gap-2">
           <h3 class="text-lg font-bold">{{ itemDefinitions[editingStockRule.itemId].name }}</h3>
-          <button type="button" class="text-sm font-bold text-muted" @click="$emit('close-edit-rule')">{{ t("ui.close") }}</button>
+          <button type="button" class="text-sm font-bold text-white/[0.7]" @click="$emit('close-edit-rule')">{{ t("ui.close") }}</button>
         </div>
 
-        <div class="mt-3 rounded-md border border-line bg-[#fffdf8] px-3 py-3 text-sm text-muted">
+        <div class="mt-3 rounded-lg bg-white/[0.34] px-3 py-3 text-sm text-white/[0.74] backdrop-blur-sm">
           {{ t("ui.stockLine", { current: inventory[editingStockRule.itemId], expected: expectedStock(editingStockRule.itemId), status: stockRuleStatus(editingStockRule) }) }}
         </div>
 
-        <label class="mt-4 grid gap-1 text-sm font-bold text-muted">
+        <label class="mt-4 grid gap-1 text-sm font-bold text-white/[0.7]">
           {{ t("ui.target") }}
           <input
             :value="editingStockRuleTarget"
-            class="rounded-md border border-line bg-white px-3 py-2 text-base text-ink"
+            class="rounded-lg bg-white/[0.55] px-3 py-2 text-base text-ink"
             type="number"
             min="1"
             @input="$emit('update-edit-target', Number($event.target.value))"
@@ -195,7 +193,7 @@
             v-for="amount in [-100, -10, -1, 1, 10, 100]"
             :key="`edit-target-${amount}`"
             type="button"
-            class="rounded-md border border-line bg-white px-3 py-1.5 text-sm font-bold text-moss transition hover:bg-moss hover:text-white"
+            class="rounded-lg bg-white/[0.42] px-3 py-1.5 text-sm font-bold text-moss backdrop-blur-sm transition hover:bg-moss hover:text-white"
             @click="$emit('update-edit-target', adjustTargetValue(editingStockRuleTarget, amount, 1))"
           >
             {{ amount > 0 ? `+${amount}` : amount }}
@@ -212,23 +210,21 @@
           </button>
           <button
             type="button"
-            class="rounded-md border border-line bg-white px-4 py-2.5 font-bold text-ambered transition hover:bg-ambered hover:text-white"
+            class="rounded-lg bg-white/[0.42] px-4 py-2.5 font-bold text-ambered backdrop-blur-sm transition hover:bg-ambered hover:text-white"
             @click="$emit('remove-rule', editingStockRule.id)"
           >
             {{ t("ui.remove") }}
           </button>
         </div>
-      </div>
-    </div>
+      </template>
 
-    <div v-if="showVillagerModal" class="absolute inset-0 z-30 flex items-center justify-center bg-black/35 p-4">
-      <div class="w-full max-w-md rounded-xl border border-line bg-white p-4 shadow-panel">
+      <template v-else-if="activeModal?.type === 'assign-villager'">
         <div class="flex items-center justify-between gap-2">
           <h3 class="text-lg font-bold">{{ t("ui.assignVillager") }}</h3>
-          <button type="button" class="text-sm font-bold text-muted" @click="showVillagerModal = false">{{ t("ui.close") }}</button>
+          <button type="button" class="text-sm font-bold text-white/[0.7]" @click="closeVillagerModal">{{ t("ui.close") }}</button>
         </div>
 
-        <div v-if="availableVillagers.length === 0" class="mt-4 text-sm text-muted">
+        <div v-if="availableVillagers.length === 0" class="mt-4 text-sm text-white/[0.66]">
           {{ t("ui.noVillagersAvailable") }}
         </div>
 
@@ -237,25 +233,27 @@
             v-for="villager in availableVillagers"
             :key="villager.id"
             type="button"
-            class="flex h-[88px] w-[88px] flex-col justify-between rounded-xl border border-line bg-[#fffdf8] px-2 py-2 text-left transition hover:-translate-y-0.5"
+            class="flex h-[88px] w-[88px] flex-col justify-between rounded-lg bg-white/[0.34] px-2 py-2 text-left backdrop-blur-sm transition hover:-translate-y-0.5"
             @click="handleAddVillager(villager.id)"
           >
-            <div class="text-xs font-bold leading-4 text-ink">{{ villager.name }}</div>
-            <div class="flex items-center justify-center text-3xl leading-none text-ink/80" aria-hidden="true">{{ villagerIcon }}</div>
+            <div class="text-xs font-bold leading-4 text-white/[0.92]">{{ villager.name }}</div>
+            <div class="flex items-center justify-center text-3xl leading-none text-white/[0.8]" aria-hidden="true">{{ villagerIcon }}</div>
             <div class="self-end max-w-full truncate text-[10px] font-bold leading-4 text-moss">
               {{ villagerAssignedStationLabel(villager) }}
             </div>
           </button>
         </div>
-      </div>
-    </div>
+      </template>
+    </WindowModalHost>
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { computed, ref, watch } from "vue";
+import { useWindowModalStack, useWindowModalStackContext } from "../composables/useWindowModalStack.js";
 import InventoryActionGrid from "./InventoryActionGrid.vue";
 import GameIcon from "./GameIcon.vue";
+import WindowModalHost from "./WindowModalHost.vue";
 import { useI18n } from "../i18n/index.js";
 
 const props = defineProps({
@@ -299,11 +297,41 @@ const emit = defineEmits([
 ]);
 
 const { t } = useI18n();
-const showVillagerModal = ref(false);
+const modalStack = useWindowModalStackContext() || useWindowModalStack();
+const { activeModal, openModal, removeModal, syncModal } = modalStack;
 const villagerIcon = "\uD83E\uDDD1";
+const isStorageModalVisible = computed(() => (
+  activeModal.value?.type === "add-stock-rule"
+  || activeModal.value?.type === "edit-stock-rule"
+  || activeModal.value?.type === "assign-villager"
+));
+
+watch(
+  () => props.showAddStockRuleModal,
+  (isOpen) => {
+    syncModal("add-stock-rule", isOpen);
+  },
+  { immediate: true },
+);
+
+watch(
+  () => [props.showEditStockRuleModal, props.editingStockRule?.id],
+  ([isOpen, ruleId]) => {
+    syncModal("edit-stock-rule", isOpen, { ruleId });
+  },
+  { immediate: true },
+);
+
+function openVillagerModal() {
+  openModal({ type: "assign-villager" });
+}
+
+function closeVillagerModal() {
+  removeModal("assign-villager");
+}
 
 function handleAddVillager(villagerId) {
-  showVillagerModal.value = false;
+  closeVillagerModal();
   emit("add-villager", villagerId);
 }
 

@@ -1,43 +1,43 @@
 <template>
   <div
-    class="relative rounded-2xl border border-line bg-white/80 p-4 transition-opacity"
-    :class="isAvailable ? 'opacity-100' : 'opacity-55'"
+    class="relative transition-opacity"
+    :class="[rootClass, isAvailable ? 'opacity-100' : 'opacity-55']"
   >
     <div class="flex items-center justify-between gap-2 font-bold">
-      <span>{{ station.name }}</span>
-      <span class="rounded-full px-3 py-1 text-xs font-bold" :class="isAvailable ? 'bg-emerald-100 text-moss' : 'bg-orange-100 text-ambered'">
+      <span class="text-white/[0.95]">{{ station.name }}</span>
+      <span class="rounded-full px-3 py-1 text-xs font-bold" :class="isAvailable ? 'bg-white/[0.18] text-white/[0.92] backdrop-blur-sm' : 'bg-white/[0.14] text-white/[0.7] backdrop-blur-sm'">
         {{ isAvailable ? t("ui.available") : t("ui.unavailable") }}
       </span>
     </div>
 
-    <p class="mt-2 text-sm leading-6 text-muted">{{ station.description }}</p>
+    <p class="mt-2 text-sm leading-6 text-white/[0.7]">{{ station.description }}</p>
 
-    <div v-if="showFuelPanel" class="mt-4 rounded-2xl border border-line bg-white/90 p-4">
+    <div v-if="showFuelPanel" class="mt-4 rounded-xl bg-white/[0.24] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-md">
       <div class="flex items-center justify-between gap-2">
-        <h3 class="text-sm font-bold">{{ t("ui.fuel") }}</h3>
-        <span class="text-xs font-semibold text-muted">
+        <h3 class="text-sm font-bold text-white/[0.92]">{{ t("ui.fuel") }}</h3>
+        <span class="text-xs font-semibold text-white/[0.7]">
           {{ isBurning ? t("ui.burning") : t("ui.notBurning") }}
         </span>
       </div>
 
-      <div class="mt-3 flex items-center justify-between gap-3 rounded-xl border border-line bg-[#fffdf8] px-3 py-3">
+      <div class="mt-3 flex items-center justify-between gap-3 rounded-lg bg-white/[0.3] px-3 py-3 backdrop-blur-sm">
         <div class="flex items-center gap-3">
-          <div class="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-white">
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.5] backdrop-blur-sm">
             <div class="h-7 w-7">
               <GameIcon :icon="currentFuelItem?.icon || ''" :alt="currentFuelItem?.name || t('ui.fuel')" fallback="🔥" />
             </div>
           </div>
           <div>
-            <div class="text-sm font-bold text-ink">{{ currentFuelItem?.name || t("ui.fuel") }}</div>
-            <div class="text-xs text-muted">{{ t("ui.currentOfTarget", { current: fuelCount, target: playerFuelTotal }) }}</div>
+            <div class="text-sm font-bold text-white/[0.92]">{{ currentFuelItem?.name || t("ui.fuel") }}</div>
+            <div class="text-xs text-white/[0.66]">{{ t("ui.currentOfTarget", { current: fuelCount, target: playerFuelTotal }) }}</div>
           </div>
         </div>
-        <div class="text-right text-xs text-muted">
+        <div class="text-right text-xs text-white/[0.66]">
           <div>{{ t("ui.remainingSeconds", { seconds: burnRemainingSeconds }) }}</div>
         </div>
       </div>
 
-      <div class="mt-3 h-2.5 overflow-hidden rounded-full border border-[#c7bdad] bg-[#eee7dd]">
+      <div class="mt-3 h-2.5 overflow-hidden rounded-full bg-[#e6dece]/85">
         <div class="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-[width]" :style="{ width: `${burnProgress}%` }"></div>
       </div>
 
@@ -60,12 +60,12 @@
         />
       </div>
 
-      <div v-if="!isPlayerAdjacent" class="mt-2 text-xs text-muted">
+      <div v-if="!isPlayerAdjacent" class="mt-2 text-xs text-white/[0.66]">
         {{ t("ui.moveNextToFacility") }}
       </div>
     </div>
 
-    <div v-if="inventoryEntries.length > 0 || showFuelPanel" class="mt-4 rounded-2xl border border-line bg-white/90 p-4">
+    <div v-if="inventoryEntries.length > 0 || showFuelPanel" class="mt-4" :class="sectionClass">
       <InventoryActionGrid
         :caption="t('ui.container')"
         :empty-text="t('common.carryingNone')"
@@ -74,26 +74,26 @@
         :disabled-text="''"
         @select="transferItemToPlayer"
       />
-      <div v-if="!isPlayerAdjacent && inventoryEntries.length > 0" class="mt-3 text-sm text-muted">
+      <div v-if="!isPlayerAdjacent && inventoryEntries.length > 0" class="mt-3 text-sm text-white/[0.66]">
         {{ t("ui.moveNextToFacility") }}
       </div>
     </div>
 
-    <div class="mt-4 rounded-2xl border border-line bg-white/90 p-4">
-      <div class="flex items-center justify-between gap-2">
-        <h3 class="text-sm font-bold">{{ t("ui.assignVillager") }}</h3>
+    <div class="mt-4" :class="sectionClass">
+      <div class="flex items-center justify-between gap-2 text-white/[0.92]">
+        <h3 class="text-sm font-bold text-white/[0.92]">{{ t("ui.assignVillager") }}</h3>
         <button
           type="button"
-          class="rounded-md border border-line bg-white px-3 py-1.5 text-sm font-bold text-moss transition hover:bg-moss hover:text-white"
-          :class="highlightAddVillager ? 'tutorial-highlight tutorial-highlight-ui' : ''"
+          class="rounded-lg px-3 py-1.5 text-sm font-bold transition"
+          :class="[isWorkbench ? 'bg-white/[0.16] text-white/[0.9] backdrop-blur-sm hover:bg-white/[0.24]' : 'bg-white/[0.42] text-white/[0.9] backdrop-blur-sm hover:bg-white/[0.56]', highlightAddVillager ? 'tutorial-highlight tutorial-highlight-ui' : '']"
           :disabled="!isAvailable"
-          @click="showVillagerModal = true"
+          @click="openVillagerModal"
         >
           {{ t("ui.add") }}
         </button>
       </div>
 
-      <div v-if="assignedVillagers.length === 0" class="mt-2 text-sm text-muted">
+      <div v-if="assignedVillagers.length === 0" class="mt-2 text-sm text-white/[0.66]">
         {{ t("ui.noAssignedStations") }}
       </div>
 
@@ -102,7 +102,7 @@
           v-for="villager in assignedVillagers"
           :key="villager.id"
           type="button"
-          class="group relative flex h-[88px] w-[88px] flex-col justify-between rounded-xl border border-line bg-[#fffdf8] px-2 py-2 text-left transition hover:-translate-y-0.5"
+          class="group relative flex h-[88px] w-[88px] flex-col justify-between rounded-lg bg-white/[0.34] px-2 py-2 text-left backdrop-blur-sm transition hover:-translate-y-0.5"
         >
           <span
             role="button"
@@ -116,20 +116,20 @@
               <path d="M3.22 3.22a.75.75 0 0 1 1.06 0L8 6.94l3.72-3.72a.75.75 0 1 1 1.06 1.06L9.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06L8 9.06l-3.72 3.72a.75.75 0 1 1-1.06-1.06L6.94 8 3.22 4.28a.75.75 0 0 1 0-1.06Z" />
             </svg>
           </span>
-          <div class="pr-5 text-xs font-bold leading-4 text-ink">{{ villager.name }}</div>
-          <div class="flex items-center justify-center text-3xl leading-none text-ink/80" aria-hidden="true">{{ villagerIcon }}</div>
-          <div class="self-end text-[10px] font-bold leading-4 text-muted">{{ station.name }}</div>
+          <div class="pr-5 text-xs font-bold leading-4 text-white/[0.92]">{{ villager.name }}</div>
+          <div class="flex flex-1 items-center justify-center text-3xl leading-none text-white/[0.8]" aria-hidden="true">{{ villagerIcon }}</div>
+          <div class="self-end text-[10px] font-bold leading-4 text-white/[0.62]">{{ station.name }}</div>
         </button>
       </div>
     </div>
 
-    <div v-if="recipes.length > 0 || craftEntries.length > 0" class="mt-4 rounded-2xl border border-line bg-white/90 p-4">
-      <div class="flex items-center justify-between gap-2">
-        <h3 class="text-sm font-bold">{{ t("ui.craftEntries") }}</h3>
+    <div v-if="recipes.length > 0 || craftEntries.length > 0" class="mt-4" :class="sectionClass">
+      <div class="flex items-center justify-between gap-2 text-white/[0.92]">
+        <h3 class="text-sm font-bold text-white/[0.92]">{{ t("ui.craftEntries") }}</h3>
         <button
           type="button"
-          class="rounded-md border border-line bg-white px-3 py-1.5 text-sm font-bold text-moss transition hover:bg-moss hover:text-white"
-          :class="highlightAddCraft ? 'tutorial-highlight tutorial-highlight-ui' : ''"
+          class="rounded-lg px-3 py-1.5 text-sm font-bold transition"
+          :class="[isWorkbench ? 'bg-white/[0.16] text-white/[0.9] backdrop-blur-sm hover:bg-white/[0.24]' : 'bg-white/[0.42] text-white/[0.9] backdrop-blur-sm hover:bg-white/[0.56]', highlightAddCraft ? 'tutorial-highlight tutorial-highlight-ui' : '']"
           :disabled="!isAvailable"
           @click="openCraftModal"
         >
@@ -137,7 +137,7 @@
         </button>
       </div>
 
-      <div v-if="craftEntries.length === 0" class="mt-2 text-sm text-muted">
+      <div v-if="craftEntries.length === 0" class="mt-2 text-sm text-white/[0.66]">
         {{ t("ui.noCraftEntries") }}
       </div>
 
@@ -147,10 +147,10 @@
           :key="entry.id"
           type="button"
           :title="craftEntryTooltip(entry)"
-          class="group relative flex h-[72px] w-[72px] items-center justify-center rounded-xl border border-line bg-[#fffdf8] transition hover:-translate-y-0.5"
+          class="group relative flex h-[72px] w-[72px] items-center justify-center rounded-lg bg-white/[0.34] backdrop-blur-sm transition hover:-translate-y-0.5"
           @click="openEditCraftModal(entry.id)"
         >
-          <span class="absolute left-1.5 top-1.5 max-w-[46px] truncate text-[10px] font-bold leading-4 text-ink">
+          <span class="absolute left-1.5 top-1.5 max-w-[46px] truncate text-[10px] font-bold leading-4 text-white/[0.9]">
             {{ recipeById(entry.recipeId).name }}
           </span>
           <span
@@ -165,10 +165,10 @@
               <path d="M3.22 3.22a.75.75 0 0 1 1.06 0L8 6.94l3.72-3.72a.75.75 0 1 1 1.06 1.06L9.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06L8 9.06l-3.72 3.72a.75.75 0 1 1-1.06-1.06L6.94 8 3.22 4.28a.75.75 0 0 1 0-1.06Z" />
             </svg>
           </span>
-          <span class="absolute bottom-1 right-1 rounded-full bg-white/90 px-1.5 text-[10px] font-bold leading-5 text-ambered">
+          <span class="absolute bottom-1 right-1 rounded-full bg-white/[0.18] px-1.5 text-[10px] font-bold leading-5 text-white/[0.92] backdrop-blur-sm">
             {{ currentAmount(entry.id) }}/{{ entry.target }}
           </span>
-          <div class="h-12 w-12" aria-hidden="true">
+          <div class="flex h-12 w-12 shrink-0 items-center justify-center" aria-hidden="true">
             <GameIcon :icon="craftEntryIcon(entry)" :alt="recipeById(entry.recipeId).name" />
           </div>
           <span class="sr-only">{{ recipeById(entry.recipeId).name }}</span>
@@ -176,21 +176,21 @@
       </div>
     </div>
 
-    <div class="mt-4 rounded-2xl border border-line bg-white/90 p-4">
-      <div class="flex items-center justify-between gap-2">
-        <h3 class="text-sm font-bold">{{ t("ui.runningTasks") }}</h3>
-        <span class="text-xs text-muted">{{ t("ui.taskCount", { count: tasks.length }) }}</span>
+    <div class="mt-4" :class="sectionClass">
+      <div class="flex items-center justify-between gap-2 text-white/[0.92]">
+        <h3 class="text-sm font-bold text-white/[0.92]">{{ t("ui.runningTasks") }}</h3>
+        <span class="text-xs text-white/[0.66]">{{ t("ui.taskCount", { count: tasks.length }) }}</span>
       </div>
 
-      <div v-if="tasks.length === 0" class="mt-2 text-sm text-muted">
+      <div v-if="tasks.length === 0" class="mt-2 text-sm text-white/[0.66]">
         {{ t("ui.noRunningTasks") }}
       </div>
 
       <div v-for="task in tasks" :key="task.id" class="mt-3 grid gap-1.5">
         <div class="flex items-center justify-between gap-2 text-sm font-bold">
-          <span>{{ taskDisplayText(task) }}</span>
+          <span class="text-white/[0.9]">{{ taskDisplayText(task) }}</span>
           <div class="flex items-center gap-2">
-            <span class="text-xs font-semibold text-muted">{{ villagerName(task.villagerId) }}</span>
+            <span class="text-xs font-semibold text-white/[0.66]">{{ villagerName(task.villagerId) }}</span>
             <button
               type="button"
               class="flex h-5 w-5 items-center justify-center rounded-full bg-[#fff1e8] text-[#b4491e] shadow-sm ring-1 ring-[#f2b899] transition hover:bg-[#ffe3d3]"
@@ -202,25 +202,25 @@
             </button>
           </div>
         </div>
-        <div class="flex justify-between text-xs text-muted">
+        <div class="flex justify-between text-xs text-white/[0.66]">
           <span>{{ taskProgress(task) }}%</span>
           <span>{{ t("ui.remainingSeconds", { seconds: remainingSeconds(task) }) }}</span>
         </div>
-        <div class="h-2.5 overflow-hidden rounded-full border border-[#c7bdad] bg-[#eee7dd]">
+        <div class="h-2.5 overflow-hidden rounded-full bg-[#e6dece]/85">
           <div class="h-full rounded-full bg-gradient-to-r from-leaf to-lime-600 transition-[width]" :style="{ width: `${taskProgress(task)}%` }"></div>
         </div>
       </div>
     </div>
 
-    <div v-if="showCraftModal" class="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
-      <div class="w-full max-w-md rounded-xl border border-line bg-white p-4 shadow-panel">
+    <WindowModalHost :modal="activeModal" :visible="isStationModalVisible">
+      <template v-if="activeModal?.type === 'craft-add'">
         <div class="flex items-center justify-between gap-2">
-          <h3 class="text-lg font-bold">{{ t("ui.addCraftEntry") }}</h3>
-          <button type="button" class="text-sm font-bold text-muted" @click="closeCraftModal">{{ t("ui.close") }}</button>
+          <h3 class="text-lg font-bold text-white/[0.95]">{{ t("ui.addCraftEntry") }}</h3>
+          <button type="button" class="text-sm font-bold text-white/[0.7]" @click="closeTopModal">{{ t("ui.close") }}</button>
         </div>
 
-        <div class="mt-4 text-sm font-bold text-muted">{{ t("ui.recipe") }}</div>
-        <div v-if="availableRecipes.length === 0" class="mt-3 text-sm text-muted">
+        <div class="mt-4 text-sm font-bold text-white/[0.7]">{{ t("ui.recipe") }}</div>
+        <div v-if="availableRecipes.length === 0" class="mt-3 text-sm text-white/[0.66]">
           {{ t("ui.noCraftEntries") }}
         </div>
         <div v-else class="mt-3 grid grid-cols-[repeat(auto-fill,minmax(72px,72px))] gap-3">
@@ -229,7 +229,7 @@
             :key="recipe.id"
             type="button"
             :title="availableRecipeTooltip(recipe)"
-            class="relative flex h-[72px] w-[72px] items-center justify-center rounded-xl border bg-[#fffdf8] transition"
+            class="relative flex h-[72px] w-[72px] items-center justify-center rounded-lg bg-white/[0.34] backdrop-blur-sm transition"
             :class="draftRecipeId === recipe.id
               ? 'border-moss shadow-[0_0_0_2px_rgba(45,106,79,0.25)]'
               : 'border-line hover:-translate-y-0.5'"
@@ -242,9 +242,9 @@
           </button>
         </div>
 
-        <label class="mt-3 grid gap-1 text-sm font-bold text-muted">
+        <label class="mt-3 grid gap-1 text-sm font-bold text-white/[0.7]">
           {{ t("ui.target") }}
-          <input v-model.number="draftTarget" class="rounded-md border border-line bg-white px-3 py-2 text-base text-ink" type="number" min="0">
+          <input v-model.number="draftTarget" class="rounded-lg bg-white/[0.55] px-3 py-2 text-base text-white/[0.92] placeholder:text-white/[0.45]" type="number" min="0">
         </label>
 
         <div class="mt-3 flex flex-wrap gap-2">
@@ -252,7 +252,7 @@
             v-for="amount in [-100, -10, -1, 1, 10, 100]"
             :key="`draft-target-${amount}`"
             type="button"
-            class="rounded-md border border-line bg-white px-3 py-1.5 text-sm font-bold text-moss transition hover:bg-moss hover:text-white"
+            class="rounded-lg bg-white/[0.42] px-3 py-1.5 text-sm font-bold text-white/[0.9] backdrop-blur-sm transition hover:bg-white/[0.56]"
             @click="draftTarget = adjustTargetValue(draftTarget, amount, 0)"
           >
             {{ amount > 0 ? `+${amount}` : amount }}
@@ -267,25 +267,23 @@
         >
           {{ t("ui.confirm") }}
         </button>
-      </div>
-    </div>
+      </template>
 
-    <div v-if="showEditCraftModal && editingCraftEntry" class="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
-      <div class="w-full max-w-md rounded-xl border border-line bg-white p-4 shadow-panel">
+      <template v-else-if="activeModal?.type === 'craft-edit' && editingCraftEntry">
         <div class="flex items-center justify-between gap-2">
-          <h3 class="text-lg font-bold">{{ recipeById(editingCraftEntry.recipeId).name }}</h3>
-          <button type="button" class="text-sm font-bold text-muted" @click="closeEditCraftModal">{{ t("ui.close") }}</button>
+          <h3 class="text-lg font-bold text-white/[0.95]">{{ recipeById(editingCraftEntry.recipeId).name }}</h3>
+          <button type="button" class="text-sm font-bold text-white/[0.7]" @click="closeTopModal">{{ t("ui.close") }}</button>
         </div>
 
-        <div class="mt-3 rounded-md border border-line bg-[#fffdf8] px-3 py-3 text-sm text-muted">
+        <div class="mt-3 rounded-lg bg-white/[0.34] px-3 py-3 text-sm text-white/[0.74] backdrop-blur-sm">
           {{ formatList(recipeById(editingCraftEntry.recipeId).costs) }}
         </div>
 
-        <label class="mt-4 grid gap-1 text-sm font-bold text-muted">
+        <label class="mt-4 grid gap-1 text-sm font-bold text-white/[0.7]">
           {{ t("ui.target") }}
           <input
             v-model.number="editingCraftTarget"
-            class="rounded-md border border-line bg-white px-3 py-2 text-base text-ink"
+            class="rounded-lg bg-white/[0.55] px-3 py-2 text-base text-white/[0.92] placeholder:text-white/[0.45]"
             type="number"
             min="0"
           >
@@ -296,14 +294,14 @@
             v-for="amount in [-100, -10, -1, 1, 10, 100]"
             :key="`editing-target-${amount}`"
             type="button"
-            class="rounded-md border border-line bg-white px-3 py-1.5 text-sm font-bold text-moss transition hover:bg-moss hover:text-white"
+            class="rounded-lg bg-white/[0.42] px-3 py-1.5 text-sm font-bold text-white/[0.9] backdrop-blur-sm transition hover:bg-white/[0.56]"
             @click="editingCraftTarget = adjustTargetValue(editingCraftTarget, amount, 0)"
           >
             {{ amount > 0 ? `+${amount}` : amount }}
           </button>
         </div>
 
-        <div class="mt-3 text-sm text-muted">
+        <div class="mt-3 text-sm text-white/[0.66]">
           {{ currentAmount(editingCraftEntry.id) }}/{{ editingCraftEntry.target }}
         </div>
 
@@ -317,23 +315,21 @@
           </button>
           <button
             type="button"
-            class="rounded-md border border-line bg-white px-4 py-2.5 font-bold text-ambered transition hover:bg-ambered hover:text-white"
+            class="rounded-lg bg-white/[0.42] px-4 py-2.5 font-bold text-white/[0.9] backdrop-blur-sm transition hover:bg-white/[0.56]"
             @click="removeCraftEntry(editingCraftEntry.id)"
           >
             {{ t("ui.remove") }}
           </button>
         </div>
-      </div>
-    </div>
+      </template>
 
-    <div v-if="showVillagerModal" class="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
-      <div class="w-full max-w-md rounded-xl border border-line bg-white p-4 shadow-panel">
+      <template v-else-if="activeModal?.type === 'assign-villager'">
         <div class="flex items-center justify-between gap-2">
-          <h3 class="text-lg font-bold">{{ t("ui.assignVillager") }}</h3>
-          <button type="button" class="text-sm font-bold text-muted" @click="showVillagerModal = false">{{ t("ui.close") }}</button>
+          <h3 class="text-lg font-bold text-white/[0.95]">{{ t("ui.assignVillager") }}</h3>
+          <button type="button" class="text-sm font-bold text-white/[0.7]" @click="closeTopModal">{{ t("ui.close") }}</button>
         </div>
 
-        <div v-if="availableVillagers.length === 0" class="mt-4 text-sm text-muted">
+        <div v-if="availableVillagers.length === 0" class="mt-4 text-sm text-white/[0.66]">
           {{ t("ui.noVillagersAvailable") }}
         </div>
 
@@ -342,26 +338,28 @@
             v-for="villager in availableVillagers"
             :key="villager.id"
             type="button"
-            class="flex h-[88px] w-[88px] flex-col justify-between rounded-xl border border-line bg-[#fffdf8] px-2 py-2 text-left transition hover:-translate-y-0.5"
+            class="flex h-[88px] w-[88px] flex-col justify-between rounded-lg bg-white/[0.34] px-2 py-2 text-left backdrop-blur-sm transition hover:-translate-y-0.5"
             @click="addVillager(villager.id)"
           >
-            <div class="text-xs font-bold leading-4 text-ink">{{ villager.name }}</div>
-            <div class="flex items-center justify-center text-3xl leading-none text-ink/80" aria-hidden="true">{{ villagerIcon }}</div>
-            <div class="self-end max-w-full truncate text-[10px] font-bold leading-4 text-moss">
+            <div class="text-xs font-bold leading-4 text-white/[0.92]">{{ villager.name }}</div>
+            <div class="flex items-center justify-center text-3xl leading-none text-white/[0.8]" aria-hidden="true">{{ villagerIcon }}</div>
+            <div class="self-end max-w-full truncate text-[10px] font-bold leading-4 text-white/[0.72]">
               {{ villagerAssignedStationLabel(villager) }}
             </div>
           </button>
         </div>
-      </div>
-    </div>
+      </template>
+    </WindowModalHost>
   </div>
 </template>
 
 <script setup>
 import { computed, ref } from "vue";
 import { useI18n } from "../i18n/index.js";
+import { useWindowModalStack, useWindowModalStackContext } from "../composables/useWindowModalStack.js";
 import GameIcon from "./GameIcon.vue";
 import InventoryActionGrid from "./InventoryActionGrid.vue";
+import WindowModalHost from "./WindowModalHost.vue";
 
 const { t } = useI18n();
 
@@ -411,18 +409,19 @@ const emit = defineEmits([
   "transfer-item-to-player",
 ]);
 
-const showCraftModal = ref(false);
-const showEditCraftModal = ref(false);
-const showVillagerModal = ref(false);
 const villagerIcon = "🧑";
 const draftRecipeId = ref("");
 const draftTarget = ref(1);
 const editingCraftEntryId = ref(null);
 const editingCraftTarget = ref(1);
+const modalStack = useWindowModalStackContext() || useWindowModalStack();
+const { activeModal, openModal, closeTopModal } = modalStack;
 
 const canSubmitCraft = computed(() => draftRecipeId.value !== "" && Number.isFinite(draftTarget.value) && draftTarget.value >= 0);
 const editingCraftEntry = computed(() =>
-  props.craftEntries.find((entry) => entry.id === editingCraftEntryId.value) || null,
+  activeModal.value?.type === "craft-edit"
+    ? props.craftEntries.find((entry) => entry.id === activeModal.value.entryId) || null
+    : null,
 );
 const availableRecipes = computed(() => {
   const registeredRecipeIds = new Set(props.craftEntries.map((entry) => entry.recipeId));
@@ -431,8 +430,19 @@ const availableRecipes = computed(() => {
 const currentFuelItem = computed(() => (
   props.currentFuelItemId ? props.itemDefinitions[props.currentFuelItemId] || null : null
 ));
+const isWorkbench = computed(() => props.station.id === "workbench");
+const rootClass = computed(() => (
+  isWorkbench.value
+    ? "p-0"
+    : "rounded-xl bg-white/[0.28] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] backdrop-blur-md"
+));
 const showFuelPanel = computed(() => props.station.id === "cookingStation");
 const playerFuelTotal = computed(() => props.playerFuelEntries.reduce((total, entry) => total + entry.amount, 0));
+const sectionClass = computed(() => (
+  isWorkbench.value
+    ? "p-0"
+    : "rounded-xl bg-white/[0.24] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-md"
+));
 const burnRemainingSeconds = computed(() => Math.max(0, Math.ceil((props.burnRemainingMs || 0) / 1000)));
 const burnProgress = computed(() => {
   if (!props.burnDurationMs) {
@@ -441,15 +451,16 @@ const burnProgress = computed(() => {
   return Math.max(0, Math.min(100, ((props.burnRemainingMs || 0) / props.burnDurationMs) * 100));
 });
 const isBurning = computed(() => props.burnRemainingMs > 0);
+const isStationModalVisible = computed(() => (
+  activeModal.value?.type === "craft-add"
+  || activeModal.value?.type === "craft-edit"
+  || activeModal.value?.type === "assign-villager"
+));
 
 function openCraftModal() {
   draftRecipeId.value = availableRecipes.value[0]?.id || "";
   draftTarget.value = 1;
-  showCraftModal.value = true;
-}
-
-function closeCraftModal() {
-  showCraftModal.value = false;
+  openModal({ type: "craft-add" });
 }
 
 function openEditCraftModal(entryId) {
@@ -457,14 +468,12 @@ function openEditCraftModal(entryId) {
   if (!entry) {
     return;
   }
-  editingCraftEntryId.value = entryId;
   editingCraftTarget.value = entry.target;
-  showEditCraftModal.value = true;
+  openModal({ type: "craft-edit", entryId });
 }
 
-function closeEditCraftModal() {
-  showEditCraftModal.value = false;
-  editingCraftEntryId.value = null;
+function openVillagerModal() {
+  openModal({ type: "assign-villager" });
 }
 
 function submitCraftEntry() {
@@ -472,12 +481,12 @@ function submitCraftEntry() {
     return;
   }
   emit("add-craft-entry", props.station.id, draftRecipeId.value, draftTarget.value);
-  closeCraftModal();
+  closeTopModal();
 }
 
 function addVillager(villagerId) {
   emit("add-villager", villagerId, props.station.id);
-  showVillagerModal.value = false;
+  closeTopModal();
 }
 
 function removeVillager(villagerId) {
@@ -501,7 +510,7 @@ function submitEditCraftEntry() {
     return;
   }
   emit("update-craft-entry-target", props.station.id, editingCraftEntry.value.id, Number(editingCraftTarget.value));
-  closeEditCraftModal();
+  closeTopModal();
 }
 
 function craftEntryOutputItemId(entry) {
@@ -533,8 +542,8 @@ function availableRecipeTooltip(recipe) {
 
 function removeCraftEntry(entryId) {
   emit("remove-craft-entry", props.station.id, entryId);
-  if (editingCraftEntryId.value === entryId) {
-    closeEditCraftModal();
+  if (activeModal.value?.type === "craft-edit" && activeModal.value.entryId === entryId) {
+    closeTopModal();
   }
 }
 

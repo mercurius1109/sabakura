@@ -1,11 +1,11 @@
 <template>
-  <div class="flex items-start justify-between gap-4 border-b border-line/70 px-4 py-4">
+  <div class="flex items-start justify-between gap-4 border-b border-white/[0.04] px-4 py-4">
     <div class="min-w-0 pr-2">
-      <div v-if="eyebrow" class="text-xs font-bold uppercase tracking-[0.24em] text-moss">
+      <div v-if="eyebrow" class="text-xs font-bold uppercase tracking-[0.24em] text-[#d8f0b6]">
         {{ eyebrow }}
       </div>
-      <h2 class="mt-2 text-3xl font-bold text-ink">{{ title }}</h2>
-      <p v-if="description" class="mt-2 text-sm leading-6 text-muted">
+      <h2 class="mt-2 text-3xl font-bold text-white/[0.95]">{{ title }}</h2>
+      <p v-if="description" class="mt-2 text-sm leading-6 text-white/[0.7]">
         {{ description }}
       </p>
     </div>
@@ -13,7 +13,7 @@
     <button
       v-if="showClose"
       type="button"
-      class="shrink-0 rounded-full border border-line bg-white px-3 py-1 text-sm font-bold text-muted transition hover:text-ink"
+      class="shrink-0 rounded-lg bg-white/[0.12] px-3 py-1.5 text-sm font-bold text-white/[0.78] backdrop-blur-md transition hover:bg-white/[0.18] hover:text-white"
       @click="$emit('close')"
     >
       {{ t("ui.close") }}
