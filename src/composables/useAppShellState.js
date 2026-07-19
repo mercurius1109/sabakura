@@ -32,8 +32,11 @@ export function useAppShellState(options) {
   const constructionSitesForField = computed(() =>
     constructionSites.map((site) => {
       const task = constructionQueue.find((entry) => entry.structureId === site.structureId);
+      const building = buildingById(site.structureId);
       return {
         ...site,
+        icon: itemDefinitions[site.structureId]?.icon || site.icon || building?.icon || "?",
+        name: itemDefinitions[site.structureId]?.name || site.name || building?.name || "",
         progress: task ? taskProgress(task) : 0,
       };
     }),

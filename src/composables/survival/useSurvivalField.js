@@ -3,6 +3,7 @@ import {
   displayFieldNodes as collectDisplayFieldNodes,
   fieldNodeById as findFieldNodeById,
   fieldNodeIndexById as findFieldNodeIndexById,
+  spawnScatteredItems as createScatteredItems,
   spawnDroppedItems as createDroppedItems,
   spawnDroppedLogs as createDroppedLogs,
   visibleFieldNodes as collectVisibleFieldNodes,
@@ -151,6 +152,10 @@ export function createSurvivalFieldHelpers({
     createDroppedItems(fieldNodes, outputs, origin, genericDropOffsets, makeId, itemName);
   }
 
+  function spawnScatteredItems(outputs, origin = playerDropPoint) {
+    createScatteredItems(fieldNodes, outputs, origin, makeId, itemName);
+  }
+
   function gatherActionForNode(node) {
     if (node.type === "tree") {
       return {
@@ -249,6 +254,7 @@ export function createSurvivalFieldHelpers({
     nodeWorkPoint,
     actorInteractionDistance: RESOURCE_INTERACTION_DISTANCE,
     spawnDroppedItems,
+    spawnScatteredItems,
     spawnDroppedLogs,
     storageInteractionDistance: DEFAULT_INTERACTION_DISTANCE,
     storageWorkPoint,

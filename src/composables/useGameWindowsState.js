@@ -188,7 +188,11 @@ export function useGameWindowsState(options) {
     };
   });
 
-  const playerTransferCaption = computed(() => t("ui.transferTo", { target: playerTransferContext.value.label }));
+  const playerTransferCaption = computed(() => (
+    playerTransferContext.value.mode === "drop"
+      ? t("ui.inventory")
+      : t("ui.transferTo", { target: playerTransferContext.value.label })
+  ));
   const playerTransferDisabled = computed(() => playerTransferContext.value.disabled);
   const playerTransferDisabledText = computed(() => playerTransferContext.value.disabledText);
   const playerItemActions = (item) => {
@@ -252,8 +256,8 @@ export function useGameWindowsState(options) {
 
   function playerRecipeButtonClass(recipe) {
     const base = canStartPlayerRecipe(recipe)
-      ? "border-[#b2c79a] bg-white/90 hover:-translate-y-0.5"
-      : "cursor-not-allowed border-line bg-white/60 opacity-60";
+      ? "border-white/[0.16] bg-black/[0.34] hover:-translate-y-0.5 backdrop-blur-sm"
+      : "cursor-not-allowed border-white/[0.08] bg-black/[0.24] backdrop-blur-sm";
     return hasTutorialTarget(currentTutorialTargets, "player-recipe", recipe.id)
       ? `${base} ${tutorialHighlightClass}`
       : base;
@@ -261,8 +265,8 @@ export function useGameWindowsState(options) {
 
   function playerBuildButtonClass(building) {
     const base = canPlaceStructure(building.id)
-      ? "border-[#b2c79a] bg-white/90 hover:-translate-y-0.5"
-      : "cursor-not-allowed border-line bg-white/60 opacity-60";
+      ? "border-white/[0.16] bg-black/[0.34] hover:-translate-y-0.5 backdrop-blur-sm"
+      : "cursor-not-allowed border-white/[0.08] bg-black/[0.24] backdrop-blur-sm";
     return hasTutorialTarget(currentTutorialTargets, "player-building", building.id)
       ? `${base} ${tutorialHighlightClass}`
       : base;
@@ -270,8 +274,8 @@ export function useGameWindowsState(options) {
 
   function buildMenuButtonClass(building) {
     const base = canPlaceStructure(building.id)
-      ? "border-[#b2c79a] bg-white/90 hover:-translate-y-0.5"
-      : "cursor-not-allowed border-line bg-white/60 opacity-60";
+      ? "border-white/[0.16] bg-black/[0.34] hover:-translate-y-0.5 backdrop-blur-sm"
+      : "cursor-not-allowed border-white/[0.08] bg-black/[0.24] backdrop-blur-sm";
     return hasTutorialTarget(currentTutorialTargets, "player-building", building.id)
       ? `${base} ${tutorialHighlightClass}`
       : base;
@@ -332,6 +336,7 @@ function itemCardsFromStore(store, itemDefinitions) {
       name: meta.name,
       icon: meta.icon,
       kind: meta.kind,
+      stackable: meta.stackable !== false,
       nutrition: meta.nutrition || 0,
       amount: store[id] || 0,
       expected: store[id] || 0,

@@ -4,7 +4,7 @@
       <button
         id="inventory-menu-button"
         type="button"
-        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/[0.16] px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/[0.24]"
+        class="hud-glass hud-glass-hover flex w-20 flex-col items-center justify-center gap-1 rounded-xl px-3 py-2 text-center text-white"
         :class="highlightInventory ? tutorialHighlightClass : ''"
         @click="$emit('open-inventory')"
       >
@@ -14,7 +14,7 @@
 
       <button
         type="button"
-        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/[0.16] px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/[0.24]"
+        class="hud-glass hud-glass-hover flex w-20 flex-col items-center justify-center gap-1 rounded-xl px-3 py-2 text-center text-white"
         :class="highlightVillage ? tutorialHighlightClass : ''"
         @click="$emit('open-village')"
       >
@@ -24,17 +24,7 @@
 
       <button
         type="button"
-        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/[0.16] px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/[0.24]"
-        :class="highlightCraft ? tutorialHighlightClass : ''"
-        @click="$emit('open-craft')"
-      >
-        <span aria-hidden="true" class="text-2xl leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">&#x1F528;</span>
-        <span class="text-xs font-bold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">{{ t("ui.menuCraft") }}</span>
-      </button>
-
-      <button
-        type="button"
-        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/[0.16] px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/[0.24]"
+        class="hud-glass hud-glass-hover flex w-20 flex-col items-center justify-center gap-1 rounded-xl px-3 py-2 text-center text-white"
         :class="highlightBuild ? tutorialHighlightClass : ''"
         @click="$emit('open-build')"
       >
@@ -44,14 +34,14 @@
 
       <button
         type="button"
-        class="flex w-20 flex-col items-center justify-center gap-1 rounded-xl bg-black/[0.16] px-3 py-2 text-center text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-black/[0.24]"
+        class="hud-glass hud-glass-hover flex w-20 flex-col items-center justify-center gap-1 rounded-xl px-3 py-2 text-center text-white"
         @click="$emit('toggle-log')"
       >
         <span aria-hidden="true" class="text-2xl leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">&#x2630;</span>
         <span class="text-xs font-bold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">{{ t("ui.menuLog") }}</span>
       </button>
 
-      <div class="flex items-center gap-2 rounded-xl bg-black/[0.16] px-3 py-2 shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md">
+      <div class="hud-glass flex items-center gap-2 rounded-xl px-3 py-2">
         <span class="text-xs font-bold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">{{ t("ui.speed") }}</span>
         <button
           v-for="speed in gameSpeedOptions"
@@ -65,7 +55,7 @@
         </button>
       </div>
 
-      <div v-if="showDevTools" class="flex items-center gap-2 rounded-xl bg-black/[0.16] px-3 py-2 shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md">
+      <div v-if="showDevTools" class="hud-glass flex items-center gap-2 rounded-xl px-3 py-2">
         <span class="text-xs font-bold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">{{ t("ui.devAutoplay") }}</span>
         <button
           type="button"
@@ -96,7 +86,7 @@
     </div>
 
     <div class="absolute right-4 top-4 z-10 flex flex-col items-end gap-3">
-      <div class="relative aspect-square w-[220px] overflow-hidden rounded-lg bg-black/[0.1] shadow-[0_12px_28px_rgba(0,0,0,0.16)] backdrop-blur-md">
+      <div class="hud-glass-soft relative aspect-square w-[220px] overflow-hidden rounded-lg">
         <div class="absolute inset-0">
           <div class="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/[0.25]"></div>
           <div class="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/[0.25]"></div>
@@ -150,20 +140,12 @@
 
     <button
       type="button"
-      class="absolute bottom-4 left-4 z-10 w-[260px] max-w-[calc(100vw-2rem)] rounded-xl bg-black/[0.16] p-4 text-left shadow-[0_8px_18px_rgba(0,0,0,0.14)] backdrop-blur-md"
+      class="hud-glass absolute bottom-4 left-4 z-10 w-[260px] max-w-[calc(100vw-2rem)] rounded-xl p-4 text-left"
       @click="$emit('click-fullness', $event)"
     >
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <div class="text-[11px] font-bold tracking-[0.16em] text-white/[0.62] drop-shadow-[0_2px_6px_rgba(0,0,0,0.75)]">{{ t("ui.fullness") }}</div>
-          <div class="mt-1 text-2xl font-bold leading-none text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">{{ playerFullnessPercent }}%</div>
-        </div>
-        <div
-          class="rounded-lg px-2.5 py-1 text-[11px] font-bold leading-none backdrop-blur-sm"
-          :class="playerIsStarving ? 'bg-[#d96c3f]/[0.26] text-[#ffd8c8]' : 'bg-[#2d6a4f]/[0.3] text-[#dcf7e9]'"
-        >
-          {{ playerIsStarving ? t("ui.starving") : t("ui.normal") }}
-        </div>
+      <div>
+        <div class="text-[11px] font-bold tracking-[0.16em] text-white/[0.62] drop-shadow-[0_2px_6px_rgba(0,0,0,0.75)]">{{ t("ui.fullness") }}</div>
+        <div class="mt-1 text-2xl font-bold leading-none text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">{{ playerFullnessPercent }}%</div>
       </div>
       <div class="mt-3 h-3.5 overflow-hidden rounded-lg bg-black/[0.26]">
         <div
@@ -174,7 +156,7 @@
       </div>
     </button>
 
-    <div v-if="isLogWindowVisible" class="absolute bottom-4 right-4 z-10 w-[340px] max-w-[calc(100vw-2rem)] rounded-xl bg-black/[0.28] p-4 text-white shadow-panel backdrop-blur">
+    <div v-if="isLogWindowVisible" class="hud-glass-strong absolute bottom-4 right-4 z-10 w-[340px] max-w-[calc(100vw-2rem)] rounded-xl p-4 text-white">
       <div class="flex items-center justify-between gap-2">
         <div class="text-sm font-bold tracking-[0.18em] text-white/[0.8]">{{ t("ui.logTitle") }}</div>
         <button type="button" class="text-xs font-bold text-white/[0.8] transition hover:text-white" @click="$emit('clear-log')">
@@ -228,7 +210,6 @@ const props = defineProps({
 defineEmits([
   "open-inventory",
   "open-village",
-  "open-craft",
   "open-build",
   "toggle-log",
   "set-speed",

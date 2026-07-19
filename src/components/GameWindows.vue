@@ -3,7 +3,6 @@
     <div
       class="pointer-events-auto absolute left-1/2 top-24 max-h-[calc(100vh-7rem)] w-[min(64rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-2xl bg-[#f2ead9]/58 shadow-[0_26px_60px_rgba(20,24,12,0.26)] backdrop-blur-xl"
       :class="selectedWindow.type === 'player' || selectedWindow.type === 'village' || selectedWindow.type === 'build'
-        || selectedWindow.type === 'craft'
         ? 'max-w-[26rem]'
         : ''"
     >
@@ -30,36 +29,7 @@
           :can-start-recipe="canStartPlayerRecipe"
           :is-craft-override-active="isCraftOverrideActive"
           :dev-craft-override-enabled="isDevMode"
-          :show-craft-section="false"
-          :item-actions-for-item="playerItemActions"
-          @select-transfer="$emit('handle-player-transfer', $event)"
-          @select-item-action="$emit('handle-player-item-action', $event)"
-        />
-      </template>
-
-      <template v-else-if="selectedWindow.type === 'craft'">
-        <WindowHeader :title="t('ui.handCraft')" :description="t('ui.craftInspect')" @close="$emit('close-window')" />
-        <PlayerActorPanel
-          :item-cards="playerItemCards"
-          :owned-kinds="playerOwnedKinds"
-          :transfer-caption="t('ui.playerInspect')"
-          :transfer-disabled="false"
-          :transfer-disabled-text="''"
-          :task="currentPlayerTask"
-          :tasks="currentPlayerTasks"
-          :task-label="taskLabel"
-          :task-display-text="taskDisplayText"
-          :task-progress="taskProgress"
-          :remaining-seconds="remainingSeconds"
-          :on-cancel-task="cancelTask"
-          :is-busy="isPlayerBusy"
-          :recipes="playerRecipes"
-          :recipe-tooltip="playerCraftTooltip"
-          :recipe-button-class="playerRecipeButtonClass"
-          :recipe-icon="playerCraftIcon"
-          :can-start-recipe="canStartPlayerRecipe"
-          :is-craft-override-active="isCraftOverrideActive"
-          :dev-craft-override-enabled="isDevMode"
+          :show-craft-section="true"
           :item-actions-for-item="playerItemActions"
           @select-transfer="$emit('handle-player-transfer', $event)"
           @select-item-action="$emit('handle-player-item-action', $event)"

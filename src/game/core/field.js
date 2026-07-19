@@ -8,6 +8,10 @@ import {
 const REFERENCE_FIELD_WIDTH = 2000;
 const REFERENCE_FIELD_HEIGHT = 1200;
 const REFERENCE_FIELD_AREA = REFERENCE_FIELD_WIDTH * REFERENCE_FIELD_HEIGHT;
+const SCATTER_MIN_DISTANCE = 34;
+const SCATTER_MIN_RADIUS = 18;
+const SCATTER_MAX_RADIUS = 34;
+const SCATTER_ATTEMPTS_PER_ITEM = 24;
 
 export function randomFieldPosition() {
   return randomWorldPosition();
@@ -125,6 +129,67 @@ export function spawnDroppedItems(fieldNodes, outputs, origin, offsets, makeId, 
       y: origin.y + drop.offset.y + drop.stackIndex * (drop.offset.y === 0 ? 0 : Math.sign(drop.offset.y) * 15),
     });
 
+    fieldNodes.push({
+      id: makeId(`dropped-${drop.itemId}-${index}`),
+      type: "pickup",
+      itemId: drop.itemId,
+      title: itemName(drop.itemId),
+      actionLabel: `${itemName(drop.itemId)}を拾う`,
+      x: position.x,
+      y: position.y,
+      respawnMs: 0,
+      hiddenUntil: null,
+      transient: true,
+    });
+  });
+}
+
+function distanceBetweenPoints(a, b) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return Math.sqrt((dx * dx) + (dy * dy));
+}
+
+function randomScatterPosition(origin) {
+  const angle = Math.random() * Math.PI * 2;
+  const radius = SCATTER_MIN_RADIUS + (Math.random() * (SCATTER_MAX_RADIUS - SCATTER_MIN_RADIUS));
+  return clampFieldPosition({
+    x: origin.x + Math.cos(angle) * radius,
+    y: origin.y + Math.sin(angle) * radius,
+  });
+}
+
+function fallbackScatterPosition(origin, index, total) {
+  const angle = (Math.PI * 2 * index) / Math.max(total, 1);
+  return clampFieldPosition({
+    x: origin.x + Math.cos(angle) * SCATTER_MAX_RADIUS,
+    y: origin.y + Math.sin(angle) * SCATTER_MAX_RADIUS,
+  });
+}
+
+export function spawnScatteredItems(fieldNodes, outputs, origin, makeId, itemName) {
+  const drops = Object.entries(outputs).flatMap(([itemId, amount]) =>
+    Array.from({ length: amount }, () => ({ itemId })),
+  );
+  const placedPositions = [];
+
+  drops.forEach((drop, index) => {
+    let position = null;
+
+    for (let attempt = 0; attempt < SCATTER_ATTEMPTS_PER_ITEM; attempt += 1) {
+      const candidate = randomScatterPosition(origin);
+      const overlaps = placedPositions.some((placed) => distanceBetweenPoints(placed, candidate) < SCATTER_MIN_DISTANCE);
+      if (!overlaps) {
+        position = candidate;
+        break;
+      }
+    }
+
+    if (!position) {
+      position = fallbackScatterPosition(origin, index, drops.length);
+    }
+
+    placedPositions.push(position);
     fieldNodes.push({
       id: makeId(`dropped-${drop.itemId}-${index}`),
       type: "pickup",

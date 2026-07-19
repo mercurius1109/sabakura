@@ -32,7 +32,6 @@
         <FieldHud
           :highlight-inventory="hasTutorialTarget('menu', 'inventory')"
           :highlight-village="hasTutorialTarget('menu', 'village')"
-          :highlight-craft="hasTutorialTarget('menu', 'craft')"
           :highlight-build="hasTutorialTarget('menu', 'build')"
           :tutorial-highlight-class="tutorialHighlightClass"
           :game-speed-options="gameSpeedOptions"
@@ -59,7 +58,6 @@
           :world-height="worldHeight"
           @open-inventory="openPlayerWindow"
           @open-village="openVillageWindow"
-          @open-craft="openCraftWindow"
           @open-build="openBuildWindow"
           @toggle-log="toggleLogWindow"
           @set-speed="setGameSpeed"

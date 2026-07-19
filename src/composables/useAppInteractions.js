@@ -164,10 +164,6 @@ export function useAppInteractions(options) {
     selectedWindow.value = { type: "player" };
   }
 
-  function openCraftWindow() {
-    selectedWindow.value = { type: "craft" };
-  }
-
   function openStructureWindow(structureId) {
     selectedWindow.value = { type: structureId };
     approachStructureTarget(structureId);
@@ -257,7 +253,6 @@ export function useAppInteractions(options) {
     removeStockRule,
     closeWindow,
     openPlayerWindow,
-    openCraftWindow,
     openStructureWindow,
     openStorageCompareWindow,
     openVillageWindow,

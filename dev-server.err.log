@@ -18,3 +18,171 @@ $ vite --host 127.0.0.1 --port 5173 --strictPort
       at Object.parse (C:\Users\hkawa\Desktop\survival_craft\node_modules\.pnpm\@vue+compiler-dom@3.5.39\node_modules\@vue\compiler-dom\dist\compiler-dom.cjs.js:910:23)
       at Object.parse$1 [as parse] (C:\Users\hkawa\Desktop\survival_craft\node_modules\.pnpm\@vue+compiler-sfc@3.5.39\node_modules\@vue\compiler-sfc\dist\compiler-sfc.cjs.js:1824:24)
       at createDescriptor (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/@vitejs+plugin-vue@5.2.4_vite@6.4.3_jiti@1.21.7__vue@3.5.39/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)
+[2m1:11:50[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to parse source for import analysis because the content contains invalid JS syntax. If you are using JSX, make sure to name the file with the .jsx or .tsx extension.
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/hkawa/Desktop/survival_craft/src/game/core/field.js[39m:207:3
+[33m  206|    });
+  207|  }
+  208|  
+     |  ^[39m
+[2m1:11:50[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to parse source for import analysis because the content contains invalid JS syntax. If you are using JSX, make sure to name the file with the .jsx or .tsx extension.
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/hkawa/Desktop/survival_craft/src/game/core/field.js[39m:207:3
+[33m  206|    });
+  207|  }
+  208|  
+     |  ^[39m
+[2m1:11:50[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to parse source for import analysis because the content contains invalid JS syntax. If you are using JSX, make sure to name the file with the .jsx or .tsx extension.[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/hkawa/Desktop/survival_craft/src/game/core/field.js[39m:207:3
+[33m  206|    });
+  207|  }
+  208|  
+     |  ^[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at TransformPluginContext.transform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40585:14)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+[2m1:12:20[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to parse source for import analysis because the content contains invalid JS syntax. If you are using JSX, make sure to name the file with the .jsx or .tsx extension.[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/hkawa/Desktop/survival_craft/src/game/core/field.js[39m:207:3
+[33m  206|    });
+  207|  }
+  208|  
+     |  ^[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at TransformPluginContext.transform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40585:14)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+[2m1:12:21[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to parse source for import analysis because the content contains invalid JS syntax. If you are using JSX, make sure to name the file with the .jsx or .tsx extension.[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/hkawa/Desktop/survival_craft/src/game/core/field.js[39m:207:3
+[33m  206|    });
+  207|  }
+  208|  
+     |  ^[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at TransformPluginContext.transform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40585:14)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+[2m1:12:22[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to parse source for import analysis because the content contains invalid JS syntax. If you are using JSX, make sure to name the file with the .jsx or .tsx extension.[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/hkawa/Desktop/survival_craft/src/game/core/field.js[39m:207:3
+[33m  206|    });
+  207|  }
+  208|  
+     |  ^[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at TransformPluginContext.transform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40585:14)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+[2m1:12:29[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to parse source for import analysis because the content contains invalid JS syntax. If you are using JSX, make sure to name the file with the .jsx or .tsx extension.
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/hkawa/Desktop/survival_craft/src/game/core/field.js[39m:207:3
+[33m  206|    });
+  207|  }
+  208|  
+     |  ^[39m
+[2m1:12:29[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to parse source for import analysis because the content contains invalid JS syntax. If you are using JSX, make sure to name the file with the .jsx or .tsx extension.
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/hkawa/Desktop/survival_craft/src/game/core/field.js[39m:207:3
+[33m  206|    });
+  207|  }
+  208|  
+     |  ^[39m
+[2m1:12:29[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to parse source for import analysis because the content contains invalid JS syntax. If you are using JSX, make sure to name the file with the .jsx or .tsx extension.[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/hkawa/Desktop/survival_craft/src/game/core/field.js[39m:207:3
+[33m  206|    });
+  207|  }
+  208|  
+     |  ^[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at TransformPluginContext.transform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40585:14)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+[2m1:12:39[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to parse source for import analysis because the content contains invalid JS syntax. If you are using JSX, make sure to name the file with the .jsx or .tsx extension.
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/hkawa/Desktop/survival_craft/src/game/core/field.js[39m:207:3
+[33m  206|    });
+  207|  }
+  208|  
+     |  ^[39m
+[2m1:12:39[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to parse source for import analysis because the content contains invalid JS syntax. If you are using JSX, make sure to name the file with the .jsx or .tsx extension.[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/hkawa/Desktop/survival_craft/src/game/core/field.js[39m:207:3
+[33m  206|    });
+  207|  }
+  208|  
+     |  ^[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at TransformPluginContext.transform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40585:14)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+[2m1:12:50[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to parse source for import analysis because the content contains invalid JS syntax. If you are using JSX, make sure to name the file with the .jsx or .tsx extension.
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/hkawa/Desktop/survival_craft/src/game/core/field.js[39m:207:3
+[33m  206|    });
+  207|  }
+  208|  
+     |  ^[39m
+[2m1:12:50[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to parse source for import analysis because the content contains invalid JS syntax. If you are using JSX, make sure to name the file with the .jsx or .tsx extension.[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/hkawa/Desktop/survival_craft/src/game/core/field.js[39m:207:3
+[33m  206|    });
+  207|  }
+  208|  
+     |  ^[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at TransformPluginContext.transform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40585:14)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+[2m1:13:11[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to parse source for import analysis because the content contains invalid JS syntax. If you are using JSX, make sure to name the file with the .jsx or .tsx extension.
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/hkawa/Desktop/survival_craft/src/game/core/field.js[39m:207:3
+[33m  206|    });
+  207|  }
+  208|  
+     |  ^[39m
+[2m1:13:11[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to parse source for import analysis because the content contains invalid JS syntax. If you are using JSX, make sure to name the file with the .jsx or .tsx extension.[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/hkawa/Desktop/survival_craft/src/game/core/field.js[39m:207:3
+[33m  206|    });
+  207|  }
+  208|  
+     |  ^[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at TransformPluginContext.transform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40585:14)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+[2m1:13:30[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to parse source for import analysis because the content contains invalid JS syntax. If you are using JSX, make sure to name the file with the .jsx or .tsx extension.[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/hkawa/Desktop/survival_craft/src/game/core/field.js[39m:207:3
+[33m  206|    });
+  207|  }
+  208|  
+     |  ^[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at TransformPluginContext.transform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40585:14)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (file:///C:/Users/hkawa/Desktop/survival_craft/node_modules/.pnpm/vite@6.4.3_jiti@1.21.7/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+[2m1:15:17[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/game/core/field.js (resolved id: C:/Users/hkawa/Desktop/survival_craft/src/game/core/field.js) in C:/Users/hkawa/Desktop/survival_craft/src/style.css. Does the file exist?
+[2m1:15:17[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/game/core/field.js (resolved id: C:/Users/hkawa/Desktop/survival_craft/src/game/core/field.js) in C:/Users/hkawa/Desktop/survival_craft/src/style.css. Does the file exist?

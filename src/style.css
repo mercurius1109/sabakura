@@ -25,6 +25,36 @@
 }
 
 @layer utilities {
+  .hud-glass {
+    background: rgba(0, 0, 0, 0.16);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.14);
+    backdrop-filter: blur(12px);
+  }
+
+  .hud-glass-hover {
+    transition:
+      transform 180ms ease,
+      background-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .hud-glass-hover:hover {
+    background: rgba(0, 0, 0, 0.24);
+    transform: translateY(-2px);
+  }
+
+  .hud-glass-strong {
+    background: rgba(0, 0, 0, 0.28);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+    backdrop-filter: blur(12px);
+  }
+
+  .hud-glass-soft {
+    background: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+    backdrop-filter: blur(12px);
+  }
+
   @keyframes tutorialBeacon {
     0%,
     100% {

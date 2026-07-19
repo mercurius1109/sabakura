@@ -5,7 +5,6 @@
         <h2 class="text-sm font-bold tracking-[0.08em] text-white/[0.92]">{{ caption || t("ui.inventory") }}</h2>
         <div v-if="subtitle" class="mt-1 text-xs font-bold text-white/[0.62]">{{ subtitle }}</div>
       </div>
-      <span class="text-xs font-bold text-white/[0.62]">{{ ownedKinds }}</span>
     </div>
 
     <div v-if="slots.length === 0" class="text-sm text-white/[0.66]">
@@ -22,17 +21,33 @@
         type="button"
         :title="slot.name"
         :disabled="disabled"
-        class="flex h-[72px] w-[72px] items-center justify-center rounded-lg border border-[#d6ccb8] bg-[#f3ecdf]"
+        class="relative flex h-[72px] w-[72px] items-center justify-center rounded-lg border border-white/[0.12] bg-black/[0.34] backdrop-blur-sm"
         :class="disabled
-          ? 'cursor-not-allowed opacity-50'
+          ? 'cursor-not-allowed'
           : clickable
             ? 'transition hover:-translate-y-0.5'
             : ''"
         @click="handleSelect(slot.itemId)"
       >
-        <div class="h-[72px] w-[72px]" aria-hidden="true">
+        <span
+          v-if="disabled"
+          class="pointer-events-none absolute right-1 top-1 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-black/[0.68] text-[10px] leading-none text-white/[0.92]"
+          aria-hidden="true"
+        >
+          ⃠
+        </span>
+        <span class="pointer-events-none absolute left-1.5 top-1.5 z-10 max-w-[46px] truncate text-[10px] font-bold leading-4 text-white/[0.92]">
+          {{ slot.name }}
+        </span>
+        <div class="flex h-[72px] w-[72px] items-center justify-center p-2" aria-hidden="true">
           <GameIcon :icon="slot.icon" :alt="slot.name" />
         </div>
+        <span
+          v-if="slot.stackable && slot.amount > 1"
+          class="pointer-events-none absolute bottom-0.5 right-1 z-10 text-[10px] font-normal leading-4 text-white/[0.92]"
+        >
+          ×{{ slot.amount }}
+        </span>
       </button>
     </div>
 
@@ -62,14 +77,31 @@ const props = defineProps({
 const emit = defineEmits(["select"]);
 
 const slots = computed(() =>
-  props.itemCards.flatMap((item) =>
-    Array.from({ length: item.amount }, (_, index) => ({
+  props.itemCards.flatMap((item) => {
+    if (item.amount <= 0) {
+      return [];
+    }
+
+    if (item.stackable !== false) {
+      return [{
+        key: item.id,
+        itemId: item.id,
+        name: item.name,
+        icon: item.icon,
+        amount: item.amount,
+        stackable: true,
+      }];
+    }
+
+    return Array.from({ length: item.amount }, (_, index) => ({
       key: `${item.id}-${index + 1}`,
       itemId: item.id,
       name: item.name,
       icon: item.icon,
-    })),
-  ),
+      amount: 1,
+      stackable: false,
+    }));
+  }),
 );
 
 function handleSelect(itemId) {

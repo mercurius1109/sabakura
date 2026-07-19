@@ -86,7 +86,7 @@ function craftRecipeStep(recipeId) {
       textParams: { itemKey: `item.${outputItemId}` },
       highlightTargets: recipe?.station === "hand"
         ? [
-          { kind: "menu", id: "craft" },
+          { kind: "menu", id: "inventory" },
           { kind: "player-recipe", id: recipeId },
         ]
         : [

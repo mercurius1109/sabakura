@@ -3,16 +3,7 @@
     class="relative transition-opacity"
     :class="[rootClass, isAvailable ? 'opacity-100' : 'opacity-55']"
   >
-    <div class="flex items-center justify-between gap-2 font-bold">
-      <span class="text-white/[0.95]">{{ station.name }}</span>
-      <span class="rounded-full px-3 py-1 text-xs font-bold" :class="isAvailable ? 'bg-white/[0.18] text-white/[0.92] backdrop-blur-sm' : 'bg-white/[0.14] text-white/[0.7] backdrop-blur-sm'">
-        {{ isAvailable ? t("ui.available") : t("ui.unavailable") }}
-      </span>
-    </div>
-
-    <p class="mt-2 text-sm leading-6 text-white/[0.7]">{{ station.description }}</p>
-
-    <div v-if="showFuelPanel" class="mt-4 rounded-xl bg-white/[0.24] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-md">
+    <div v-if="showFuelPanel" :class="sectionClass">
       <div class="flex items-center justify-between gap-2">
         <h3 class="text-sm font-bold text-white/[0.92]">{{ t("ui.fuel") }}</h3>
         <span class="text-xs font-semibold text-white/[0.7]">
@@ -20,19 +11,19 @@
         </span>
       </div>
 
-      <div class="mt-3 flex items-center justify-between gap-3 rounded-lg bg-white/[0.3] px-3 py-3 backdrop-blur-sm">
+      <div class="mt-3 flex items-center justify-between gap-3 px-1 py-1">
         <div class="flex items-center gap-3">
-          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.5] backdrop-blur-sm">
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.18]">
             <div class="h-7 w-7">
               <GameIcon :icon="currentFuelItem?.icon || ''" :alt="currentFuelItem?.name || t('ui.fuel')" fallback="🔥" />
             </div>
           </div>
           <div>
             <div class="text-sm font-bold text-white/[0.92]">{{ currentFuelItem?.name || t("ui.fuel") }}</div>
-            <div class="text-xs text-white/[0.66]">{{ t("ui.currentOfTarget", { current: fuelCount, target: playerFuelTotal }) }}</div>
+            <div class="text-xs text-white/[0.7]">{{ t("ui.container") }}: {{ fuelCount }}</div>
           </div>
         </div>
-        <div class="text-right text-xs text-white/[0.66]">
+        <div class="text-right text-xs text-white/[0.7]">
           <div>{{ t("ui.remainingSeconds", { seconds: burnRemainingSeconds }) }}</div>
         </div>
       </div>
@@ -41,27 +32,8 @@
         <div class="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-[width]" :style="{ width: `${burnProgress}%` }"></div>
       </div>
 
-      <div class="mt-4 grid gap-4 lg:grid-cols-2">
-        <InventoryActionGrid
-          :caption="t('ui.addFuel')"
-          :empty-text="t('common.carryingNone')"
-          :entries="playerFuelEntries"
-          :disabled="!isPlayerAdjacent"
-          :disabled-text="t('ui.moveNextToFacility')"
-          @select="transferFuelToStation"
-        />
-        <InventoryActionGrid
-          :caption="t('ui.takeFuel')"
-          :empty-text="t('common.carryingNone')"
-          :entries="stationFuelEntries"
-          :disabled="!isPlayerAdjacent"
-          :disabled-text="t('ui.moveNextToFacility')"
-          @select="transferFuelToPlayer"
-        />
-      </div>
-
-      <div v-if="!isPlayerAdjacent" class="mt-2 text-xs text-white/[0.66]">
-        {{ t("ui.moveNextToFacility") }}
+      <div class="mt-3 text-xs text-white/[0.68]">
+        {{ t("ui.fuel") }}{{ fuelCount > 0 ? ` ${fuelCount}` : "" }}
       </div>
     </div>
 
@@ -72,20 +44,21 @@
         :entries="inventoryEntries"
         :disabled="false"
         :disabled-text="''"
+        tone="light"
         @select="transferItemToPlayer"
       />
-      <div v-if="!isPlayerAdjacent && inventoryEntries.length > 0" class="mt-3 text-sm text-white/[0.66]">
+      <div v-if="!isPlayerAdjacent && inventoryEntries.length > 0" class="mt-3 text-sm" :class="isWorkbench ? 'text-white/[0.66]' : 'text-white/[0.68]'">
         {{ t("ui.moveNextToFacility") }}
       </div>
     </div>
 
     <div class="mt-4" :class="sectionClass">
-      <div class="flex items-center justify-between gap-2 text-white/[0.92]">
-        <h3 class="text-sm font-bold text-white/[0.92]">{{ t("ui.assignVillager") }}</h3>
+      <div class="flex items-center justify-between gap-2" :class="isWorkbench ? 'text-white/[0.92]' : 'text-white/[0.92]'">
+        <h3 class="text-sm font-bold" :class="isWorkbench ? 'text-white/[0.92]' : 'text-white/[0.92]'">{{ t("ui.assignVillager") }}</h3>
         <button
           type="button"
           class="rounded-lg px-3 py-1.5 text-sm font-bold transition"
-          :class="[isWorkbench ? 'bg-white/[0.16] text-white/[0.9] backdrop-blur-sm hover:bg-white/[0.24]' : 'bg-white/[0.42] text-white/[0.9] backdrop-blur-sm hover:bg-white/[0.56]', highlightAddVillager ? 'tutorial-highlight tutorial-highlight-ui' : '']"
+          :class="[isWorkbench ? 'bg-white/[0.16] text-white/[0.9] backdrop-blur-sm hover:bg-white/[0.24]' : 'bg-white/[0.16] text-white/[0.9] backdrop-blur-sm hover:bg-white/[0.24]', highlightAddVillager ? 'tutorial-highlight tutorial-highlight-ui' : '']"
           :disabled="!isAvailable"
           @click="openVillagerModal"
         >
@@ -93,7 +66,7 @@
         </button>
       </div>
 
-      <div v-if="assignedVillagers.length === 0" class="mt-2 text-sm text-white/[0.66]">
+      <div v-if="assignedVillagers.length === 0" class="mt-2 text-sm" :class="isWorkbench ? 'text-white/[0.66]' : 'text-white/[0.68]'">
         {{ t("ui.noAssignedStations") }}
       </div>
 
@@ -102,7 +75,7 @@
           v-for="villager in assignedVillagers"
           :key="villager.id"
           type="button"
-          class="group relative flex h-[88px] w-[88px] flex-col justify-between rounded-lg bg-white/[0.34] px-2 py-2 text-left backdrop-blur-sm transition hover:-translate-y-0.5"
+          class="group relative flex h-[88px] w-[88px] flex-col justify-between rounded-lg border border-white/[0.12] bg-black/[0.34] px-2 py-2 text-left backdrop-blur-sm transition hover:-translate-y-0.5"
         >
           <span
             role="button"
@@ -116,20 +89,20 @@
               <path d="M3.22 3.22a.75.75 0 0 1 1.06 0L8 6.94l3.72-3.72a.75.75 0 1 1 1.06 1.06L9.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06L8 9.06l-3.72 3.72a.75.75 0 1 1-1.06-1.06L6.94 8 3.22 4.28a.75.75 0 0 1 0-1.06Z" />
             </svg>
           </span>
-          <div class="pr-5 text-xs font-bold leading-4 text-white/[0.92]">{{ villager.name }}</div>
-          <div class="flex flex-1 items-center justify-center text-3xl leading-none text-white/[0.8]" aria-hidden="true">{{ villagerIcon }}</div>
-          <div class="self-end text-[10px] font-bold leading-4 text-white/[0.62]">{{ station.name }}</div>
-        </button>
+          <div class="pr-5 text-xs font-normal leading-4 text-white/[0.92]">{{ villager.name }}</div>
+          <div class="flex flex-1 items-center justify-center text-3xl leading-none text-white/[0.82]" aria-hidden="true">{{ villagerIcon }}</div>
+          <div class="self-end text-[10px] font-normal leading-4 text-white/[0.68]">{{ station.name }}</div>
+      </button>
       </div>
     </div>
 
     <div v-if="recipes.length > 0 || craftEntries.length > 0" class="mt-4" :class="sectionClass">
-      <div class="flex items-center justify-between gap-2 text-white/[0.92]">
-        <h3 class="text-sm font-bold text-white/[0.92]">{{ t("ui.craftEntries") }}</h3>
+      <div class="flex items-center justify-between gap-2" :class="isWorkbench ? 'text-white/[0.92]' : 'text-white/[0.92]'">
+        <h3 class="text-sm font-bold" :class="isWorkbench ? 'text-white/[0.92]' : 'text-white/[0.92]'">{{ t("ui.craftEntries") }}</h3>
         <button
           type="button"
           class="rounded-lg px-3 py-1.5 text-sm font-bold transition"
-          :class="[isWorkbench ? 'bg-white/[0.16] text-white/[0.9] backdrop-blur-sm hover:bg-white/[0.24]' : 'bg-white/[0.42] text-white/[0.9] backdrop-blur-sm hover:bg-white/[0.56]', highlightAddCraft ? 'tutorial-highlight tutorial-highlight-ui' : '']"
+          :class="[isWorkbench ? 'bg-white/[0.16] text-white/[0.9] backdrop-blur-sm hover:bg-white/[0.24]' : 'bg-white/[0.16] text-white/[0.9] backdrop-blur-sm hover:bg-white/[0.24]', highlightAddCraft ? 'tutorial-highlight tutorial-highlight-ui' : '']"
           :disabled="!isAvailable"
           @click="openCraftModal"
         >
@@ -137,7 +110,7 @@
         </button>
       </div>
 
-      <div v-if="craftEntries.length === 0" class="mt-2 text-sm text-white/[0.66]">
+      <div v-if="craftEntries.length === 0" class="mt-2 text-sm" :class="isWorkbench ? 'text-white/[0.66]' : 'text-white/[0.68]'">
         {{ t("ui.noCraftEntries") }}
       </div>
 
@@ -147,10 +120,10 @@
           :key="entry.id"
           type="button"
           :title="craftEntryTooltip(entry)"
-          class="group relative flex h-[72px] w-[72px] items-center justify-center rounded-lg bg-white/[0.34] backdrop-blur-sm transition hover:-translate-y-0.5"
+          class="group relative flex h-[72px] w-[72px] items-center justify-center rounded-lg border border-white/[0.12] bg-black/[0.34] backdrop-blur-sm transition hover:-translate-y-0.5"
           @click="openEditCraftModal(entry.id)"
         >
-          <span class="absolute left-1.5 top-1.5 max-w-[46px] truncate text-[10px] font-bold leading-4 text-white/[0.9]">
+          <span class="absolute left-1.5 top-1.5 max-w-[46px] truncate text-[10px] font-bold leading-4 text-white/[0.92]">
             {{ recipeById(entry.recipeId).name }}
           </span>
           <span
@@ -165,7 +138,7 @@
               <path d="M3.22 3.22a.75.75 0 0 1 1.06 0L8 6.94l3.72-3.72a.75.75 0 1 1 1.06 1.06L9.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06L8 9.06l-3.72 3.72a.75.75 0 1 1-1.06-1.06L6.94 8 3.22 4.28a.75.75 0 0 1 0-1.06Z" />
             </svg>
           </span>
-          <span class="absolute bottom-1 right-1 rounded-full bg-white/[0.18] px-1.5 text-[10px] font-bold leading-5 text-white/[0.92] backdrop-blur-sm">
+          <span class="absolute bottom-1 right-1 rounded-full bg-black/[0.52] px-1.5 text-[10px] font-bold leading-5 text-white/[0.92] backdrop-blur-sm">
             {{ currentAmount(entry.id) }}/{{ entry.target }}
           </span>
           <div class="flex h-12 w-12 shrink-0 items-center justify-center" aria-hidden="true">
@@ -177,20 +150,20 @@
     </div>
 
     <div class="mt-4" :class="sectionClass">
-      <div class="flex items-center justify-between gap-2 text-white/[0.92]">
-        <h3 class="text-sm font-bold text-white/[0.92]">{{ t("ui.runningTasks") }}</h3>
-        <span class="text-xs text-white/[0.66]">{{ t("ui.taskCount", { count: tasks.length }) }}</span>
+      <div class="flex items-center justify-between gap-2" :class="isWorkbench ? 'text-white/[0.92]' : 'text-white/[0.92]'">
+        <h3 class="text-sm font-bold" :class="isWorkbench ? 'text-white/[0.92]' : 'text-white/[0.92]'">{{ t("ui.runningTasks") }}</h3>
+        <span class="text-xs" :class="isWorkbench ? 'text-white/[0.66]' : 'text-white/[0.68]'">{{ t("ui.taskCount", { count: tasks.length }) }}</span>
       </div>
 
-      <div v-if="tasks.length === 0" class="mt-2 text-sm text-white/[0.66]">
+      <div v-if="tasks.length === 0" class="mt-2 text-sm" :class="isWorkbench ? 'text-white/[0.66]' : 'text-white/[0.68]'">
         {{ t("ui.noRunningTasks") }}
       </div>
 
       <div v-for="task in tasks" :key="task.id" class="mt-3 grid gap-1.5">
         <div class="flex items-center justify-between gap-2 text-sm font-bold">
-          <span class="text-white/[0.9]">{{ taskDisplayText(task) }}</span>
+          <span :class="isWorkbench ? 'text-white/[0.9]' : 'text-white/[0.9]'">{{ taskDisplayText(task) }}</span>
           <div class="flex items-center gap-2">
-            <span class="text-xs font-semibold text-white/[0.66]">{{ villagerName(task.villagerId) }}</span>
+            <span class="text-xs font-semibold" :class="isWorkbench ? 'text-white/[0.66]' : 'text-white/[0.68]'">{{ villagerName(task.villagerId) }}</span>
             <button
               type="button"
               class="flex h-5 w-5 items-center justify-center rounded-full bg-[#fff1e8] text-[#b4491e] shadow-sm ring-1 ring-[#f2b899] transition hover:bg-[#ffe3d3]"
@@ -202,7 +175,7 @@
             </button>
           </div>
         </div>
-        <div class="flex justify-between text-xs text-white/[0.66]">
+        <div class="flex justify-between text-xs" :class="isWorkbench ? 'text-white/[0.66]' : 'text-white/[0.68]'">
           <span>{{ taskProgress(task) }}%</span>
           <span>{{ t("ui.remainingSeconds", { seconds: remainingSeconds(task) }) }}</span>
         </div>
@@ -216,7 +189,14 @@
       <template v-if="activeModal?.type === 'craft-add'">
         <div class="flex items-center justify-between gap-2">
           <h3 class="text-lg font-bold text-white/[0.95]">{{ t("ui.addCraftEntry") }}</h3>
-          <button type="button" class="text-sm font-bold text-white/[0.7]" @click="closeTopModal">{{ t("ui.close") }}</button>
+          <button
+            type="button"
+            :aria-label="t('ui.close')"
+            class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.08] text-base font-bold leading-none text-white/[0.68] transition hover:bg-white/[0.16] hover:text-white"
+            @click="closeTopModal"
+          >
+            ✗
+          </button>
         </div>
 
         <div class="mt-4 text-sm font-bold text-white/[0.7]">{{ t("ui.recipe") }}</div>
@@ -229,7 +209,7 @@
             :key="recipe.id"
             type="button"
             :title="availableRecipeTooltip(recipe)"
-            class="relative flex h-[72px] w-[72px] items-center justify-center rounded-lg bg-white/[0.34] backdrop-blur-sm transition"
+            class="relative flex h-[72px] w-[72px] items-center justify-center rounded-lg border border-white/[0.12] bg-black/[0.34] backdrop-blur-sm transition"
             :class="draftRecipeId === recipe.id
               ? 'border-moss shadow-[0_0_0_2px_rgba(45,106,79,0.25)]'
               : 'border-line hover:-translate-y-0.5'"
@@ -272,7 +252,14 @@
       <template v-else-if="activeModal?.type === 'craft-edit' && editingCraftEntry">
         <div class="flex items-center justify-between gap-2">
           <h3 class="text-lg font-bold text-white/[0.95]">{{ recipeById(editingCraftEntry.recipeId).name }}</h3>
-          <button type="button" class="text-sm font-bold text-white/[0.7]" @click="closeTopModal">{{ t("ui.close") }}</button>
+          <button
+            type="button"
+            :aria-label="t('ui.close')"
+            class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.08] text-base font-bold leading-none text-white/[0.68] transition hover:bg-white/[0.16] hover:text-white"
+            @click="closeTopModal"
+          >
+            ✗
+          </button>
         </div>
 
         <div class="mt-3 rounded-lg bg-white/[0.34] px-3 py-3 text-sm text-white/[0.74] backdrop-blur-sm">
@@ -326,7 +313,14 @@
       <template v-else-if="activeModal?.type === 'assign-villager'">
         <div class="flex items-center justify-between gap-2">
           <h3 class="text-lg font-bold text-white/[0.95]">{{ t("ui.assignVillager") }}</h3>
-          <button type="button" class="text-sm font-bold text-white/[0.7]" @click="closeTopModal">{{ t("ui.close") }}</button>
+          <button
+            type="button"
+            :aria-label="t('ui.close')"
+            class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.08] text-base font-bold leading-none text-white/[0.68] transition hover:bg-white/[0.16] hover:text-white"
+            @click="closeTopModal"
+          >
+            ✗
+          </button>
         </div>
 
         <div v-if="availableVillagers.length === 0" class="mt-4 text-sm text-white/[0.66]">
@@ -338,12 +332,12 @@
             v-for="villager in availableVillagers"
             :key="villager.id"
             type="button"
-            class="flex h-[88px] w-[88px] flex-col justify-between rounded-lg bg-white/[0.34] px-2 py-2 text-left backdrop-blur-sm transition hover:-translate-y-0.5"
+            class="flex h-[88px] w-[88px] flex-col justify-between rounded-lg border border-white/[0.12] bg-black/[0.34] px-2 py-2 text-left backdrop-blur-sm transition hover:-translate-y-0.5"
             @click="addVillager(villager.id)"
           >
-            <div class="text-xs font-bold leading-4 text-white/[0.92]">{{ villager.name }}</div>
+            <div class="text-xs font-normal leading-4 text-white/[0.92]">{{ villager.name }}</div>
             <div class="flex items-center justify-center text-3xl leading-none text-white/[0.8]" aria-hidden="true">{{ villagerIcon }}</div>
-            <div class="self-end max-w-full truncate text-[10px] font-bold leading-4 text-white/[0.72]">
+            <div class="self-end max-w-full truncate text-[10px] font-normal leading-4 text-white/[0.72]">
               {{ villagerAssignedStationLabel(villager) }}
             </div>
           </button>
@@ -431,17 +425,13 @@ const currentFuelItem = computed(() => (
   props.currentFuelItemId ? props.itemDefinitions[props.currentFuelItemId] || null : null
 ));
 const isWorkbench = computed(() => props.station.id === "workbench");
-const rootClass = computed(() => (
-  isWorkbench.value
-    ? "p-0"
-    : "rounded-xl bg-white/[0.28] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] backdrop-blur-md"
-));
+const rootClass = computed(() => "p-0");
 const showFuelPanel = computed(() => props.station.id === "cookingStation");
 const playerFuelTotal = computed(() => props.playerFuelEntries.reduce((total, entry) => total + entry.amount, 0));
 const sectionClass = computed(() => (
   isWorkbench.value
     ? "p-0"
-    : "rounded-xl bg-white/[0.24] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-md"
+    : "pt-4"
 ));
 const burnRemainingSeconds = computed(() => Math.max(0, Math.ceil((props.burnRemainingMs || 0) / 1000)));
 const burnProgress = computed(() => {

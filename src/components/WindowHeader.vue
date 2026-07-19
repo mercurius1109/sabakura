@@ -5,18 +5,16 @@
         {{ eyebrow }}
       </div>
       <h2 class="mt-2 text-3xl font-bold text-white/[0.95]">{{ title }}</h2>
-      <p v-if="description" class="mt-2 text-sm leading-6 text-white/[0.7]">
-        {{ description }}
-      </p>
     </div>
 
     <button
       v-if="showClose"
       type="button"
-      class="shrink-0 rounded-lg bg-white/[0.12] px-3 py-1.5 text-sm font-bold text-white/[0.78] backdrop-blur-md transition hover:bg-white/[0.18] hover:text-white"
+      :aria-label="t('ui.close')"
+      class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.08] text-lg font-bold leading-none text-white/[0.72] backdrop-blur-md transition hover:bg-white/[0.16] hover:text-white"
       @click="$emit('close')"
     >
-      {{ t("ui.close") }}
+      ✗
     </button>
   </div>
 </template>
@@ -27,7 +25,6 @@ import { useI18n } from "../i18n/index.js";
 defineProps({
   eyebrow: { type: String, default: "" },
   title: { type: String, required: true },
-  description: { type: String, default: "" },
   showClose: { type: Boolean, default: true },
 });
 

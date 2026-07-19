@@ -17,6 +17,8 @@ export function createSurvivalTaskRuntimeHandlers({
   isFieldNodeVisible,
   fieldNodeIndexById,
   spawnDroppedLogs,
+  spawnDroppedItems,
+  spawnScatteredItems,
   nodeWorkPoint,
   actorInventoryCount,
   gatherActionById,
@@ -301,7 +303,7 @@ export function createSurvivalTaskRuntimeHandlers({
       if (node.type === "tree") {
         const spawnedStartIndex = fieldNodes.length;
         node.hiddenUntil = now.value + node.respawnMs;
-        spawnDroppedLogs(node);
+        spawnScatteredItems({ [task.itemId]: task.amount }, { x: node.x, y: node.y });
         addLog(t("log.choppedTree", { actor: villagerName(task.villagerId) }));
 
         const villager = actorById(task.villagerId);
@@ -329,6 +331,48 @@ export function createSurvivalTaskRuntimeHandlers({
             enqueueMoveThenTask(
               villager,
               nodeWorkPoint(spawnedLogs[0], villager),
+              t("log.moveToPickup", { actor: villager.name, item: itemName(task.itemId) }),
+              nextTask,
+            );
+            removeTaskFromActiveState(task);
+            return true;
+          }
+        }
+
+        completeGatherTask(task, { skipDeposit: true });
+        return true;
+      }
+
+      if (node.type === "rock") {
+        const spawnedStartIndex = fieldNodes.length;
+        node.hiddenUntil = now.value + node.respawnMs;
+        spawnScatteredItems({ [task.itemId]: task.amount }, { x: node.x, y: node.y });
+
+        const villager = actorById(task.villagerId);
+        if (task.workerType === "villager" && villager && placedStructures.storage) {
+          const spawnedDrops = fieldNodes.slice(spawnedStartIndex).filter((entry) =>
+            entry.type === "pickup" && entry.itemId === task.itemId && entry.transient
+          );
+
+          if (spawnedDrops.length > 0) {
+            const pickupAction = gatherActionById(`pickup-${task.itemId}`) || {
+              id: `pickup-${task.itemId}`,
+              itemId: task.itemId,
+              amount: 1,
+              duration: 1000,
+            };
+            const nextTask = createGatherTaskFromTemplate(villager, pickupAction, spawnedDrops[0], {
+              source: task.source,
+              dropToStorage: true,
+              keepOutputs: false,
+              carryLimit: task.carryLimit,
+              deliveryTarget: task.deliveryTarget,
+              carriedAmount: task.carriedAmount,
+              resumeActionId: task.resumeActionId || task.actionId,
+            });
+            enqueueMoveThenTask(
+              villager,
+              nodeWorkPoint(spawnedDrops[0], villager),
               t("log.moveToPickup", { actor: villager.name, item: itemName(task.itemId) }),
               nextTask,
             );

@@ -45,11 +45,12 @@
         :style="fieldPositionStyle(site.x, site.y)"
         @click.stop="$emit('select-construction', site.structureId)"
       >
-        <div class="relative flex h-24 w-24 flex-col items-center justify-center rounded-2xl border border-[#73573c] bg-[#b89a73]/90 px-3 py-3 shadow-xl">
-          <div class="text-center text-4xl leading-none">{{ site.icon || "?" }}</div>
-          <div class="mt-1 text-center text-xs font-bold leading-4 text-white">{{ site.name }}</div>
-          <div class="absolute bottom-2 left-3 right-3 h-2 overflow-hidden rounded-full bg-black/[0.2]">
-            <div class="h-full rounded-full bg-[#f8e38f] transition-[width] duration-200" :style="{ width: `${site.progress || 0}%` }"></div>
+        <div class="relative flex w-24 flex-col items-center justify-center gap-2">
+          <div class="h-24 w-24 drop-shadow-[0_10px_18px_rgba(0,0,0,0.28)] opacity-80">
+            <GameIcon :icon="site.icon || '?'" :alt="site.name || ''" />
+          </div>
+          <div class="w-20 overflow-hidden rounded-full bg-black/[0.22]">
+            <div class="h-2 rounded-full bg-[#f8e38f] transition-[width] duration-200" :style="{ width: `${site.progress || 0}%` }"></div>
           </div>
         </div>
       </button>
@@ -63,9 +64,8 @@
         :style="fieldPositionStyle(structure.x, structure.y)"
         @click.stop="selectStructure(structure.id)"
       >
-        <div class="flex h-24 w-24 flex-col items-center justify-center rounded-2xl border border-[#7f5636] bg-[#a87447] px-3 py-3 shadow-xl">
-          <div class="text-center text-4xl leading-none">{{ structure.icon }}</div>
-          <div class="mt-1 text-center text-xs font-bold leading-4 text-white">{{ structure.name }}</div>
+        <div class="h-24 w-24 drop-shadow-[0_10px_18px_rgba(0,0,0,0.28)]">
+          <GameIcon :icon="structure.icon || '?'" :alt="structure.name || ''" />
         </div>
       </button>
 
