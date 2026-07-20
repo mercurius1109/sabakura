@@ -192,8 +192,13 @@ export function useDevTutorialAutoplay({
     if (!rule || rule.enabled) {
       return false;
     }
-    rule.enabled = true;
-    rule.target = Math.max(1, Number(rule.target) || 1);
+    const target = Math.max(1, Number(rule.target) || 1);
+    stockRules
+      .filter((entry) => entry.itemId === itemId)
+      .forEach((entry) => {
+        entry.enabled = true;
+        entry.target = target;
+      });
     onRuleChanged(rule);
     markAction(stepId);
     return true;

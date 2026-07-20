@@ -379,7 +379,10 @@ export function createSurvivalManagementHelpers({
   }
 
   function activeAutoTaskForRule(rule) {
-    return gatherQueue.some((task) => task.ruleId === rule.id);
+    return gatherQueue.some((task) =>
+      task.ruleId !== null
+      && task.itemId === rule.itemId
+    );
   }
 
   function craftEntryStatus(stationId, craftEntryId) {

@@ -32,6 +32,13 @@ export function useAppInteractions(options) {
     pickupFieldNode,
   } = options;
 
+  function stockRulesForItem(itemId) {
+    if (!itemId) {
+      return [];
+    }
+    return stockRules.filter((entry) => entry.itemId === itemId);
+  }
+
   function transferPlayerItemToStorage(itemId) {
     moveItemFromActorToStorage(playerActor, itemId, 1);
   }
@@ -123,8 +130,11 @@ export function useAppInteractions(options) {
       return;
     }
 
-    rule.enabled = true;
-    rule.target = Number(draftStockRuleTarget.value);
+    const target = Number(draftStockRuleTarget.value);
+    stockRulesForItem(rule.itemId).forEach((entry) => {
+      entry.enabled = true;
+      entry.target = target;
+    });
     onRuleChanged(rule);
     closeAddStockRuleModal();
   }
@@ -137,8 +147,11 @@ export function useAppInteractions(options) {
       return;
     }
 
-    editingStockRule.value.enabled = true;
-    editingStockRule.value.target = Number(editingStockRuleTarget.value);
+    const target = Number(editingStockRuleTarget.value);
+    stockRulesForItem(editingStockRule.value.itemId).forEach((entry) => {
+      entry.enabled = true;
+      entry.target = target;
+    });
     onRuleChanged(editingStockRule.value);
     closeStockRuleModal();
   }
@@ -149,7 +162,9 @@ export function useAppInteractions(options) {
       return;
     }
 
-    rule.enabled = false;
+    stockRulesForItem(rule.itemId).forEach((entry) => {
+      entry.enabled = false;
+    });
     onRuleChanged(rule);
     if (editingStockRuleId.value === ruleId) {
       closeStockRuleModal();
